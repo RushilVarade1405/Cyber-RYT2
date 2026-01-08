@@ -1,32 +1,49 @@
-// ===============================
-// TYPES
-// ===============================
+// ======================================================
+// CYBER LAW TYPES (UI + EXAM FRIENDLY)
+// ======================================================
 
+/**
+ * Navigation link for cyber law sub-pages
+ * Used for cards, buttons, or menus
+ */
 export interface CyberLawLink {
-  label: string;
-  path: string;
-  icon: string;
+  label: string;        // Display text
+  path: string;         // Route path
+  icon: string;         // Emoji or icon
+  color?: string;       // Optional UI color (Tailwind class)
 }
 
+/**
+ * Case study structure for exams + UI cards
+ */
 export interface CyberLawCaseStudy {
   title: string;
+  icon: string;
+  shortDescription: string;
   description: string;
   lawApplied: string;
-
-  // Optional UI / Exam helpers
-  shortDescription?: string;
-  severity?: "Low" | "Medium" | "High";
-  tags?: string[];
-  examTip?: string;
+  severity: "Low" | "Medium" | "High";
+  impact: string; // ✅ ADD THIS
+  punishmentHint?: string;
+  tags: string[];
+  examTip: string;
 }
 
+/**
+ * Section-wise cyber law structure
+ * Used for India + Global segregation
+ */
 export interface CyberLawSection {
   region: "India" | "Global";
   title: string;
   description: string;
 
-  links?: CyberLawLink[];
-  examSummary?: string[];
+  // Optional UI helpers
+  badge?: string;               // Example: "Important", "Exam Focus"
+  themeColor?: string;          // Tailwind color reference
+
+  links?: CyberLawLink[];       // Navigation links
+  examSummary?: string[];       // Quick revision points
   caseStudies?: CyberLawCaseStudy[];
 
   sections: {
@@ -35,205 +52,266 @@ export interface CyberLawSection {
   }[];
 }
 
-// ===============================
-// CYBER LAWS DATA
-// ===============================
+// ======================================================
+// CYBER LAWS MASTER DATA
+// ======================================================
 
 export const cyberLaws: CyberLawSection[] = [
-  // ===============================
+
+  // ======================================================
   // 🇮🇳 CYBER LAWS IN INDIA
-  // ===============================
+  // ======================================================
   {
     region: "India",
     title: "Cyber Laws in India",
+    badge: "Exam Focus",
+    themeColor: "cyan",
     description:
-      "Cyber laws in India govern the use of computers, networks, digital devices, and the internet. These laws aim to prevent cybercrime, protect data and privacy, regulate electronic transactions, and ensure secure digital communication.",
+      "Cyber laws in India regulate digital activities involving computers, networks, and the internet. They aim to prevent cybercrime, protect personal data, regulate electronic transactions, and ensure secure digital communication.",
 
+    // -------------------------------
+    // NAVIGATION LINKS
+    // -------------------------------
     links: [
       {
         label: "Cyber Crimes",
         path: "/cyber-laws/cyber-crimes",
         icon: "⚠️",
+        color: "text-red-400",
       },
       {
         label: "IT Act, 2000",
         path: "/cyber-laws/it-act",
         icon: "📜",
+        color: "text-yellow-400",
       },
       {
         label: "Cyber Ethics",
         path: "/cyber-laws/ethics",
         icon: "🧠",
+        color: "text-purple-400",
       },
     ],
 
+    // -------------------------------
+    // EXAM QUICK REVISION
+    // -------------------------------
     examSummary: [
-      "Cyber law deals with crimes and legal issues involving computers and the internet",
-      "The Information Technology Act, 2000 is the primary cyber law in India",
-      "Section 43 addresses unauthorized access and damage to computer systems",
-      "Section 66 provides criminal punishment for computer-related offences",
-      "Sections 66C and 66D deal with identity theft and online cheating",
-      "Section 66F defines cyber terrorism",
-      "Section 67 punishes publishing obscene content online",
-      "The Digital Personal Data Protection Act, 2023 safeguards personal data",
+      "Cyber law deals with crimes and legal issues related to computers and the internet",
+      "Information Technology Act, 2000 is the primary cyber law in India",
+      "Section 43 – Unauthorized access and data damage",
+      "Section 66 – Criminal punishment for computer-related offences",
+      "Sections 66C & 66D – Identity theft and online cheating",
+      "Section 66F – Cyber terrorism",
+      "Section 67 – Obscene content online",
+      "Digital Personal Data Protection Act, 2023 protects personal data",
     ],
 
-    caseStudies: [
-      {
-        title: "Online Banking Phishing Scam",
-        shortDescription:
-          "Fraudsters impersonate banks to steal login credentials.",
-        description:
-          "Cyber criminals sent fake bank emails asking users to verify their accounts. Victims entered login credentials on fraudulent websites, leading to unauthorized withdrawals.",
-        lawApplied:
-          "IT Act Section 66C (Identity Theft) and Section 66D (Cheating by Personation)",
-        severity: "High",
-        tags: ["Phishing", "Banking Fraud", "Identity Theft"],
-        examTip:
-          "Always mention Sections 66C and 66D when answering banking fraud questions.",
-      },
-      {
-        title: "Cyber Stalking on Social Media",
-        shortDescription:
-          "Harassment using fake profiles and threatening messages.",
-        description:
-          "An individual was repeatedly harassed through fake social media accounts, threatening messages, and misuse of personal images.",
-        lawApplied:
-          "IT Act Section 66E (Privacy Violation) and Section 67 (Obscene Content)",
-        severity: "Medium",
-        tags: ["Cyber Stalking", "Privacy", "Social Media"],
-        examTip:
-          "Use Sections 66E and 67 for social media harassment cases.",
-      },
-      {
-        title: "Corporate Data Breach",
-        shortDescription:
-          "Customer data exposed due to weak cybersecurity practices.",
-        description:
-          "A company failed to implement proper security safeguards, resulting in leakage of sensitive customer information.",
-        lawApplied:
-          "Digital Personal Data Protection Act, 2023 and IT Act Section 43A",
-        severity: "High",
-        tags: ["Data Breach", "DPDP Act", "Corporate Liability"],
-        examTip:
-          "Mention DPDP Act, 2023 along with Section 43A for data breach answers.",
-      },
-      {
-        title: "Government Website Hacking",
-        shortDescription:
-          "Unauthorized access leads to website defacement.",
-        description:
-          "Hackers gained unauthorized access to a government website and altered its content, causing public misinformation.",
-        lawApplied:
-          "IT Act Section 65 (Tampering with Source Code) and Section 66",
-        severity: "High",
-        tags: ["Hacking", "Defacement", "Government Systems"],
-        examTip:
-          "Sections 65 and 66 are essential when explaining hacking incidents.",
-      },
-    ],
+// -------------------------------
+// CASE STUDIES (ENHANCED)
+// -------------------------------
+caseStudies: [
+  {
+    title: "Online Banking Phishing Scam",
+    icon: "🏦",
+    shortDescription: "Fraudulent emails trick users into revealing banking credentials",
+    description:
+      "Cyber criminals impersonated legitimate banks by sending fake emails and SMS messages containing malicious links. Victims unknowingly entered their login credentials on counterfeit banking websites, resulting in unauthorized access and illegal fund transfers.",
+    lawApplied:
+      "IT Act Section 66C (Identity Theft) and Section 66D (Cheating by Personation using Computer Resources)",
+    severity: "High",
+    impact:
+      "Financial loss, identity misuse, erosion of trust in online banking systems",
+    punishmentHint:
+      "Imprisonment up to 3 years and/or fine up to ₹1 lakh",
+    tags: ["Phishing", "Banking Fraud", "Identity Theft"],
+    examTip:
+      "Clearly link phishing with identity theft (66C) and personation (66D) for full marks.",
+  },
 
+  {
+    title: "Cyber Stalking on Social Media",
+    icon: "📱",
+    shortDescription: "Persistent online harassment using fake identities",
+    description:
+      "The victim was repeatedly harassed through fake social media profiles involving threatening messages, stalking behavior, and unauthorized use of personal photographs, causing mental distress and privacy violations.",
+    lawApplied:
+      "IT Act Section 66E (Violation of Privacy) and Section 67 (Publishing Obscene Content)",
+    severity: "Medium",
+    impact:
+      "Psychological trauma, reputational damage, invasion of personal privacy",
+    punishmentHint:
+      "Imprisonment up to 3 years with fine under Section 67",
+    tags: ["Cyber Stalking", "Privacy Violation", "Social Media Abuse"],
+    examTip:
+      "Mention mental harassment + privacy breach while explaining Sections 66E and 67.",
+  },
+
+  {
+    title: "Corporate Data Breach",
+    icon: "💾",
+    shortDescription: "Leak of sensitive customer information due to weak security",
+    description:
+      "A corporate organization failed to implement reasonable security practices, leading to unauthorized access and leakage of sensitive customer data such as Aadhaar details, contact information, and financial records.",
+    lawApplied:
+      "Digital Personal Data Protection Act, 2023 and IT Act Section 43A",
+    severity: "High",
+    impact:
+      "Loss of customer trust, legal penalties, financial compensation liabilities",
+    punishmentHint:
+      "Compensation for affected users and heavy monetary penalties under DPDP Act",
+    tags: ["Data Breach", "DPDP Act", "Corporate Negligence"],
+    examTip:
+      "Always connect Section 43A with the DPDP Act, 2023 for modern data protection answers.",
+  },
+
+  {
+    title: "Government Website Hacking",
+    icon: "🏛️",
+    shortDescription: "Unauthorized intrusion and website defacement",
+    description:
+      "Hackers illegally accessed a government-owned website and modified its content, spreading false information and compromising the integrity of public digital infrastructure.",
+    lawApplied:
+      "IT Act Section 65 (Tampering with Computer Source Documents) and Section 66 (Computer-Related Offences)",
+    severity: "High",
+    impact:
+      "National security risk, public misinformation, loss of system credibility",
+    punishmentHint:
+      "Imprisonment up to 3 years and/or fine",
+    tags: ["Hacking", "Website Defacement", "Government Systems"],
+    examTip:
+      "Use keywords like ‘unauthorized access’ and ‘tampering’ when citing Sections 65 and 66.",
+  },
+],
+
+    // -------------------------------
+    // THEORY SECTIONS
+    // -------------------------------
     sections: [
       {
         heading: "Meaning and Scope of Cyber Law",
         points: [
-          "Cyber law deals with legal aspects of computers and internet usage",
-          "It includes cybercrime, data protection, and e-commerce",
-          "Applies to individuals, organizations, and governments",
-          "Covers offences involving computer systems located in India",
-        ],
+  "Deals with legal aspects of computers, networks, and internet usage",
+  "Regulates activities performed using digital and electronic technologies",
+  "Includes cybercrime such as hacking, phishing, identity theft, and online fraud",
+  "Covers data protection, privacy rights, and information security",
+  "Governs electronic commerce, online contracts, and digital transactions",
+  "Provides legal recognition to electronic records and digital communication",
+  "Applicable to individuals, organizations, companies, and government bodies",
+  "Defines offences, liabilities, and penalties in cyberspace",
+  "Ensures accountability for misuse of computer systems and networks",
+  "Supports investigation and prosecution of cyber offences",
+  "Covers offences involving computer systems or data located in India",
+  "Helps maintain trust, safety, and order in the digital environment",
+]
       },
       {
         heading: "Information Technology Act, 2000",
         points: [
-          "Provides legal recognition to electronic records and signatures",
-          "Facilitates e-governance and online transactions",
-          "Defines cyber offences and prescribes penalties",
-        ],
+  "Provides legal recognition to electronic records and digital documents",
+  "Grants legal validity to digital and electronic signatures",
+  "Facilitates e-governance by enabling online delivery of government services",
+  "Promotes paperless administration and electronic filing of documents",
+  "Supports secure online transactions and electronic communication",
+  "Creates a legal framework for e-commerce and digital business",
+  "Defines various cyber offences such as hacking, identity theft, and online fraud",
+  "Prescribes penalties, fines, and imprisonment for cyber crimes",
+  "Ensures legal protection against misuse of computer systems and data",
+]
+
       },
       {
         heading: "Important Sections of the IT Act",
-        points: [
-          "Section 43 – Unauthorized access and data damage",
-          "Section 65 – Tampering with computer source code",
-          "Section 66 – Computer-related offences",
-          "Section 66C – Identity theft",
-          "Section 66D – Cheating by personation",
-          "Section 66E – Privacy violation",
-          "Section 66F – Cyber terrorism",
-        ],
+      points: [
+  "Section 43 – Unauthorized access, data damage, or denial of services",
+  "Section 65 – Tampering with computer source code",
+  "Section 66 – Computer-related offences committed dishonestly or fraudulently",
+  "Section 66B – Dishonestly receiving stolen computer resources or devices",
+  "Section 66C – Identity theft using passwords or digital signatures",
+  "Section 66D – Cheating by personation through online platforms",
+  "Section 66E – Violation of privacy by capturing or sharing private images",
+  "Section 66F – Cyber terrorism affecting national security",
+  "Section 67 – Publishing or transmitting obscene content in electronic form",
+  "Section 67A – Publishing sexually explicit content online",
+  "Section 67B – Publishing child sexual abuse material",
+  "Section 69 – Government powers for interception, monitoring, and decryption",
+  "Section 70 – Protected systems related to national security",
+  "Section 72 – Breach of confidentiality and privacy by authorized persons",
+  "Section 72A – Disclosure of information in breach of lawful contract",
+]
+
       },
     ],
   },
 
-  // ===============================
+// ======================================================
   // 🌍 GLOBAL CYBER LAWS
-  // ===============================
+  // ======================================================
   {
     region: "Global",
     title: "Cyber Laws Around the World",
+    badge: "International",
+    themeColor: "emerald",
     description:
-      "Cyber laws across the world regulate digital technologies, protect personal data, prevent cybercrime, and ensure cybersecurity through national and international legal frameworks.",
+      "Global cyber laws regulate digital technologies, protect personal data, prevent cybercrime, and promote international cooperation in cybersecurity.",
 
     examSummary: [
-      "Global cyber laws emphasize privacy and user consent",
-      "GDPR is the most influential international data protection law",
-      "CFAA governs cybercrime in the United States",
-      "Many countries follow consent-based data protection models",
-      "International cybercrime requires cross-border cooperation",
-      "The Budapest Convention is the first international cybercrime treaty",
+      "Global cyber laws emphasize privacy and data protection",
+      "GDPR is the most influential data protection law",
+      "USA follows a sector-based cyber law model",
+      "Cross-border cybercrime needs international cooperation",
+      "Budapest Convention is the first cybercrime treaty",
     ],
 
     sections: [
       {
-        heading: "European Union – GDPR",
+        heading: "🇪🇺 European Union – GDPR",
         points: [
           "Protects personal data of EU citizens",
-          "Applies globally if EU residents' data is processed",
-          "Right to access, rectify, and erase personal data",
-          "Mandatory breach notification within 72 hours",
-          "Penalties up to €20 million or 4% of global turnover",
+          "Applies globally if EU data is processed",
+          "Right to access, rectify, and erase data",
+          "72-hour data breach notification rule",
+          "Heavy financial penalties for violations",
         ],
       },
       {
-        heading: "United States",
+        heading: "🇺🇸 United States",
         points: [
           "Computer Fraud and Abuse Act (CFAA)",
-          "Criminalizes unauthorized access to computer systems",
-          "California Consumer Privacy Act (CCPA)",
-          "Sector-based approach to data protection",
+          "Criminalizes unauthorized system access",
+          "Sector-based data protection laws",
         ],
       },
       {
-        heading: "United Kingdom",
+        heading: "🇬🇧 United Kingdom",
         points: [
           "Data Protection Act, 2018",
-          "UK GDPR principles after Brexit",
-          "Strong emphasis on transparency and accountability",
+          "UK GDPR after Brexit",
+          "Focus on transparency and accountability",
         ],
       },
       {
-        heading: "China",
+        heading: "🇨🇳 China",
         points: [
           "Cybersecurity Law of China",
-          "Strict data localization requirements",
-          "Strong government control over data flow",
+          "Strict data localization rules",
+          "Strong government control over data",
         ],
       },
       {
-        heading: "Australia",
+        heading: "🇦🇺 Australia",
         points: [
           "Privacy Act, 1988",
-          "Mandatory data breach notification scheme",
-          "Applies to both public and private sectors",
+          "Mandatory data breach notifications",
+          "Applies to public and private sectors",
         ],
       },
       {
-        heading: "International Cyber Law",
+        heading: "🌐 International Cyber Law",
         points: [
           "Budapest Convention on Cybercrime",
-          "Cross-border investigation cooperation",
-          "Electronic evidence sharing mechanisms",
+          "Supports cross-border investigations",
+          "Facilitates electronic evidence sharing",
         ],
       },
     ],

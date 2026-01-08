@@ -2,7 +2,7 @@ import { blockchainData } from "../data/blockchain";
 
 export default function Blockchain() {
   return (
-    <div className="px-10 py-14 max-w-6xl mx-auto text-white">
+    <div className="px-10 py-14 max-w-7xl mx-auto text-white">
       <h1 className="text-4xl font-bold mb-10">Blockchain</h1>
 
       {blockchainData.map((topic, index) => (

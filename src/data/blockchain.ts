@@ -21,24 +21,43 @@ export const blockchainData: BlockchainTopic[] = [
   {
     title: "What is Blockchain?",
     description:
-      "Blockchain is a decentralized, distributed, and immutable digital ledger used to record transactions securely without a central authority.",
+      "Blockchain is a decentralized and distributed digital ledger that securely records transactions across multiple computers without a central authority. Once data is added, it cannot be changed, ensuring security, transparency, and trust.",
     sections: [
       {
         heading: "Core Characteristics",
-        points: [
-          "Decentralized network with no single authority",
-          "Distributed ledger shared across nodes",
-          "Immutable records once data is confirmed",
-          "Cryptographically secured transactions",
-        ],
+points: [
+  "Decentralized network with no single authority",
+  "Distributed ledger shared across nodes",
+  "Immutable records once data is confirmed",
+  "Cryptographically secured transactions",
+  "Peer-to-peer data exchange without intermediaries",
+  "Transparent transaction history",
+  "Consensus mechanism validates transactions",
+  "Data stored in blocks linked by hashes",
+  "High resistance to data tampering",
+  "Improved trust among network participants",
+  "Fault-tolerant system architecture",
+  "Works without central server",
+  "Enhances security and data integrity",
+  "Supports smart contracts (programmable logic)",
+  "Suitable for financial and non-financial use cases",
+]
       },
       {
         heading: "Why Blockchain Matters",
-        points: [
-          "Removes intermediaries",
-          "Builds trust between untrusted parties",
-          "Improves transparency and security",
-        ],
+points: [
+  "Removes intermediaries",
+  "Builds trust between untrusted parties",
+  "Improves transparency and security",
+  "Reduces transaction costs",
+  "Speeds up transaction processing",
+  "Prevents data manipulation",
+  "Ensures data integrity",
+  "Provides permanent audit trail",
+  "Minimizes fraud and corruption",
+  "Enables secure peer-to-peer transactions",
+  "Improves system reliability",
+]
       },
     ],
   },
@@ -49,17 +68,21 @@ export const blockchainData: BlockchainTopic[] = [
   {
     title: "How Blockchain Works",
     description:
-      "Blockchain works by validating transactions through a network of nodes and grouping them into cryptographically linked blocks.",
+      "Blockchain works by validating transactions using a decentralized network of nodes. Verified transactions are grouped into blocks and linked together using cryptography, ensuring security and immutability.",
     sections: [
       {
         heading: "Transaction Flow",
-        points: [
-          "User initiates a transaction",
-          "Transaction is broadcast to the network",
-          "Nodes validate the transaction",
-          "Transactions are grouped into a block",
-          "Block is added to the blockchain",
-        ],
+points: [
+  "User initiates a transaction",
+  "Transaction is broadcast to the network",
+  "Nodes verify the transaction details",
+  "Consensus mechanism approves the transaction",
+  "Validated transactions are grouped into a block",
+  "Block is cryptographically linked to the previous block",
+  "Block is added to the blockchain",
+  "Ledger is updated across all nodes",
+  "Transaction becomes permanent and immutable",
+]
       },
     ],
   },
@@ -74,12 +97,12 @@ export const blockchainData: BlockchainTopic[] = [
     sections: [
       {
         heading: "Popular Mechanisms",
-        points: [
-          "Proof of Work (PoW)",
-          "Proof of Stake (PoS)",
-          "Delegated Proof of Stake (DPoS)",
-          "Proof of Authority (PoA)",
-        ],
+ points: [
+  "Proof of Work (PoW) – mining-based validation",
+  "Proof of Stake (PoS) – stake-based validation",
+  "Delegated Proof of Stake (DPoS) – validator voting system",
+  "Proof of Authority (PoA) – identity-based validation",
+]
       },
     ],
   },

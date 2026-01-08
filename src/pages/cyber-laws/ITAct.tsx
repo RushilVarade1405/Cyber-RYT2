@@ -19,6 +19,38 @@ export default function ITActs() {
       </h1>
 
       {/* ===============================
+    BADGES – IT ACTS
+=============================== */}
+<div className="flex flex-wrap gap-3 mb-20">
+
+  <span className="px-3 py-1 text-sm rounded-full
+    bg-red-600/20 text-red-400 border border-red-500/30">
+    Legal Compliance
+  </span>
+
+  <span className="px-3 py-1 text-sm rounded-full
+    bg-orange-600/20 text-orange-400 border border-orange-500/30">
+    Cyber Crime Law
+  </span>
+
+  <span className="px-3 py-1 text-sm rounded-full
+    bg-cyan-600/20 text-cyan-400 border border-cyan-500/30">
+    Digital Evidence
+  </span>
+
+  <span className="px-3 py-1 text-sm rounded-full
+    bg-purple-600/20 text-purple-400 border border-purple-500/30">
+    Data Protection
+  </span>
+
+  <span className="px-3 py-1 text-sm rounded-full
+    bg-yellow-600/20 text-yellow-400 border border-yellow-500/30">
+    Penalties & Fines
+  </span>
+
+</div>
+
+      {/* ===============================
           INTRODUCTION
       =============================== */}
       <p className="text-gray-300 leading-relaxed mb-10">
