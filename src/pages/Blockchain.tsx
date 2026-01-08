@@ -68,6 +68,7 @@ export default function Blockchain() {
                     Visit Platform →
                   </a>
                 </div>
+                
               ))}
             </div>
           )}

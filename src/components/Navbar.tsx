@@ -18,7 +18,7 @@ export default function Navbar() {
   const [lastScrollY, setLastScrollY] = useState(0);
 
   /* ===============================
-     Scroll Hide / Show Navbar (Optimized)
+     Scroll Hide / Show Navbar
   =============================== */
   useEffect(() => {
     let ticking = false;
@@ -59,26 +59,23 @@ export default function Navbar() {
         transition-transform duration-300
         ${hidden ? "-translate-y-full" : "translate-y-0"}
       `}
-      style={{
-        paddingTop: "env(safe-area-inset-top)",
-      }}
+      style={{ paddingTop: "env(safe-area-inset-top)" }}
     >
       <div className="max-w-[1920px] mx-auto px-4 sm:px-6 md:px-8 lg:px-12">
-        <div className="grid grid-cols-3 items-center h-16">
+        {/* NAVBAR ROW */}
+        <div className="flex items-center h-16">
 
-          {/* LOGO */}
-          <div className="flex items-center">
-            <NavLink
-              to="/"
-              className="text-cyan-400 font-extrabold text-lg tracking-widest
-              drop-shadow-[0_0_10px_rgba(34,211,238,0.9)]"
-            >
-              CYBER_WORLD
-            </NavLink>
-          </div>
+          {/* LOGO (LEFT) */}
+          <NavLink
+            to="/"
+            className="text-cyan-400 font-extrabold text-lg tracking-widest
+            drop-shadow-[0_0_10px_rgba(34,211,238,0.9)]"
+          >
+            CYBER_WORLD
+          </NavLink>
 
-          {/* DESKTOP LINKS */}
-          <div className="hidden md:flex justify-center gap-8 h-full">
+          {/* DESKTOP LINKS (CENTER) */}
+          <div className="hidden md:flex flex-1 justify-center gap-8 h-full">
             {links.map((link) => (
               <NavLink
                 key={link.path}
@@ -105,19 +102,27 @@ export default function Navbar() {
             ))}
           </div>
 
-          {/* MOBILE TOGGLE */}
-          <div className="flex justify-end md:hidden">
-            <button
-              aria-label="Toggle menu"
-              aria-expanded={menuOpen}
-              onClick={() => setMenuOpen(!menuOpen)}
-              className="w-10 h-10 flex flex-col justify-center items-center gap-1"
-            >
-              <span className={`h-[2px] w-6 bg-cyan-400 transition-transform ${menuOpen ? "rotate-45 translate-y-[6px]" : ""}`} />
-              <span className={`h-[2px] w-6 bg-cyan-400 transition-opacity ${menuOpen ? "opacity-0" : ""}`} />
-              <span className={`h-[2px] w-6 bg-cyan-400 transition-transform ${menuOpen ? "-rotate-45 -translate-y-[6px]" : ""}`} />
-            </button>
-          </div>
+          {/* HAMBURGER (RIGHT) */}
+          <button
+            aria-label="Toggle menu"
+            aria-expanded={menuOpen}
+            onClick={() => setMenuOpen(!menuOpen)}
+            className="ml-auto md:hidden w-10 h-10
+            flex flex-col justify-center items-center gap-1"
+          >
+            <span
+              className={`h-[2px] w-6 bg-cyan-400 transition-transform duration-300
+              ${menuOpen ? "rotate-45 translate-y-[6px]" : ""}`}
+            />
+            <span
+              className={`h-[2px] w-6 bg-cyan-400 transition-opacity duration-300
+              ${menuOpen ? "opacity-0" : ""}`}
+            />
+            <span
+              className={`h-[2px] w-6 bg-cyan-400 transition-transform duration-300
+              ${menuOpen ? "-rotate-45 -translate-y-[6px]" : ""}`}
+            />
+          </button>
         </div>
       </div>
 

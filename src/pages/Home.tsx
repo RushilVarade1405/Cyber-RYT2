@@ -1,5 +1,6 @@
 import { Link } from "react-router-dom";
 
+
 export default function Home() {
   return (
     <div className="px-10 py-16 max-w-7xl mx-auto text-white">
@@ -49,15 +50,18 @@ export default function Home() {
       {/* ===============================
           LEARNING SECTIONS
       =============================== */}
+      
       <div className="grid gap-8 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
         {[
           {
             title: "🐧 Linux",
             text: "Learn Linux fundamentals step by step. Understand essential commands, file systems, permissions, and how Linux is used in real-world environments.",
+            path: "/linux",
           },
           {
             title: "🛠️ Cyber Tools",
             text: "Get hands-on knowledge of popular cybersecurity tools such as Nmap, Burp Suite, Metasploit, and Wireshark, explained in an easy-to-follow way.",
+            path: "/tools",
           },
           {
             title: "⚖️ Cyber Laws",

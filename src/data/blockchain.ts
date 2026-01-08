@@ -141,9 +141,9 @@ points: [
         link: "https://www.hyperledger.org/use/fabric",
       },
       {
-        name: "IPFS",
+        name: "Binance Smart Chain",
         description: "Decentralized storage for Web3",
-        link: "https://ipfs.io",
+        link: "https://www.bnbchain.org/en/bnb-smart-chain",
       },
     ],
   },
@@ -154,16 +154,19 @@ points: [
   {
     title: "Blockchain Security",
     description:
-      "Blockchain uses cryptography and decentralization to provide strong security guarantees.",
+      "Blockchain uses cryptography to secure transactions through hashing and digital signatures, ensuring data integrity and authentication. Its decentralized structure distributes data across many nodes, removing single points of failure and making tampering extremely difficult.",
     sections: [
       {
         heading: "Security Techniques",
-        points: [
-          "Hashing algorithms",
-          "Public-key cryptography",
-          "Digital signatures",
-          "Decentralized validation",
-        ],
+points: [
+  "Hashing algorithms – Detect data tampering using cryptographic hashes",
+  "Public-key cryptography – Securely identify users with public and private keys",
+  "Digital signatures – Verify transaction authenticity and integrity",
+  "Decentralized validation – Multiple nodes verify transactions, not a central authority",
+  "Immutability of data – Once recorded, data cannot be altered or deleted",
+  "Consensus mechanisms – Network agreement ensures only valid transactions are added",
+],
+
       },
     ],
   },
@@ -174,17 +177,19 @@ points: [
   {
     title: "Future of Blockchain",
     description:
-      "Blockchain is evolving rapidly and is expected to transform digital systems.",
+      "Blockchain is evolving rapidly with continuous advancements in scalability, security, and interoperability. It is expected to transform digital systems by enabling transparent, secure, and decentralized solutions across finance, governance, supply chains, healthcare, and many other sectors.",
     sections: [
       {
         heading: "Emerging Trends",
-        points: [
-          "Web3 and decentralized internet",
-          "Blockchain interoperability",
-          "Central Bank Digital Currencies (CBDCs)",
-          "Enterprise blockchain adoption",
-        ],
+points: [
+  "Web3 and decentralized internet – Enables users to own data and interact without relying on centralized platforms",
+  "Blockchain interoperability – Allows different blockchains to communicate and share data seamlessly",
+  "Central Bank Digital Currencies (CBDCs) – Government-backed digital currencies using blockchain for secure transactions",
+  "Enterprise blockchain adoption – Businesses use blockchain to improve transparency, security, and efficiency",
+  "Smart contract automation – Self-executing contracts reduce intermediaries and operational costs",
+  "Tokenization of assets – Real-world assets like land and stocks can be digitally represented on blockchain",
+],
       },
     ],
-  },
+  },  
 ];
