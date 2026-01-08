@@ -1,9 +1,39 @@
 import { blockchainData } from "../data/blockchain";
+import { Link } from "react-router-dom";
 
 export default function Blockchain() {
   return (
     <div className="px-10 py-14 max-w-7xl mx-auto text-white">
       <h1 className="text-4xl font-bold mb-10">Blockchain</h1>
+
+{/* ===============================
+    BLOCKCHAIN LEARNING PAGES
+=============================== */}
+<div className="flex flex-wrap gap-4 mb-14">
+  <Link
+    to="/blockchain/how-it-works"
+    className="px-5 py-2 rounded-lg border border-cyan-400
+    text-cyan-400 hover:bg-cyan-400 hover:text-black transition"
+  >
+    How It Works
+  </Link>
+
+  <Link
+    to="/blockchain/security"
+    className="px-5 py-2 rounded-lg border border-cyan-400
+    text-cyan-400 hover:bg-cyan-400 hover:text-black transition"
+  >
+    Security
+  </Link>
+
+  <Link
+    to="/blockchain/smart-contracts"
+    className="px-5 py-2 rounded-lg border border-cyan-400
+    text-cyan-400 hover:bg-cyan-400 hover:text-black transition"
+  >
+    Smart Contracts
+  </Link>
+</div>
 
       {blockchainData.map((topic, index) => (
         <div key={index} className="mb-14">

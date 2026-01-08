@@ -21,8 +21,8 @@ export const blockchainData: BlockchainTopic[] = [
   {
     title: "What is Blockchain?",
     description:
-      "Blockchain is a decentralized and distributed digital ledger that securely records transactions across multiple computers without a central authority. Once data is added, it cannot be changed, ensuring security, transparency, and trust.",
-    sections: [
+      "Blockchain is a decentralized and distributed digital ledger technology that records transactions across a network of multiple computers (called nodes) instead of relying on a single central authority. Each participant in the network maintains a copy of the ledger, which ensures that all transaction records are consistent and transparent across the system. Once a transaction is verified through a consensus mechanism, it is grouped into a block and permanently added to the blockchain. These blocks are linked together using cryptographic hashes, forming a secure chain. Because each block depends on the previous one, altering any stored data is extremely difficult, making the system immutable. Blockchain uses advanced cryptographic techniques to secure transactions, protect data integrity, and prevent unauthorized access. The decentralized nature eliminates single points of failure and reduces the risk of fraud or manipulation. As a result, blockchain creates a high level of trust among participants, even in environments where they do not know or trust each other. Due to its transparency, security, and reliability, blockchain is widely used in financial applications like cryptocurrencies and digital payments, as well as non-financial sectors such as supply chain management, healthcare, governance, and digital identity systems.",
+      sections: [
       {
         heading: "Core Characteristics",
 points: [
@@ -39,8 +39,6 @@ points: [
   "Fault-tolerant system architecture",
   "Works without central server",
   "Enhances security and data integrity",
-  "Supports smart contracts (programmable logic)",
-  "Suitable for financial and non-financial use cases",
 ]
       },
       {
@@ -68,20 +66,17 @@ points: [
   {
     title: "How Blockchain Works",
     description:
-      "Blockchain works by validating transactions using a decentralized network of nodes. Verified transactions are grouped into blocks and linked together using cryptography, ensuring security and immutability.",
+      "Blockchain works by validating transactions using a decentralized network of nodes. Verified transactions are grouped into blocks and linked together using cryptography, ensuring security and immutability. For More information refer above mentioned page which covers detailed inforamtion of How Blockchain works",
     sections: [
       {
         heading: "Transaction Flow",
-points: [
-  "User initiates a transaction",
-  "Transaction is broadcast to the network",
-  "Nodes verify the transaction details",
-  "Consensus mechanism approves the transaction",
-  "Validated transactions are grouped into a block",
-  "Block is cryptographically linked to the previous block",
-  "Block is added to the blockchain",
-  "Ledger is updated across all nodes",
-  "Transaction becomes permanent and immutable",
+points:[
+  "Transaction initiation",
+  "Verification by nodes",
+  "Consensus approval",
+  "Block creation",
+  "Block added to blockchain",
+  "Immutable ledger update",
 ]
       },
     ],
@@ -93,7 +88,7 @@ points: [
   {
     title: "Consensus Mechanisms",
     description:
-      "Consensus mechanisms ensure agreement among nodes on transaction validity.",
+      "Consensus mechanisms ensure agreement among nodes on the validity of transactions by allowing the decentralized network to collectively verify and approve data before it is added to the blockchain. They define the rules and processes through which nodes reach a common decision, even in the absence of a central authority. By using mechanisms such as Proof of Work or Proof of Stake, consensus prevents fraudulent transactions, maintains network integrity, and ensures that all copies of the distributed ledger remain consistent and trustworthy.",
     sections: [
       {
         heading: "Popular Mechanisms",
@@ -113,7 +108,7 @@ points: [
   {
     title: "Blockchain Platforms",
     description:
-      "Popular blockchain platforms used for building decentralized applications, enterprise solutions, and Web3 systems.",
+      "Popular blockchain platforms are widely used for building decentralized applications (dApps), enterprise-level solutions, and Web3 systems. These platforms provide core features such as smart contracts, decentralized consensus, cryptographic security, and interoperability, enabling developers to create secure, transparent, and trustless applications. They support a broad range of use cases, including cryptocurrencies, decentralized finance (DeFi), supply chain management, digital identity, gaming, and non-fungible tokens (NFTs). With strong developer communities and evolving ecosystems, these blockchain platforms play a crucial role in driving innovation across both financial and non-financial sectors.",
     platforms: [
       {
         name: "Ethereum",
@@ -154,7 +149,7 @@ points: [
   {
     title: "Blockchain Security",
     description:
-      "Blockchain uses cryptography to secure transactions through hashing and digital signatures, ensuring data integrity and authentication. Its decentralized structure distributes data across many nodes, removing single points of failure and making tampering extremely difficult.",
+      "Blockchain uses cryptography to secure transactions through techniques such as hashing and digital signatures, which ensure data integrity, confidentiality, and authentication. Hashing converts transaction data into a fixed-length cryptographic hash, making it easy to detect any alteration in the data. Digital signatures verify the identity of the sender and confirm that the transaction has not been modified during transmission. The decentralized structure of blockchain distributes data across a large number of nodes in the network, rather than storing it on a single central server. Each node maintains a copy of the ledger, ensuring consistency and transparency across the system. This distribution removes single points of failure, increases fault tolerance, and makes unauthorized tampering extremely difficult. As a result, blockchain provides a highly secure, reliable, and trust-based framework for recording and managing digital transactions.",
     sections: [
       {
         heading: "Security Techniques",
@@ -177,7 +172,7 @@ points: [
   {
     title: "Future of Blockchain",
     description:
-      "Blockchain is evolving rapidly with continuous advancements in scalability, security, and interoperability. It is expected to transform digital systems by enabling transparent, secure, and decentralized solutions across finance, governance, supply chains, healthcare, and many other sectors.",
+      "Blockchain is evolving rapidly with continuous advancements in scalability, security, and interoperability, allowing networks to handle more transactions efficiently while maintaining strong protection against threats. These improvements enable different blockchain platforms to communicate and work together seamlessly, expanding their real-world usability. As a result, blockchain is expected to transform digital systems by providing transparent, secure, and decentralized solutions across a wide range of sectors. In finance, it enables faster and more secure transactions; in governance, it promotes transparency and trust; in supply chains, it improves traceability and efficiency; and in healthcare, it ensures secure management of sensitive data. With its growing adoption, blockchain has the potential to reshape many industries and redefine how digital trust is established.",
     sections: [
       {
         heading: "Emerging Trends",

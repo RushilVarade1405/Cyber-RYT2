@@ -1,10 +1,7 @@
 export default function BlockchainHome() {
   return (
-    <div className="px-10 py-10 max-w-6xl mx-auto text-white">
-      <h1 className="text-4xl font-bold mb-4">Blockchain Fundamentals</h1>
-      <p className="text-gray-300">
-        Understand how decentralized systems work.
-      </p>
+    <div className="text-white p-10">
+      <h1 className="text-4xl font-bold">Blockchain Home</h1>
     </div>
   );
 }
