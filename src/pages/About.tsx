@@ -1,37 +1,44 @@
 export default function About() {
   return (
-    <div className="min-h-screen  text-white px-8 py-24">
-<div className="px-10 py-16 max-w-7xl mx-auto text-white">
+    <div className="min-h-screen text-white px-8 py-24">
+      <div className="px-10 py-16 max-w-7xl mx-auto">
 
-        {/* Title */}
+        {/* ===============================
+            TITLE
+        =============================== */}
         <h1 className="text-4xl font-bold mb-6">
-          About Cyber World
+          About <span className="text-cyan-400">Cyber World</span>
         </h1>
 
-        {/* Intro */}
+        {/* ===============================
+            INTRO
+        =============================== */}
         <p className="text-gray-300 leading-relaxed mb-6">
-          <span className="text-cyan-400 font-semibold">Cyber World</span> is a
-          learning-focused platform created to help students, beginners, and
+          <span className="text-cyan-400 font-semibold">Cyber World</span> is an
+          educational platform designed to help students, beginners, and
           cybersecurity enthusiasts understand modern digital security concepts
-          in a clear and structured way.
+          in a structured, practical, and easy-to-follow manner.
         </p>
 
-        <p className="text-gray-300 leading-relaxed mb-10">
-          The goal is to bridge the gap between theory and practice by combining
-          foundational knowledge with real-world tools, platforms, and hands-on
-          learning paths commonly used in cybersecurity.
+        <p className="text-gray-300 leading-relaxed mb-12">
+          The platform bridges the gap between <span className="text-cyan-400">theory</span> and
+          <span className="text-cyan-400"> real-world practice</span> by combining
+          foundational knowledge with industry-relevant tools, platforms, and
+          hands-on learning paths used in cybersecurity and emerging technologies.
         </p>
 
-        {/* Purpose & Vision */}
-        <div className="grid gap-6 md:grid-cols-2 mb-12">
+        {/* ===============================
+            PURPOSE & VISION
+        =============================== */}
+        <div className="grid gap-6 md:grid-cols-2 mb-14">
           <div className="p-6 rounded-xl border border-cyan-400/20 bg-gradient-to-br from-[#0b1224] to-[#0f1a33]">
             <h3 className="text-cyan-400 text-lg font-semibold mb-2">
               🎯 Purpose
             </h3>
             <p className="text-gray-300">
-              To simplify complex cybersecurity topics and present them in a
-              practical, beginner-friendly format that encourages hands-on
-              learning.
+              To simplify complex cybersecurity concepts and present them in a
+              beginner-friendly, practical format that encourages hands-on
+              exploration and learning.
             </p>
           </div>
 
@@ -40,55 +47,68 @@ export default function About() {
               🌐 Vision
             </h3>
             <p className="text-gray-300">
-              To grow into a reliable learning space where aspiring security
-              professionals can build strong fundamentals before moving toward
-              advanced skills.
+              To grow into a trusted learning hub where aspiring security
+              professionals can build strong fundamentals before advancing to
+              specialized and professional-level skills.
             </p>
           </div>
         </div>
 
-        {/* What You Learn */}
-        <div className="p-6 rounded-xl border border-cyan-400/20 bg-gradient-to-br from-[#0b1224] to-[#0f1a33] mb-12">
+        {/* ===============================
+            WHAT YOU LEARN
+        =============================== */}
+        <div className="p-6 rounded-xl border border-cyan-400/20 bg-gradient-to-br from-[#0b1224] to-[#0f1a33] mb-16">
           <h3 className="text-cyan-400 text-lg font-semibold mb-3">
-            🚀 What You Learn
+            🚀 What You’ll Learn
           </h3>
           <ul className="list-disc list-inside text-gray-300 space-y-1">
-            <li>Linux commands and system usage</li>
-            <li>Cybersecurity tools and attack/defense basics</li>
-            <li>Cryptography fundamentals</li>
-            <li>Blockchain and Web3 concepts</li>
-            <li>Cyber laws, ethics, and compliance</li>
-            <li>Hands-on practice platforms and labs</li>
+            <li>Linux fundamentals and command-line usage</li>
+            <li>Cybersecurity tools and attack & defense basics</li>
+            <li>Cryptography concepts and secure communication</li>
+            <li>Blockchain, Web3, and decentralized systems</li>
+            <li>Cyber laws, ethics, and digital compliance</li>
+            <li>Hands-on labs, platforms, and real-world scenarios</li>
           </ul>
         </div>
 
-        {/* Creator / Team */}
+        {/* ===============================
+            FOUNDER / CREATOR
+        =============================== */}
         <div className="mb-16">
           <h2 className="text-2xl font-semibold text-cyan-400 mb-4">
-            👨‍💻 Creator & Team
+            👨‍💻 Founder & Creator
           </h2>
 
           <div className="p-6 rounded-xl border border-cyan-400/20 bg-gradient-to-br from-[#0b1224] to-[#0f1a33]">
             <p className="text-gray-300 leading-relaxed mb-4">
-              Cyber World is built and maintained by learners with a genuine
-              interest in cybersecurity, ethical hacking, and digital
-              technologies.
+              Hi, I’m <span className="text-cyan-400 font-semibold">RYTNIX OP</span>,
+              a cybersecurity learner and technology enthusiast with a strong
+              interest in ethical hacking, Linux, blockchain, and digital security.
             </p>
 
             <p className="text-gray-300 leading-relaxed mb-4">
-              The focus is not on overwhelming content, but on presenting
-              information in a way that is simple, practical, and useful —
-              especially for students who are just starting their journey.
+              Cyber World was created as a personal learning project that evolved
+              into a structured platform for sharing knowledge in a simple,
+              practical, and beginner-focused way — especially for students who
+              are just starting their cybersecurity journey.
             </p>
 
             <p className="text-gray-300 leading-relaxed">
-              Cyber World is an evolving project and will continue to expand as
-              new tools, platforms, and security concepts are explored.
+              This project is continuously evolving as I explore new tools,
+              security techniques, and emerging technologies, with the goal of
+              learning deeply and sharing valuable insights along the way.
             </p>
           </div>
         </div>
 
-       
+        {/* ===============================
+            CLOSING NOTE
+        =============================== */}
+        <div className="text-center text-gray-400 text-sm">
+          <p>
+            Learn. Practice. Secure. <span className="text-cyan-400">Cyber World</span>
+          </p>
+        </div>
 
       </div>
     </div>

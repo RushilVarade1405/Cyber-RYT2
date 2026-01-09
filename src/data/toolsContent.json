@@ -1,0 +1,290 @@
+{
+  "nmap": {
+    "title": "Nmap (Network Mapper)",
+    "category": "Network Scanning",
+    "color": "emerald",
+    "description": "Nmap is a powerful network discovery and security auditing tool used to identify live hosts, open ports, running services, operating systems, and potential vulnerabilities.",
+    "features": [
+      "Host discovery",
+      "TCP and UDP port scanning",
+      "Service and version detection",
+      "OS fingerprinting",
+      "Nmap Scripting Engine (NSE)"
+    ],
+    "commands": [
+      { "cmd": "nmap 192.168.1.1", "desc": "Basic scan" },
+      { "cmd": "nmap -sS target", "desc": "Stealth SYN scan" },
+      { "cmd": "nmap -sV target", "desc": "Service version detection" },
+      { "cmd": "nmap -A target", "desc": "Aggressive scan" }
+    ]
+  },
+
+  "wireshark": {
+    "title": "Wireshark (Packet Analyzer)",
+    "category": "Packet Analysis",
+    "color": "sky",
+    "description": "Wireshark captures and analyzes network packets in real time, allowing deep inspection of protocols and traffic behavior.",
+    "features": [
+      "Live packet capture",
+      "Deep protocol inspection",
+      "Advanced display filters",
+      "Traffic statistics and graphs"
+    ],
+    "commands": [
+      { "cmd": "http", "desc": "Show HTTP traffic" },
+      { "cmd": "dns", "desc": "Show DNS packets" },
+      { "cmd": "tcp.port == 80", "desc": "Filter TCP port 80" }
+    ]
+  },
+
+  "tcpdump": {
+    "title": "Tcpdump (Packet Capture Tool)",
+    "category": "Packet Capture",
+    "color": "teal",
+    "description": "Tcpdump is a lightweight command-line packet capture tool widely used on servers and headless systems.",
+    "features": [
+      "Low resource usage",
+      "Capture filters",
+      "PCAP file export"
+    ],
+    "commands": [
+      { "cmd": "tcpdump -i eth0", "desc": "Capture on interface" },
+      { "cmd": "tcpdump port 80", "desc": "Capture HTTP traffic" },
+      { "cmd": "tcpdump -w capture.pcap", "desc": "Save capture" }
+    ]
+  },
+
+  "netcat": {
+    "title": "Netcat (Networking Swiss Army Knife)",
+    "category": "Networking",
+    "color": "lime",
+    "description": "Netcat is a versatile networking utility for reading and writing data over TCP and UDP connections.",
+    "features": [
+      "Port listening",
+      "Data transfer",
+      "Service debugging",
+      "Port scanning"
+    ],
+    "commands": [
+      { "cmd": "nc -lvp 4444", "desc": "Listen on port" },
+      { "cmd": "nc target 80", "desc": "Connect to server" },
+      { "cmd": "nc -zv target 1-1000", "desc": "Port scan" }
+    ]
+  },
+
+  "bettercap": {
+    "title": "Bettercap (MITM Attack Framework)",
+    "category": "MITM Attacks",
+    "color": "purple",
+    "description": "Bettercap is a powerful framework for performing man-in-the-middle attacks, network sniffing, and traffic manipulation.",
+    "features": [
+      "ARP spoofing",
+      "Packet sniffing",
+      "DNS spoofing",
+      "HTTPS stripping",
+      "Modular attack framework"
+    ],
+    "commands": [
+      { "cmd": "bettercap -iface eth0", "desc": "Start Bettercap" },
+      { "cmd": "net.probe on", "desc": "Discover network hosts" },
+      { "cmd": "arp.spoof on", "desc": "Enable ARP spoofing" }
+    ]
+  },
+
+  "burpsuite": {
+    "title": "Burp Suite (Web Security Tool)",
+    "category": "Web Security",
+    "color": "orange",
+    "description": "Burp Suite is an integrated platform for testing web application security by intercepting and modifying HTTP/HTTPS traffic.",
+    "features": [
+      "Intercepting proxy",
+      "Automated vulnerability scanning",
+      "Request manipulation",
+      "Fuzzing and brute force testing"
+    ],
+    "commands": [
+      { "cmd": "Configure browser proxy", "desc": "Send traffic through Burp" },
+      { "cmd": "Use Repeater", "desc": "Manually replay requests" }
+    ]
+  },
+
+  "owaspzap": {
+    "title": "OWASP ZAP (Web Application Scanner)",
+    "category": "Web Security",
+    "color": "amber",
+    "description": "OWASP ZAP is an open-source web application security scanner designed for beginners and professionals.",
+    "features": [
+      "Passive scanning",
+      "Active scanning",
+      "Intercepting proxy",
+      "Automated reports"
+    ],
+    "commands": [
+      { "cmd": "Launch ZAP", "desc": "Start scanning session" },
+      { "cmd": "Run Active Scan", "desc": "Test for vulnerabilities" }
+    ]
+  },
+
+  "sqlmap": {
+    "title": "SQLmap (SQL Injection Tool)",
+    "category": "SQL Injection",
+    "color": "rose",
+    "description": "SQLmap automates the detection and exploitation of SQL injection vulnerabilities in web applications.",
+    "features": [
+      "SQL injection detection",
+      "Database enumeration",
+      "Data dumping",
+      "Multiple injection techniques"
+    ],
+    "commands": [
+      { "cmd": "sqlmap -u \"URL\"", "desc": "Test for SQL injection" },
+      { "cmd": "sqlmap -u URL --dbs", "desc": "List databases" },
+      { "cmd": "sqlmap -u URL --dump", "desc": "Dump database data" }
+    ]
+  },
+
+  "hydra": {
+    "title": "Hydra (Online Brute Force Tool)",
+    "category": "Brute Force",
+    "color": "fuchsia",
+    "description": "Hydra is a fast and flexible tool for performing online password brute-force attacks against network services.",
+    "features": [
+      "Multi-protocol support",
+      "Parallel attacks",
+      "Fast login testing"
+    ],
+    "commands": [
+      { "cmd": "hydra -l admin -P passwords.txt ssh://target", "desc": "SSH brute force" },
+      { "cmd": "hydra -L users.txt -P passwords.txt ftp://target", "desc": "FTP brute force" }
+    ]
+  },
+
+  "hashcat": {
+    "title": "Hashcat (Advanced Hash Cracking Tool)",
+    "category": "Hash Cracking",
+    "color": "cyan",
+    "description": "Hashcat is a high-performance password recovery tool using CPU and GPU acceleration.",
+    "features": [
+      "Dictionary attacks",
+      "Rule-based attacks",
+      "Brute-force attacks",
+      "GPU acceleration"
+    ],
+    "commands": [
+      { "cmd": "hashcat -m 0 hashes.txt wordlist.txt", "desc": "Crack MD5 hashes" },
+      { "cmd": "hashcat -m 1000 hashes.txt wordlist.txt", "desc": "Crack NTLM hashes" }
+    ]
+  },
+
+  "johntheripper": {
+    "title": "John the Ripper (Password Cracking Tool)",
+    "category": "Password Cracking",
+    "color": "sky",
+    "description": "John the Ripper is a popular password auditing and recovery tool used to test password strength.",
+    "features": [
+      "Dictionary attacks",
+      "Rule-based attacks",
+      "Brute-force cracking",
+      "Wide hash format support"
+    ],
+    "commands": [
+      { "cmd": "john hashes.txt", "desc": "Start cracking" },
+      { "cmd": "john --show hashes.txt", "desc": "Show cracked passwords" }
+    ]
+  },
+
+  "aircrackng": {
+    "title": "Aircrack-ng (Wireless Security Tool)",
+    "category": "Wireless Security",
+    "color": "green",
+    "description": "Aircrack-ng is a suite of tools for auditing wireless network security.",
+    "features": [
+      "Wireless packet capture",
+      "WEP/WPA cracking",
+      "Handshake analysis"
+    ],
+    "commands": [
+      { "cmd": "airmon-ng start wlan0", "desc": "Enable monitor mode" },
+      { "cmd": "airodump-ng wlan0mon", "desc": "Capture packets" },
+      { "cmd": "aircrack-ng capture.cap -w wordlist.txt", "desc": "Crack Wi-Fi key" }
+    ]
+  },
+
+  "metasploit": {
+    "title": "Metasploit (Exploitation Framework)",
+    "category": "Exploitation",
+    "color": "red",
+    "description": "Metasploit is a powerful framework for developing, testing, and executing exploits.",
+    "features": [
+      "Exploit modules",
+      "Payloads",
+      "Post-exploitation tools",
+      "Auxiliary scanners"
+    ],
+    "commands": [
+      { "cmd": "msfconsole", "desc": "Launch Metasploit" },
+      { "cmd": "search exploit", "desc": "Search exploits" },
+      { "cmd": "use exploit/path", "desc": "Use exploit module" }
+    ]
+  },
+
+  "maltego": {
+    "title": "Maltego (OSINT & Link Analysis Tool)",
+    "category": "OSINT",
+    "color": "violet",
+    "description": "Maltego is an intelligence and forensics tool used for OSINT investigations and link analysis.",
+    "features": [
+      "Entity mapping",
+      "Relationship visualization",
+      "OSINT data transforms"
+    ],
+    "commands": [
+      { "cmd": "Run transforms", "desc": "Gather intelligence" }
+    ]
+  },
+
+  "sherlock": {
+    "title": "Sherlock (Username OSINT Tool)",
+    "category": "OSINT",
+    "color": "pink",
+    "description": "Sherlock searches for usernames across multiple social media platforms.",
+    "features": [
+      "Fast username search",
+      "Multiple platform support"
+    ],
+    "commands": [
+      { "cmd": "sherlock username", "desc": "Search username" }
+    ]
+  },
+
+  "shodan": {
+    "title": "Shodan (Internet Exposure Search Engine)",
+    "category": "OSINT",
+    "color": "orange",
+    "description": "Shodan is a search engine for internet-connected devices and services.",
+    "features": [
+      "Device discovery",
+      "Service fingerprinting",
+      "Exposure analysis"
+    ],
+    "commands": [
+      { "cmd": "port:22", "desc": "Find SSH servers" },
+      { "cmd": "country:IN", "desc": "Filter by country" }
+    ]
+  },
+
+  "theharvester": {
+    "title": "theHarvester (OSINT Recon Tool)",
+    "category": "OSINT",
+    "color": "slate",
+    "description": "theHarvester collects emails, subdomains, and public information related to a domain.",
+    "features": [
+      "Email harvesting",
+      "Subdomain discovery",
+      "Search engine scraping"
+    ],
+    "commands": [
+      { "cmd": "theHarvester -d example.com -b google", "desc": "Collect OSINT data" }
+    ]
+  }
+}

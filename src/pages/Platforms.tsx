@@ -1,23 +1,88 @@
-import { platforms } from "../data/platforms";
-
 function getMainCategory(category: string) {
-  if (category.toLowerCase().includes("crypto")) return "Crypto";
-  if (category.toLowerCase().includes("blockchain")) return "Blockchain";
+  if (category.toLowerCase().includes("ctf")) return "CTF";
+  if (category.toLowerCase().includes("web")) return "Web Security";
   if (category.toLowerCase().includes("linux")) return "Linux";
-  if (category.toLowerCase().includes("cyber")) return "Cyber";
-  return "All";
+  if (category.toLowerCase().includes("pentest")) return "Pentesting";
+  return "Cyber";
 }
+
+const platforms = [
+  {
+    name: "TryHackMe",
+    category: "Cybersecurity & Pentesting",
+    difficulty: "Beginner → Advanced",
+    description:
+      "An interactive learning platform with guided labs covering cybersecurity, networking, Linux, and ethical hacking.",
+    link: "https://tryhackme.com",
+  },
+  {
+    name: "Hack The Box",
+    category: "Advanced Pentesting",
+    difficulty: "Intermediate → Expert",
+    description:
+      "A hands-on platform focused on real-world penetration testing labs, machines, and challenges.",
+    link: "https://www.hackthebox.com",
+  },
+  {
+    name: "OWASP Juice Shop",
+    category: "Web Application Security",
+    difficulty: "Beginner → Advanced",
+    description:
+      "An intentionally vulnerable web application designed to teach web security flaws from the OWASP Top 10.",
+    link: "https://owasp.org/www-project-juice-shop/",
+  },
+  {
+    name: "OverTheWire",
+    category: "Linux & Security Wargames",
+    difficulty: "Beginner → Intermediate",
+    description:
+      "A collection of Linux-based wargames that teach security concepts using command-line challenges.",
+    link: "https://overthewire.org",
+  },
+  {
+    name: "PicoCTF",
+    category: "CTF & Cybersecurity",
+    difficulty: "Beginner → Intermediate",
+    description:
+      "A beginner-friendly Capture The Flag platform focused on learning cybersecurity concepts step by step.",
+    link: "https://picoctf.org",
+  },
+  {
+    name: "VulnHub",
+    category: "Vulnerable Machines",
+    difficulty: "Intermediate → Advanced",
+    description:
+      "A resource for vulnerable virtual machines designed for practicing penetration testing locally.",
+    link: "https://www.vulnhub.com",
+  },
+  {
+    name: "CTFlearn",
+    category: "CTF Practice",
+    difficulty: "Beginner → Intermediate",
+    description:
+      "A platform offering beginner-friendly CTF challenges across cryptography, web, reversing, and forensics.",
+    link: "https://ctflearn.com",
+  },
+];
 
 export default function Platforms() {
   return (
     <div className="px-10 py-10 max-w-7xl mx-auto text-white">
-      <h1 className="text-4xl font-bold mb-4">Learning Platforms</h1>
+      {/* ===============================
+          TITLE
+      =============================== */}
+      <h1 className="text-4xl font-bold mb-4">
+        Learning Platforms
+      </h1>
 
-      <p className="text-cyan-300 mb-8">
-        Hands-on platforms offering labs for cybersecurity, cryptography,
-        blockchain, Linux, and penetration testing.
+      <p className="text-cyan-300 mb-10">
+        Curated hands-on platforms for learning cybersecurity, Linux,
+        penetration testing, and Capture The Flag (CTF) challenges.
       </p>
 
+      {/* ===============================
+          PLATFORM GRID
+      =============================== */}
       <div className="grid gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
         {platforms.map((p, index) => {
           const mainCategory = getMainCategory(p.category);
@@ -37,7 +102,6 @@ export default function Platforms() {
 
               {/* Category Badges */}
               <div className="flex flex-wrap gap-2 mb-3">
-                {/* Main Category */}
                 <span
                   className="text-xs px-3 py-1 rounded-full
                   bg-emerald-500/10 text-emerald-300
@@ -46,7 +110,6 @@ export default function Platforms() {
                   {mainCategory}
                 </span>
 
-                {/* Detailed Category */}
                 <span
                   className="text-xs px-3 py-1 rounded-full
                   bg-cyan-500/10 text-cyan-300
@@ -55,7 +118,6 @@ export default function Platforms() {
                   {p.category}
                 </span>
 
-                {/* Difficulty */}
                 <span
                   className="text-xs px-3 py-1 rounded-full
                   bg-purple-500/10 text-purple-300
@@ -70,7 +132,7 @@ export default function Platforms() {
                 {p.description}
               </p>
 
-              {/* Official Link */}
+              {/* Link */}
               <a
                 href={p.link}
                 target="_blank"

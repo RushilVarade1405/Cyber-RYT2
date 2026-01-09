@@ -26,24 +26,9 @@ import LinuxFiles from "./pages/linux/LinuxFiles";
 import LinuxNetworking from "./pages/linux/LinuxNetworking";
 import LinuxBash from "./pages/linux/LinuxBash";
 
-// Tools Pages
+// 🔥 TOOLS (DYNAMIC)
 import ToolsHome from "./pages/tools/ToolsHome";
-import Nmap from "./pages/tools/Nmap";
-import TheHarvester from "./pages/tools/theHarvester";
-import Wireshark from "./pages/tools/Wireshark";
-import Tcpdump from "./pages/tools/Tcpdump";
-import Netcat from "./pages/tools/Netcat";
-import Bettercap from "./pages/tools/Bettercap";
-import BurpSuite from "./pages/tools/BurpSuite";
-import OWASPZAP from "./pages/tools/OWASPZAP";
-import SQLmap from "./pages/tools/SQLmap";
-import Hydra from "./pages/tools/Hydra";
-import JohnTheRipper from "./pages/tools/JohnTheRipper";
-import Hashcat from "./pages/tools/Hashcat";
-import AircrackNg from "./pages/tools/AircrackNg";
-import Shodan from "./pages/tools/Shodan";
-import Maltego from "./pages/tools/Maltego";
-import Sherlock from "./pages/tools/Sherlock";
+import ToolPage from "./pages/tools/ToolPage";
 
 // Cryptography Sub-Pages
 import CryptoHome from "./pages/cryptography/CryptoHome";
@@ -83,6 +68,9 @@ function AnimatedRoutes() {
           <Route path="/platforms" element={<Platforms />} />
           <Route path="/about" element={<About />} />
 
+          {/* ================= TOOLS (DYNAMIC) ================= */}
+          <Route path="/tools/:toolId" element={<ToolPage />} />
+
           {/* ================= CYBER LAWS ================= */}
           <Route path="/cyber-laws/home" element={<LawsHome />} />
           <Route path="/cyber-laws/cyber-crimes" element={<CyberCrimes />} />
@@ -95,24 +83,6 @@ function AnimatedRoutes() {
           <Route path="/linux/files" element={<LinuxFiles />} />
           <Route path="/linux/networking" element={<LinuxNetworking />} />
           <Route path="/linux/bash" element={<LinuxBash />} />
-
-          {/* ================= TOOLS ================= */}
-          <Route path="/tools/nmap" element={<Nmap />} />
-          <Route path="/tools/theharvester" element={<TheHarvester />} />
-          <Route path="/tools/wireshark" element={<Wireshark />} />
-          <Route path="/tools/tcpdump" element={<Tcpdump />} />
-          <Route path="/tools/netcat" element={<Netcat />} />
-          <Route path="/tools/bettercap" element={<Bettercap />} />
-          <Route path="/tools/burp-suite" element={<BurpSuite />} />
-          <Route path="/tools/owasp-zap" element={<OWASPZAP />} />
-          <Route path="/tools/sqlmap" element={<SQLmap />} />
-          <Route path="/tools/hydra" element={<Hydra />} />
-          <Route path="/tools/john-the-ripper" element={<JohnTheRipper />} />
-          <Route path="/tools/hashcat" element={<Hashcat />} />
-          <Route path="/tools/aircrack-ng" element={<AircrackNg />} />
-          <Route path="/tools/shodan" element={<Shodan />} />
-          <Route path="/tools/maltego" element={<Maltego />} />
-          <Route path="/tools/sherlock" element={<Sherlock />} />
 
           {/* ================= CRYPTOGRAPHY ================= */}
           <Route path="/cryptography/home" element={<CryptoHome />} />

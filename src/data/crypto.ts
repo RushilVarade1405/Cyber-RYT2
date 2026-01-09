@@ -14,24 +14,25 @@ export const cryptoData: CryptographyTopic[] = [
   {
     title: "What is Cryptography?",
     description:
-      "Cryptography is the practice of securing information by converting it into an unreadable format using mathematical algorithms.",
+      "Cryptography is the science of securing information by transforming readable data into an unreadable format using mathematical algorithms and secret keys.",
     sections: [
       {
         heading: "Purpose of Cryptography",
         points: [
-          "Protect sensitive information",
-          "Prevent unauthorized access",
-          "Ensure secure communication",
-          "Maintain trust in digital systems",
+          "Protect sensitive information from unauthorized access",
+          "Ensure secure communication over insecure networks",
+          "Prevent data tampering and forgery",
+          "Build trust in digital systems",
         ],
       },
       {
         heading: "Where Cryptography is Used",
         points: [
-          "Internet communication",
-          "Banking systems",
-          "Cybersecurity",
+          "Internet and web security",
+          "Banking and financial systems",
+          "Cybersecurity and ethical hacking",
           "Blockchain and cryptocurrencies",
+          "Military and government communication",
         ],
       },
     ],
@@ -43,23 +44,23 @@ export const cryptoData: CryptographyTopic[] = [
   {
     title: "Goals of Cryptography",
     description:
-      "Cryptography is designed to achieve fundamental security objectives.",
+      "Cryptography aims to achieve essential security goals required for protecting digital data and systems.",
     sections: [
       {
         heading: "Core Security Goals",
         points: [
-          "Confidentiality",
-          "Integrity",
-          "Authentication",
-          "Non-repudiation",
+          "Confidentiality – data is accessible only to authorized users",
+          "Integrity – data cannot be altered without detection",
+          "Authentication – verifies identity of sender and receiver",
+          "Non-repudiation – sender cannot deny sending data",
         ],
       },
       {
         heading: "CIA Triad Relation",
         points: [
-          "Confidentiality through encryption",
-          "Integrity through hashing",
-          "Availability through secure systems",
+          "Confidentiality achieved using encryption",
+          "Integrity achieved using hashing and digital signatures",
+          "Availability ensured through secure system design",
         ],
       },
     ],
@@ -71,74 +72,74 @@ export const cryptoData: CryptographyTopic[] = [
   {
     title: "Types of Cryptography",
     description:
-      "Cryptographic techniques are classified based on key usage and operation.",
+      "Cryptographic techniques are classified based on how keys are used and how data is protected.",
     sections: [
       {
         heading: "Symmetric Key Cryptography",
         points: [
-          "Same key used for encryption and decryption",
-          "Fast and efficient",
-          "Examples: AES, DES",
+          "Same key is used for encryption and decryption",
+          "Very fast and efficient",
+          "Key sharing is a major challenge",
+          "Examples: AES, DES, Blowfish",
         ],
       },
       {
         heading: "Asymmetric Key Cryptography",
         points: [
-          "Uses public and private keys",
+          "Uses a public key and a private key",
+          "More secure key exchange",
           "Slower than symmetric encryption",
-          "Examples: RSA, ECC",
+          "Examples: RSA, ECC, Diffie-Hellman",
         ],
       },
       {
         heading: "Hash Functions",
         points: [
-          "One-way encryption",
-          "Used for data integrity",
-          "Examples: SHA-256, MD5",
+          "One-way mathematical function",
+          "No decryption possible",
+          "Used for integrity and password storage",
+          "Examples: SHA-256, SHA-3, MD5 (deprecated)",
         ],
       },
     ],
   },
 
   // ===============================
-  // AES, DES, RSA
+  // POPULAR ALGORITHMS
   // ===============================
   {
-    title: "Popular Cryptographic Algorithms (AES, DES, RSA)",
+    title: "Popular Cryptographic Algorithms",
     description:
-      "AES, DES, and RSA are widely used cryptographic algorithms that form the foundation of secure communication.",
+      "These algorithms form the backbone of modern cryptographic systems.",
     sections: [
       {
         heading: "AES (Advanced Encryption Standard)",
         points: [
-          "Symmetric key encryption algorithm",
-          "Uses 128, 192, or 256-bit keys",
-          "Highly secure and fast",
+          "Symmetric encryption algorithm",
+          "Key sizes: 128, 192, 256 bits",
+          "Highly secure and efficient",
           "Resistant to brute-force attacks",
-          "Used in HTTPS, VPNs, disk encryption, and Wi-Fi security",
-          "Recommended modern encryption standard",
+          "Used in HTTPS, VPNs, disk encryption, Wi-Fi",
         ],
       },
       {
-        heading: "DES (Data Encryption Standard)",
+        heading: "DES and 3DES",
         points: [
-          "Symmetric encryption algorithm",
-          "Uses a 56-bit key",
-          "Once widely used but now obsolete",
+          "DES uses 56-bit key (insecure)",
           "Vulnerable to brute-force attacks",
+          "3DES applies DES three times",
+          "Slower and being phased out",
           "Replaced by AES",
-          "Triple DES (3DES) introduced to improve security",
         ],
       },
       {
         heading: "RSA (Rivest–Shamir–Adleman)",
         points: [
           "Asymmetric encryption algorithm",
-          "Uses public and private keys",
-          "Based on large prime number factorization",
-          "Slower than symmetric encryption",
+          "Security based on prime factorization",
           "Used for key exchange and digital signatures",
-          "Common in SSL/TLS and digital certificates",
+          "Key sizes: 2048-bit or higher recommended",
+          "Common in SSL/TLS and certificates",
         ],
       },
     ],
@@ -150,22 +151,24 @@ export const cryptoData: CryptographyTopic[] = [
   {
     title: "Digital Signatures",
     description:
-      "Digital signatures provide authentication, integrity, and non-repudiation of digital data.",
+      "Digital signatures ensure authenticity, integrity, and non-repudiation of digital data.",
     sections: [
       {
         heading: "How Digital Signatures Work",
         points: [
-          "Message is hashed",
-          "Hash is encrypted using sender's private key",
-          "Receiver verifies using sender's public key",
+          "Message is hashed using a hash function",
+          "Hash is encrypted with sender's private key",
+          "Receiver decrypts using sender's public key",
+          "Hash comparison verifies integrity",
         ],
       },
       {
         heading: "Applications",
         points: [
-          "Secure email communication",
-          "Software authenticity verification",
+          "Secure email and document signing",
+          "Software and firmware verification",
           "Blockchain transactions",
+          "Legal and financial documents",
         ],
       },
     ],
@@ -177,23 +180,25 @@ export const cryptoData: CryptographyTopic[] = [
   {
     title: "Key Management",
     description:
-      "Key management involves secure generation, storage, distribution, and revocation of cryptographic keys.",
+      "Key management is the process of securely handling cryptographic keys throughout their lifecycle.",
     sections: [
       {
         heading: "Key Management Practices",
         points: [
-          "Secure key generation",
-          "Safe storage of keys",
+          "Strong random key generation",
+          "Secure storage (HSMs, vaults)",
           "Regular key rotation",
-          "Key revocation",
+          "Key backup and recovery",
+          "Key revocation and expiration",
         ],
       },
       {
         heading: "Key Management Challenges",
         points: [
-          "Key theft",
-          "Improper storage",
+          "Key theft and leakage",
+          "Poor storage practices",
           "Human errors",
+          "Insider threats",
         ],
       },
     ],
@@ -205,14 +210,15 @@ export const cryptoData: CryptographyTopic[] = [
   {
     title: "Cryptographic Attacks",
     description:
-      "Attacks that attempt to break cryptographic systems or exploit weaknesses.",
+      "Cryptographic attacks attempt to compromise encrypted data or cryptographic systems.",
     sections: [
       {
         heading: "Common Attacks",
         points: [
-          "Brute force attack",
+          "Brute-force attack",
           "Man-in-the-middle attack",
           "Replay attack",
+          "Chosen-plaintext attack",
           "Side-channel attack",
         ],
       },
@@ -228,28 +234,57 @@ export const cryptoData: CryptographyTopic[] = [
   },
 
   // ===============================
+  // MODERN CRYPTOGRAPHY
+  // ===============================
+  {
+    title: "Modern Cryptography Concepts",
+    description:
+      "Advanced cryptographic techniques designed for modern security challenges.",
+    sections: [
+      {
+        heading: "Advanced Techniques",
+        points: [
+          "Elliptic Curve Cryptography (ECC)",
+          "Zero-Knowledge Proofs",
+          "Homomorphic Encryption",
+          "Secure Multi-Party Computation",
+        ],
+      },
+      {
+        heading: "Post-Quantum Cryptography",
+        points: [
+          "Designed to resist quantum attacks",
+          "Lattice-based cryptography",
+          "Hash-based signatures",
+        ],
+      },
+    ],
+  },
+
+  // ===============================
   // APPLICATIONS
   // ===============================
   {
     title: "Applications of Cryptography",
     description:
-      "Cryptography plays a vital role in securing modern digital systems.",
+      "Cryptography is essential for securing digital infrastructure.",
     sections: [
       {
-        heading: "Real-World Applications",
+        heading: "Everyday Applications",
         points: [
           "Secure web browsing (HTTPS)",
-          "Online banking",
-          "Email encryption",
-          "Blockchain and cryptocurrencies",
+          "Online banking and payments",
+          "Email and messaging encryption",
+          "Password protection",
         ],
       },
       {
-        heading: "Enterprise Use",
+        heading: "Enterprise and Government Use",
         points: [
-          "Data protection",
-          "Identity management",
-          "Secure authentication systems",
+          "Data protection and compliance",
+          "Identity and access management",
+          "Secure cloud infrastructure",
+          "Defense and intelligence systems",
         ],
       },
     ],
@@ -259,44 +294,46 @@ export const cryptoData: CryptographyTopic[] = [
   // ADVANTAGES & LIMITATIONS
   // ===============================
   {
-    title: "Advantages and Limitations",
+    title: "Advantages and Limitations of Cryptography",
     description:
-      "Cryptography strengthens security but also introduces challenges.",
+      "While cryptography provides strong security, it also has limitations.",
     sections: [
       {
         heading: "Advantages",
         points: [
-          "Strong data protection",
-          "Secure communication",
+          "Strong data confidentiality",
+          "Secure communication channels",
           "Authentication and integrity",
+          "Legal and regulatory compliance",
         ],
       },
       {
         heading: "Limitations",
         points: [
           "Complex implementation",
-          "Key management issues",
+          "Key management difficulties",
           "Performance overhead",
+          "Vulnerable to poor configuration",
         ],
       },
     ],
   },
 
   // ===============================
-  // FUTURE OF CRYPTOGRAPHY
+  // FUTURE
   // ===============================
   {
     title: "Future of Cryptography",
     description:
-      "Cryptography continues to evolve with new technologies and threats.",
+      "Cryptography continues to evolve to counter emerging threats.",
     sections: [
       {
-        heading: "Emerging Trends",
+        heading: "Future Trends",
         points: [
-          "Post-quantum cryptography",
-          "Zero-knowledge proofs",
-          "Homomorphic encryption",
-          "Blockchain-based security",
+          "Quantum-resistant algorithms",
+          "Blockchain-based security systems",
+          "Privacy-preserving cryptography",
+          "AI-driven cryptographic analysis",
         ],
       },
     ],
