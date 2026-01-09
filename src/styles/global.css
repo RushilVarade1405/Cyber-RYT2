@@ -41,6 +41,46 @@ body {
   line-height: 1.6;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
+  overflow-x: hidden; /* 🔑 prevents mobile overflow */
+}
+
+/* ===============================
+   GLOBAL PAGE CONTAINER (IMPORTANT)
+================================ */
+/*
+  Use this class once in App.tsx / Layout.tsx
+  All pages will follow responsive padding automatically
+*/
+.page-container {
+  max-width: 80rem; /* ~1280px */
+  margin-left: auto;
+  margin-right: auto;
+  padding-left: 1rem;  /* mobile */
+  padding-right: 1rem;
+}
+
+/* Tablet */
+@media (min-width: 640px) {
+  .page-container {
+    padding-left: 1.5rem;
+    padding-right: 1.5rem;
+  }
+}
+
+/* Laptop */
+@media (min-width: 768px) {
+  .page-container {
+    padding-left: 2.5rem;
+    padding-right: 2.5rem;
+  }
+}
+
+/* Desktop */
+@media (min-width: 1024px) {
+  .page-container {
+    padding-left: 4rem;
+    padding-right: 4rem;
+  }
 }
 
 /* ===============================

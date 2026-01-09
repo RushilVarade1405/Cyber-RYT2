@@ -1,5 +1,6 @@
 import { Routes, Route, useLocation } from "react-router-dom";
 import { AnimatePresence } from "framer-motion";
+import { useEffect } from "react";
 
 import Layout from "./components/Layout";
 import Start from "./pages/Start";
@@ -49,72 +50,103 @@ import Concepts from "./pages/cybersecurity/Concepts";
 import Attacks from "./pages/cybersecurity/Attacks";
 import Vulnerabilities from "./pages/cybersecurity/Vulnerabilities";
 
+/* ===============================
+   SCROLL TO TOP COMPONENT
+================================ */
+function ScrollToTop() {
+  const { pathname } = useLocation();
+
+  useEffect(() => {
+    window.scrollTo({
+      top: 0,
+      left: 0,
+      behavior: "auto", // ✅ lowercase only
+    });
+  }, [pathname]);
+
+  return null;
+}
+
+
+/* ===============================
+   ANIMATED ROUTES
+================================ */
 function AnimatedRoutes() {
   const location = useLocation();
 
   return (
-    <AnimatePresence mode="wait">
-      <Routes location={location} key={location.pathname}>
-        <Route element={<Layout />}>
+    <>
+      <ScrollToTop />
 
-          {/* ================= MAIN ================= */}
-          <Route path="/" element={<Home />} />
-          <Route path="/start" element={<Start />} />
-          <Route path="/linux" element={<Linux />} />
-          <Route path="/tools" element={<ToolsHome />} />
-          <Route path="/cyber-laws" element={<CyberLaws />} />
-          <Route path="/blockchain" element={<Blockchain />} />
-          <Route path="/cryptography" element={<Cryptography />} />
-          <Route path="/platforms" element={<Platforms />} />
-          <Route path="/about" element={<About />} />
+      <AnimatePresence mode="wait">
+        <Routes location={location} key={location.pathname}>
+          <Route element={<Layout />}>
 
-          {/* ================= TOOLS (DYNAMIC) ================= */}
-          <Route path="/tools/:toolId" element={<ToolPage />} />
+            {/* ================= MAIN ================= */}
+            <Route path="/" element={<Home />} />
+            <Route path="/start" element={<Start />} />
+            <Route path="/linux" element={<Linux />} />
+            <Route path="/tools" element={<ToolsHome />} />
+            <Route path="/cyber-laws" element={<CyberLaws />} />
+            <Route path="/blockchain" element={<Blockchain />} />
+            <Route path="/cryptography" element={<Cryptography />} />
+            <Route path="/platforms" element={<Platforms />} />
+            <Route path="/about" element={<About />} />
 
-          {/* ================= CYBER LAWS ================= */}
-          <Route path="/cyber-laws/home" element={<LawsHome />} />
-          <Route path="/cyber-laws/cyber-crimes" element={<CyberCrimes />} />
-          <Route path="/cyber-laws/it-act" element={<ITAct />} />
-          <Route path="/cyber-laws/ethics" element={<Ethics />} />
+            {/* ================= TOOLS (DYNAMIC) ================= */}
+            <Route path="/tools/:toolId" element={<ToolPage />} />
 
-          {/* ================= LINUX ================= */}
-          <Route path="/linux/home" element={<LinuxHome />} />
-          <Route path="/linux/basics" element={<LinuxBasics />} />
-          <Route path="/linux/files" element={<LinuxFiles />} />
-          <Route path="/linux/networking" element={<LinuxNetworking />} />
-          <Route path="/linux/bash" element={<LinuxBash />} />
+            {/* ================= CYBER LAWS ================= */}
+            <Route path="/cyber-laws/home" element={<LawsHome />} />
+            <Route path="/cyber-laws/cyber-crimes" element={<CyberCrimes />} />
+            <Route path="/cyber-laws/it-act" element={<ITAct />} />
+            <Route path="/cyber-laws/ethics" element={<Ethics />} />
 
-          {/* ================= CRYPTOGRAPHY ================= */}
-          <Route path="/cryptography/home" element={<CryptoHome />} />
-          <Route path="/cryptography/symmetric" element={<Symmetric />} />
-          <Route path="/cryptography/asymmetric" element={<Asymmetric />} />
-          <Route path="/cryptography/hashing" element={<Hashing />} />
-          <Route
-            path="/cryptography/digital-signatures"
-            element={<DigitalSignatures />}
-          />
+            {/* ================= LINUX ================= */}
+            <Route path="/linux/home" element={<LinuxHome />} />
+            <Route path="/linux/basics" element={<LinuxBasics />} />
+            <Route path="/linux/files" element={<LinuxFiles />} />
+            <Route path="/linux/networking" element={<LinuxNetworking />} />
+            <Route path="/linux/bash" element={<LinuxBash />} />
 
-          {/* ================= BLOCKCHAIN ================= */}
-          <Route path="/blockchain/home" element={<BlockchainHome />} />
-          <Route path="/blockchain/how-it-works" element={<HowItWorks />} />
-          <Route path="/blockchain/smart-contracts" element={<SmartContracts />} />
-          <Route path="/blockchain/security" element={<Security />} />
+            {/* ================= CRYPTOGRAPHY ================= */}
+            <Route path="/cryptography/home" element={<CryptoHome />} />
+            <Route path="/cryptography/symmetric" element={<Symmetric />} />
+            <Route path="/cryptography/asymmetric" element={<Asymmetric />} />
+            <Route path="/cryptography/hashing" element={<Hashing />} />
+            <Route
+              path="/cryptography/digital-signatures"
+              element={<DigitalSignatures />}
+            />
 
-          {/* ================= CYBERSECURITY ================= */}
-          <Route path="/cybersecurity/home" element={<CyberHome />} />
-          <Route path="/cybersecurity/concepts" element={<Concepts />} />
-          <Route path="/cybersecurity/attacks" element={<Attacks />} />
-          <Route
-            path="/cybersecurity/vulnerabilities"
-            element={<Vulnerabilities />}
-          />
+            {/* ================= BLOCKCHAIN ================= */}
+            <Route path="/blockchain/home" element={<BlockchainHome />} />
+            <Route path="/blockchain/how-it-works" element={<HowItWorks />} />
+            <Route
+              path="/blockchain/smart-contracts"
+              element={<SmartContracts />}
+            />
+            <Route path="/blockchain/security" element={<Security />} />
 
-        </Route>
-      </Routes>
-    </AnimatePresence>
+            {/* ================= CYBERSECURITY ================= */}
+            <Route path="/cybersecurity/home" element={<CyberHome />} />
+            <Route path="/cybersecurity/concepts" element={<Concepts />} />
+            <Route path="/cybersecurity/attacks" element={<Attacks />} />
+            <Route
+              path="/cybersecurity/vulnerabilities"
+              element={<Vulnerabilities />}
+            />
+
+          </Route>
+        </Routes>
+      </AnimatePresence>
+    </>
   );
 }
 
+/* ===============================
+   APP ROOT
+================================ */
 export default function App() {
   return (
     <div className="min-h-screen bg-bg text-white font-sans">

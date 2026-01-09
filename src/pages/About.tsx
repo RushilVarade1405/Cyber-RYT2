@@ -1,12 +1,23 @@
 export default function About() {
   return (
-    <div className="min-h-screen text-white px-8 py-24">
-      <div className="px-10 py-16 max-w-7xl mx-auto">
-
+    <div className="min-h-screen text-white bg-black">
+      <div
+        className="
+          max-w-7xl
+          mx-auto
+          px-4
+          sm:px-6
+          md:px-10
+          lg:px-16
+          py-12
+          sm:py-16
+          lg:py-24
+        "
+      >
         {/* ===============================
             TITLE
         =============================== */}
-        <h1 className="text-4xl font-bold mb-6">
+        <h1 className="text-4xl sm:text-5xl font-bold mb-6">
           About <span className="text-cyan-400">Cyber World</span>
         </h1>
 
@@ -21,7 +32,8 @@ export default function About() {
         </p>
 
         <p className="text-gray-300 leading-relaxed mb-12">
-          The platform bridges the gap between <span className="text-cyan-400">theory</span> and
+          The platform bridges the gap between{" "}
+          <span className="text-cyan-400">theory</span> and
           <span className="text-cyan-400"> real-world practice</span> by combining
           foundational knowledge with industry-relevant tools, platforms, and
           hands-on learning paths used in cybersecurity and emerging technologies.
@@ -31,7 +43,7 @@ export default function About() {
             PURPOSE & VISION
         =============================== */}
         <div className="grid gap-6 md:grid-cols-2 mb-14">
-          <div className="p-6 rounded-xl border border-cyan-400/20 bg-gradient-to-br from-[#0b1224] to-[#0f1a33]">
+          <div className="p-5 sm:p-6 rounded-xl border border-cyan-400/20 bg-gradient-to-br from-[#0b1224] to-[#0f1a33]">
             <h3 className="text-cyan-400 text-lg font-semibold mb-2">
               🎯 Purpose
             </h3>
@@ -42,7 +54,7 @@ export default function About() {
             </p>
           </div>
 
-          <div className="p-6 rounded-xl border border-cyan-400/20 bg-gradient-to-br from-[#0b1224] to-[#0f1a33]">
+          <div className="p-5 sm:p-6 rounded-xl border border-cyan-400/20 bg-gradient-to-br from-[#0b1224] to-[#0f1a33]">
             <h3 className="text-cyan-400 text-lg font-semibold mb-2">
               🌐 Vision
             </h3>
@@ -57,7 +69,7 @@ export default function About() {
         {/* ===============================
             WHAT YOU LEARN
         =============================== */}
-        <div className="p-6 rounded-xl border border-cyan-400/20 bg-gradient-to-br from-[#0b1224] to-[#0f1a33] mb-16">
+        <div className="p-5 sm:p-6 rounded-xl border border-cyan-400/20 bg-gradient-to-br from-[#0b1224] to-[#0f1a33] mb-16">
           <h3 className="text-cyan-400 text-lg font-semibold mb-3">
             🚀 What You’ll Learn
           </h3>
@@ -79,10 +91,11 @@ export default function About() {
             👨‍💻 Founder & Creator
           </h2>
 
-          <div className="p-6 rounded-xl border border-cyan-400/20 bg-gradient-to-br from-[#0b1224] to-[#0f1a33]">
+          <div className="p-5 sm:p-6 rounded-xl border border-cyan-400/20 bg-gradient-to-br from-[#0b1224] to-[#0f1a33]">
             <p className="text-gray-300 leading-relaxed mb-4">
-              Hi, I’m <span className="text-cyan-400 font-semibold">RYTNIX OP</span>,
-              a cybersecurity learner and technology enthusiast with a strong
+              Hi, I’m{" "}
+              <span className="text-cyan-400 font-semibold">RYTNIX OP</span>, a
+              cybersecurity learner and technology enthusiast with a strong
               interest in ethical hacking, Linux, blockchain, and digital security.
             </p>
 
@@ -106,10 +119,10 @@ export default function About() {
         =============================== */}
         <div className="text-center text-gray-400 text-sm">
           <p>
-            Learn. Practice. Secure. <span className="text-cyan-400">Cyber World</span>
+            Learn. Practice. Secure.{" "}
+            <span className="text-cyan-400">Cyber World</span>
           </p>
         </div>
-
       </div>
     </div>
   );
