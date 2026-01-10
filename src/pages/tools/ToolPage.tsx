@@ -1,54 +1,36 @@
 import { useParams, Link } from "react-router-dom";
-import rawToolsContent from "../../data/toolsContent.json";
-
-/* ===============================
-   TOOL TYPE DEFINITION
-================================ */
-
-interface ToolCommand {
-  cmd: string;
-  desc: string;
-}
-
-interface Tool {
-  title: string;
-  category: string;
-  color: string;
-  description: string;
-
-  overview?: string;
-  features?: string[];
-  installation?: string[];
-  commands?: ToolCommand[];
-  useCases?: string[];
-  defensiveNotes?: string[];
-  warnings?: string[];
-}
-
-/* ===============================
-   TYPE CAST JSON
-================================ */
-
-const toolsContent = rawToolsContent as Record<string, Tool>;
+import toolsContent from "../../data/toolsContent.json";
 
 export default function ToolPage() {
   const { toolId } = useParams<{ toolId: string }>();
-  const tool = toolId ? toolsContent[toolId] : null;
+
+  if (!toolId) {
+    return (
+      <div className="px-10 py-20 text-center text-red-400">
+        Invalid tool URL
+      </div>
+    );
+  }
+
+  const tool = (toolsContent as Record<string, any>)[toolId];
 
   if (!tool) {
     return (
-      <div className="px-10 py-20 text-center text-red-400">
-        Tool not found
+      <div className="px-10 py-20 text-center">
+        <p className="text-red-400 text-xl mb-4">Tool not found</p>
+        <Link
+          to="/tools"
+          className="text-cyan-400 hover:underline"
+        >
+          ← Back to Tools
+        </Link>
       </div>
     );
   }
 
   return (
     <div className="px-10 py-16 max-w-7xl mx-auto text-white">
-
-      {/* ===============================
-          BACK TO TOOLS
-      =============================== */}
+      {/* BACK LINK */}
       <Link
         to="/tools"
         className={`inline-block mb-6 text-${tool.color}-400 hover:underline`}
@@ -56,161 +38,64 @@ export default function ToolPage() {
         ← Back to Tools
       </Link>
 
-      {/* ===============================
-          TITLE
-      =============================== */}
+      {/* TITLE */}
       <h1 className={`text-5xl font-bold mb-6 text-${tool.color}-400`}>
         {tool.title}
       </h1>
 
-      {/* ===============================
-          DESCRIPTION
-      =============================== */}
+      {/* DESCRIPTION */}
       <p className="text-gray-300 max-w-4xl mb-8">
         {tool.description}
       </p>
 
-      {/* ===============================
-          OVERVIEW
-      =============================== */}
-      {tool.overview && (
-        <Section title="Overview" color={tool.color}>
-          <p className="text-gray-300 leading-relaxed">
-            {tool.overview}
-          </p>
-        </Section>
-      )}
+      {/* CATEGORY */}
+      <span
+        className={`inline-block mb-10 px-4 py-1 rounded-full
+        bg-${tool.color}-600/20 text-${tool.color}-400 border border-${tool.color}-500/30`}
+      >
+        {tool.category}
+      </span>
 
-      {/* ===============================
-          BADGES
-      =============================== */}
-      <div className="flex flex-wrap gap-3 mb-10">
-        <Badge text="Beginner Friendly" color="green" />
-        <Badge text="Intermediate" color="yellow" />
-        <Badge text="Advanced" color="red" />
-        <Badge text={tool.category} color={tool.color} />
-      </div>
+      {/* FEATURES */}
+      <section className="mb-10">
+        <h2 className={`text-2xl font-semibold mb-4 text-${tool.color}-300`}>
+          Core Features
+        </h2>
+        <ul className="list-disc list-inside text-gray-300 space-y-2">
+          {tool.features.map((f: string, i: number) => (
+            <li key={i}>{f}</li>
+          ))}
+        </ul>
+      </section>
 
-      {/* ===============================
-          FEATURES
-      =============================== */}
-      {tool.features && (
-        <Section title="Core Features" color={tool.color}>
-          <ul className="list-disc list-inside text-gray-300 space-y-2">
-            {tool.features.map((f, i) => (
-              <li key={i}>{f}</li>
-            ))}
-          </ul>
-        </Section>
-      )}
+      {/* COMMANDS */}
+      <section className="mb-10">
+        <h2 className={`text-2xl font-semibold mb-4 text-${tool.color}-300`}>
+          Common Commands
+        </h2>
 
-      {/* ===============================
-          INSTALLATION
-      =============================== */}
-      {tool.installation && (
-        <Section title="Installation" color={tool.color}>
-          <div className="bg-gray-900 rounded-lg p-5 space-y-2 text-sm font-mono text-gray-200">
-            {tool.installation.map((cmd, i) => (
-              <p key={i}>{cmd}</p>
-            ))}
-          </div>
-        </Section>
-      )}
-
-      {/* ===============================
-          COMMANDS
-      =============================== */}
-      {tool.commands && (
-        <Section title="Common Commands" color={tool.color}>
-          <div className="bg-gray-900 rounded-lg p-5 space-y-3 text-sm font-mono text-gray-200">
-            {tool.commands.map((item, i) => (
+        <div className="bg-gray-900 rounded-lg p-5 space-y-3 text-sm font-mono">
+          {tool.commands.map(
+            (c: { cmd: string; desc: string }, i: number) => (
               <p key={i}>
-                <span className={`text-${tool.color}-400`}>
-                  {item.cmd}
-                </span>{" "}
-                — {item.desc}
+                <span className={`text-${tool.color}-400`}>{c.cmd}</span>
+                {" — "}
+                {c.desc}
               </p>
-            ))}
-          </div>
-        </Section>
-      )}
+            )
+          )}
+        </div>
+      </section>
 
-      {/* ===============================
-          USE CASES
-      =============================== */}
-      {tool.useCases && (
-        <Section title="Real-World Use Cases" color={tool.color}>
-          <ul className="list-disc list-inside text-gray-300 space-y-2">
-            {tool.useCases.map((use, i) => (
-              <li key={i}>{use}</li>
-            ))}
-          </ul>
-        </Section>
-      )}
-
-      {/* ===============================
-          DEFENSIVE NOTES
-      =============================== */}
-      {tool.defensiveNotes && (
-        <Section title="Defensive Notes" color={tool.color}>
-          <ul className="list-disc list-inside text-gray-300 space-y-2">
-            {tool.defensiveNotes.map((note, i) => (
-              <li key={i}>{note}</li>
-            ))}
-          </ul>
-        </Section>
-      )}
-
-      {/* ===============================
-          WARNINGS
-      =============================== */}
-      {tool.warnings && (
-        <section className="bg-red-900/20 border border-red-500/30 rounded-lg p-6 mt-10">
-          <h2 className="text-xl font-semibold mb-3 text-red-400">
-            ⚠ Legal & Ethical Warning
-          </h2>
-          <ul className="list-disc list-inside text-gray-300 space-y-2">
-            {tool.warnings.map((warn, i) => (
-              <li key={i}>{warn}</li>
-            ))}
-          </ul>
-        </section>
-      )}
-
+      {/* WARNING */}
+      <section className="bg-red-900/20 border border-red-500/30 rounded-lg p-6">
+        <h2 className="text-xl font-semibold mb-3 text-red-400">
+          ⚠ Legal Warning
+        </h2>
+        <p className="text-gray-300">
+          Use this tool only on systems you own or have permission to test.
+        </p>
+      </section>
     </div>
-  );
-}
-
-/* ===============================
-   REUSABLE UI COMPONENTS
-================================ */
-
-function Section({
-  title,
-  color,
-  children,
-}: {
-  title: string;
-  color: string;
-  children: React.ReactNode;
-}) {
-  return (
-    <section className="mb-10">
-      <h2 className={`text-2xl font-semibold mb-4 text-${color}-300`}>
-        {title}
-      </h2>
-      {children}
-    </section>
-  );
-}
-
-function Badge({ text, color }: { text: string; color: string }) {
-  return (
-    <span
-      className={`px-3 py-1 text-sm rounded-full
-      bg-${color}-600/20 text-${color}-400 border border-${color}-500/30`}
-    >
-      {text}
-    </span>
   );
 }

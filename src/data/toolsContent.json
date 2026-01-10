@@ -1,26 +1,56 @@
 {
   "nmap": {
-    "title": "Nmap (Network Mapper)",
-    "category": "Network Scanning",
-    "color": "emerald",
-    "description": "Nmap is a powerful network discovery and security auditing tool used to identify live hosts, open ports, running services, operating systems, and potential vulnerabilities.",
+    "title": "Nmap",
+    "description": "Nmap is a powerful open-source network scanning tool used for discovering hosts, ports, and services.",
+    "color": "cyan",
+    "category": "Networking",
     "features": [
-      "Host discovery",
-      "TCP and UDP port scanning",
-      "Service and version detection",
+      "Port scanning",
+      "Service detection",
       "OS fingerprinting",
       "Nmap Scripting Engine (NSE)"
     ],
     "commands": [
-      { "cmd": "nmap 192.168.1.1", "desc": "Basic scan" },
-      { "cmd": "nmap -sS target", "desc": "Stealth SYN scan" },
+      { "cmd": "nmap target", "desc": "Basic scan" },
       { "cmd": "nmap -sV target", "desc": "Service version detection" },
       { "cmd": "nmap -A target", "desc": "Aggressive scan" }
     ]
   },
 
+  "burp-suite": {
+    "title": "Burp Suite",
+    "description": "Burp Suite is a comprehensive web security testing platform for intercepting, inspecting, and modifying HTTP/S traffic.",
+    "color": "orange",
+    "category": "Web Security",
+    "features": [
+      "Intercepting proxy",
+      "Intruder attack tool",
+      "Repeater for manual testing",
+      "Built-in vulnerability scanner"
+    ],
+    "commands": [
+      { "cmd": "burpsuite", "desc": "Launch Burp Suite" }
+    ]
+  },
+
+  "owasp-zap": {
+    "title": "OWASP ZAP",
+    "description": "OWASP Zed Attack Proxy (ZAP) is an open-source web security scanner designed to find vulnerabilities in web applications.",
+    "color": "emerald",
+    "category": "Web Security",
+    "features": [
+      "Automated vulnerability scanning",
+      "Intercepting proxy",
+      "Active and passive scanning",
+      "Beginner-friendly interface"
+    ],
+    "commands": [
+      { "cmd": "zaproxy", "desc": "Start OWASP ZAP" }
+    ]
+  },
+
   "wireshark": {
-    "title": "Wireshark (Packet Analyzer)",
+    "title": "Wireshark",
     "category": "Packet Analysis",
     "color": "sky",
     "description": "Wireshark captures and analyzes network packets in real time, allowing deep inspection of protocols and traffic behavior.",
@@ -38,24 +68,24 @@
   },
 
   "tcpdump": {
-    "title": "Tcpdump (Packet Capture Tool)",
+    "title": "Tcpdump",
     "category": "Packet Capture",
     "color": "teal",
     "description": "Tcpdump is a lightweight command-line packet capture tool widely used on servers and headless systems.",
     "features": [
       "Low resource usage",
-      "Capture filters",
+      "Advanced capture filters",
       "PCAP file export"
     ],
     "commands": [
       { "cmd": "tcpdump -i eth0", "desc": "Capture on interface" },
       { "cmd": "tcpdump port 80", "desc": "Capture HTTP traffic" },
-      { "cmd": "tcpdump -w capture.pcap", "desc": "Save capture" }
+      { "cmd": "tcpdump -w capture.pcap", "desc": "Save capture to file" }
     ]
   },
 
   "netcat": {
-    "title": "Netcat (Networking Swiss Army Knife)",
+    "title": "Netcat",
     "category": "Networking",
     "color": "lime",
     "description": "Netcat is a versatile networking utility for reading and writing data over TCP and UDP connections.",
@@ -63,24 +93,24 @@
       "Port listening",
       "Data transfer",
       "Service debugging",
-      "Port scanning"
+      "Lightweight port scanning"
     ],
     "commands": [
-      { "cmd": "nc -lvp 4444", "desc": "Listen on port" },
+      { "cmd": "nc -lvp 4444", "desc": "Listen on port 4444" },
       { "cmd": "nc target 80", "desc": "Connect to server" },
-      { "cmd": "nc -zv target 1-1000", "desc": "Port scan" }
+      { "cmd": "nc -zv target 1-1000", "desc": "Scan port range" }
     ]
   },
 
   "bettercap": {
-    "title": "Bettercap (MITM Attack Framework)",
+    "title": "Bettercap",
     "category": "MITM Attacks",
     "color": "purple",
-    "description": "Bettercap is a powerful framework for performing man-in-the-middle attacks, network sniffing, and traffic manipulation.",
+    "description": "Bettercap is a framework for performing man-in-the-middle attacks, sniffing traffic, and manipulating network data.",
     "features": [
       "ARP spoofing",
-      "Packet sniffing",
       "DNS spoofing",
+      "Packet sniffing",
       "HTTPS stripping",
       "Modular attack framework"
     ],
@@ -91,42 +121,8 @@
     ]
   },
 
-  "burpsuite": {
-    "title": "Burp Suite (Web Security Tool)",
-    "category": "Web Security",
-    "color": "orange",
-    "description": "Burp Suite is an integrated platform for testing web application security by intercepting and modifying HTTP/HTTPS traffic.",
-    "features": [
-      "Intercepting proxy",
-      "Automated vulnerability scanning",
-      "Request manipulation",
-      "Fuzzing and brute force testing"
-    ],
-    "commands": [
-      { "cmd": "Configure browser proxy", "desc": "Send traffic through Burp" },
-      { "cmd": "Use Repeater", "desc": "Manually replay requests" }
-    ]
-  },
-
-  "owaspzap": {
-    "title": "OWASP ZAP (Web Application Scanner)",
-    "category": "Web Security",
-    "color": "amber",
-    "description": "OWASP ZAP is an open-source web application security scanner designed for beginners and professionals.",
-    "features": [
-      "Passive scanning",
-      "Active scanning",
-      "Intercepting proxy",
-      "Automated reports"
-    ],
-    "commands": [
-      { "cmd": "Launch ZAP", "desc": "Start scanning session" },
-      { "cmd": "Run Active Scan", "desc": "Test for vulnerabilities" }
-    ]
-  },
-
   "sqlmap": {
-    "title": "SQLmap (SQL Injection Tool)",
+    "title": "SQLmap",
     "category": "SQL Injection",
     "color": "rose",
     "description": "SQLmap automates the detection and exploitation of SQL injection vulnerabilities in web applications.",
@@ -137,21 +133,21 @@
       "Multiple injection techniques"
     ],
     "commands": [
-      { "cmd": "sqlmap -u \"URL\"", "desc": "Test for SQL injection" },
+      { "cmd": "sqlmap -u \"URL\"", "desc": "Test SQL injection" },
       { "cmd": "sqlmap -u URL --dbs", "desc": "List databases" },
       { "cmd": "sqlmap -u URL --dump", "desc": "Dump database data" }
     ]
   },
 
   "hydra": {
-    "title": "Hydra (Online Brute Force Tool)",
+    "title": "Hydra",
     "category": "Brute Force",
     "color": "fuchsia",
-    "description": "Hydra is a fast and flexible tool for performing online password brute-force attacks against network services.",
+    "description": "Hydra is a fast and flexible online password brute-force tool for network services.",
     "features": [
       "Multi-protocol support",
       "Parallel attacks",
-      "Fast login testing"
+      "Fast credential testing"
     ],
     "commands": [
       { "cmd": "hydra -l admin -P passwords.txt ssh://target", "desc": "SSH brute force" },
@@ -160,7 +156,7 @@
   },
 
   "hashcat": {
-    "title": "Hashcat (Advanced Hash Cracking Tool)",
+    "title": "Hashcat",
     "category": "Hash Cracking",
     "color": "cyan",
     "description": "Hashcat is a high-performance password recovery tool using CPU and GPU acceleration.",
@@ -177,15 +173,15 @@
   },
 
   "johntheripper": {
-    "title": "John the Ripper (Password Cracking Tool)",
+    "title": "John the Ripper",
     "category": "Password Cracking",
     "color": "sky",
-    "description": "John the Ripper is a popular password auditing and recovery tool used to test password strength.",
+    "description": "John the Ripper is a popular password auditing and recovery tool.",
     "features": [
       "Dictionary attacks",
       "Rule-based attacks",
       "Brute-force cracking",
-      "Wide hash format support"
+      "Wide hash support"
     ],
     "commands": [
       { "cmd": "john hashes.txt", "desc": "Start cracking" },
@@ -194,7 +190,7 @@
   },
 
   "aircrackng": {
-    "title": "Aircrack-ng (Wireless Security Tool)",
+    "title": "Aircrack-ng",
     "category": "Wireless Security",
     "color": "green",
     "description": "Aircrack-ng is a suite of tools for auditing wireless network security.",
@@ -211,13 +207,13 @@
   },
 
   "metasploit": {
-    "title": "Metasploit (Exploitation Framework)",
+    "title": "Metasploit",
     "category": "Exploitation",
     "color": "red",
-    "description": "Metasploit is a powerful framework for developing, testing, and executing exploits.",
+    "description": "Metasploit is a framework for developing, testing, and executing exploits.",
     "features": [
       "Exploit modules",
-      "Payloads",
+      "Payload generation",
       "Post-exploitation tools",
       "Auxiliary scanners"
     ],
@@ -229,10 +225,10 @@
   },
 
   "maltego": {
-    "title": "Maltego (OSINT & Link Analysis Tool)",
+    "title": "Maltego",
     "category": "OSINT",
     "color": "violet",
-    "description": "Maltego is an intelligence and forensics tool used for OSINT investigations and link analysis.",
+    "description": "Maltego is an OSINT and link-analysis investigation tool.",
     "features": [
       "Entity mapping",
       "Relationship visualization",
@@ -244,7 +240,7 @@
   },
 
   "sherlock": {
-    "title": "Sherlock (Username OSINT Tool)",
+    "title": "Sherlock",
     "category": "OSINT",
     "color": "pink",
     "description": "Sherlock searches for usernames across multiple social media platforms.",
@@ -258,10 +254,10 @@
   },
 
   "shodan": {
-    "title": "Shodan (Internet Exposure Search Engine)",
+    "title": "Shodan",
     "category": "OSINT",
     "color": "orange",
-    "description": "Shodan is a search engine for internet-connected devices and services.",
+    "description": "Shodan is a search engine for internet-connected devices and exposed services.",
     "features": [
       "Device discovery",
       "Service fingerprinting",
@@ -274,7 +270,7 @@
   },
 
   "theharvester": {
-    "title": "theHarvester (OSINT Recon Tool)",
+    "title": "theHarvester",
     "category": "OSINT",
     "color": "slate",
     "description": "theHarvester collects emails, subdomains, and public information related to a domain.",

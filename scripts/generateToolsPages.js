@@ -22,7 +22,7 @@ const tools = [
   { file: "Metasploit.tsx", component: "Metasploit", key: "metasploit" },
   { file: "Netcat.tsx", component: "Netcat", key: "netcat" },
   { file: "Nmap.tsx", component: "Nmap", key: "nmap" },
-  { file: "OWASPZAP.tsx", component: "OWASPZAP", key: "owaspzap" },
+  { file: "OWASPZAP.tsx", component: "OWASPZAP", key: "owasp-zap" }
   { file: "Sherlock.tsx", component: "Sherlock", key: "sherlock" },
   { file: "Shodan.tsx", component: "Shodan", key: "shodan" },
   { file: "SQLmap.tsx", component: "SQLmap", key: "sqlmap" },
