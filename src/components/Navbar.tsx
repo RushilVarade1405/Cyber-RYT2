@@ -1,6 +1,6 @@
 import { NavLink, useLocation } from "react-router-dom";
 import { useEffect, useState } from "react";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 
 /* ===============================
    NAV LINKS
@@ -76,11 +76,6 @@ function SearchModal({ open, onClose }: { open: boolean; onClose: () => void }) 
     );
   };
 
-  const jumpTo = (el: HTMLElement) => {
-    el.scrollIntoView({ behavior: "smooth", block: "center" });
-    onClose();
-  };
-
   if (!open) return null;
 
   return (
@@ -114,18 +109,17 @@ function SearchModal({ open, onClose }: { open: boolean; onClose: () => void }) 
             {results.map((el, i) => (
               <button
                 key={i}
-                onClick={() => jumpTo(el)}
-                className="w-full text-left px-5 py-3 text-sm text-gray-300 hover:bg-cyan-500/10 transition"
+                onClick={() => {
+                  el.scrollIntoView({ behavior: "smooth", block: "center" });
+                  onClose();
+                }}
+                className="w-full text-left px-5 py-3 text-sm text-gray-300 hover:bg-cyan-500/10"
               >
                 {el.innerText}
               </button>
             ))}
           </div>
         </motion.div>
-
-        <p className="mt-3 text-center text-sm text-gray-500">
-          Press <kbd className="px-1 border rounded">ESC</kbd> to close
-        </p>
       </div>
     </div>
   );
@@ -141,15 +135,35 @@ export default function Navbar() {
   const [lastScrollY, setLastScrollY] = useState(0);
   const [searchOpen, setSearchOpen] = useState(false);
 
+  // Hide navbar only on desktop
   useEffect(() => {
     const onScroll = () => {
+      if (window.innerWidth < 768) {
+        setHidden(false);
+        return;
+      }
+
       const current = window.scrollY;
       setHidden(current > lastScrollY && current > 80);
       setLastScrollY(current);
     };
+
     window.addEventListener("scroll", onScroll);
     return () => window.removeEventListener("scroll", onScroll);
   }, [lastScrollY]);
+
+  // Close menu on route change
+  useEffect(() => {
+    setMenuOpen(false);
+  }, [location.pathname]);
+
+  // Lock body scroll when menu open
+  useEffect(() => {
+    document.body.style.overflow = menuOpen ? "hidden" : "";
+    return () => {
+      document.body.style.overflow = "";
+    };
+  }, [menuOpen]);
 
   return (
     <>
@@ -164,54 +178,77 @@ export default function Navbar() {
             {/* LOGO */}
             <NavLink
               to="/"
-              className="font-extrabold tracking-widest text-cyan-400 drop-shadow-[0_0_12px_rgba(34,211,238,0.9)]"
+              className="font-extrabold tracking-widest text-cyan-400"
             >
               CYBER_<span className="text-white">WORLD</span>
             </NavLink>
 
             {/* DESKTOP LINKS */}
             <div className="hidden md:flex flex-1 justify-center gap-8">
-              {links.map(link => {
-                const active = location.pathname === link.path;
-                return (
-                  <motion.div key={link.path} className="relative">
-                    <NavLink
-                      to={link.path}
-                      className={`text-sm transition ${
-                        active ? "text-cyan-400" : "text-gray-300 hover:text-cyan-400"
-                      }`}
-                    >
-                      {link.name}
-                    </NavLink>
-
-                    {active && (
-                      <motion.span
-                        layoutId="nav-underline"
-                        className="absolute left-0 -bottom-2 h-[2px] w-full bg-cyan-400 rounded"
-                      />
-                    )}
-                  </motion.div>
-                );
-              })}
+              {links.map(link => (
+                <NavLink
+                  key={link.path}
+                  to={link.path}
+                  className={({ isActive }) =>
+                    `text-sm transition ${
+                      isActive
+                        ? "text-cyan-400"
+                        : "text-gray-300 hover:text-cyan-400"
+                    }`
+                  }
+                >
+                  {link.name}
+                </NavLink>
+              ))}
             </div>
 
             {/* ACTIONS */}
             <div className="ml-auto flex items-center gap-4">
-              <motion.button whileHover={{ scale: 1.2 }} onClick={() => setSearchOpen(true)}>
+              <button onClick={() => setSearchOpen(true)}>
                 <SearchIcon className="w-5 h-5 text-cyan-400" />
-              </motion.button>
+              </button>
 
-              <motion.button
-                whileTap={{ scale: 0.9 }}
+              <button
                 onClick={() => setMenuOpen(!menuOpen)}
                 className="md:hidden text-cyan-400"
               >
                 {menuOpen ? <CloseIcon className="w-6 h-6" /> : <MenuIcon className="w-6 h-6" />}
-              </motion.button>
+              </button>
             </div>
           </div>
         </div>
       </motion.nav>
+
+      {/* MOBILE MENU */}
+      <AnimatePresence>
+        {menuOpen && (
+          <motion.div
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -10 }}
+            className="fixed top-16 left-0 w-full z-40 bg-[#020617]/95 backdrop-blur border-b border-cyan-500/20 md:hidden"
+          >
+            <div className="flex flex-col px-6 py-4 gap-4">
+              {links.map(link => (
+                <NavLink
+                  key={link.path}
+                  to={link.path}
+                  onClick={() => setMenuOpen(false)}
+                  className={({ isActive }) =>
+                    `text-sm ${
+                      isActive
+                        ? "text-cyan-400"
+                        : "text-gray-300 hover:text-cyan-400"
+                    }`
+                  }
+                >
+                  {link.name}
+                </NavLink>
+              ))}
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       <SearchModal open={searchOpen} onClose={() => setSearchOpen(false)} />
     </>

@@ -94,7 +94,7 @@ export default function CyberLaws() {
         </Link>
 
         <Link
-          to="/cyber-laws/cyber-ethics"
+          to="/cyber-laws/ethics"
           className="flex items-center gap-3 px-6 py-3 rounded-xl
           border border-purple-500/40 text-purple-400
           bg-black/40 backdrop-blur
