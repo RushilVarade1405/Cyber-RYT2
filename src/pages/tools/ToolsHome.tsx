@@ -268,78 +268,82 @@ export default function ToolsHome() {
 
           <div className="grid gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
             {(groupedByLevel[level] || []).map((tool) => (
-              <div
-                key={tool.slug}
-                className="bg-gradient-to-br from-[#0b1224] to-[#0f1a33]
-                border border-cyan-500/30 rounded-xl p-6
-                transition-all duration-300
-                hover:-translate-y-2
-                hover:shadow-[0_0_25px_rgba(34,211,238,0.35)]"
-              >
-                {/* Tool Name */}
-                <h3 className="text-cyan-400 font-semibold text-lg mb-1">
-                  ›› {tool.name}
-                </h3>
+<div
+  key={tool.slug}
+  className="flex flex-col h-full
+  bg-gradient-to-br from-[#0b1224] to-[#0f1a33]
+  border border-cyan-500/30 rounded-xl p-6
+  transition-all duration-300
+  hover:-translate-y-2
+  hover:shadow-[0_0_25px_rgba(34,211,238,0.35)]"
+>
+  {/* CONTENT (fills available height) */}
+  <div className="flex-1">
+    {/* Tool Name */}
+    <h3 className="text-cyan-400 font-semibold text-lg mb-1">
+      ›› {tool.name}
+    </h3>
 
-                {/* Level + Category Badges */}
-                <div className="flex gap-2 mb-3 flex-wrap">
-                  <span
-                    className="text-xs px-2 py-1 rounded-full
-                    bg-cyan-500/10 text-cyan-300
-                    border border-cyan-500/30"
-                  >
-                    {tool.level}
-                  </span>
+    {/* Level + Category Badges */}
+    <div className="flex gap-2 mb-3 flex-wrap">
+      <span
+        className="text-xs px-2 py-1 rounded-full
+        bg-cyan-500/10 text-cyan-300
+        border border-cyan-500/30"
+      >
+        {tool.level}
+      </span>
 
-                  <span
-                    className="text-xs px-2 py-1 rounded-full
-                    bg-indigo-500/10 text-indigo-300
-                    border border-indigo-500/30"
-                  >
-                    {tool.category}
-                  </span>
-                </div>
+      <span
+        className="text-xs px-2 py-1 rounded-full
+        bg-indigo-500/10 text-indigo-300
+        border border-indigo-500/30"
+      >
+        {tool.category}
+      </span>
+    </div>
 
-                {/* Description */}
-                <p className="text-gray-300 text-sm mb-4">
-                  {tool.use}
-                </p>
+    {/* Description */}
+    <p className="text-gray-300 text-sm mb-4">
+      {tool.use}
+    </p>
 
-                {/* Commands */}
-                <div className="space-y-2">
-                  {tool.commands.map((cmd, index) => (
-                    <div
-                      key={`${tool.slug}-${index}`}
-                      className="flex items-center justify-between
-                      bg-[#020617] rounded-lg px-3 py-2
-                      border border-cyan-500/30"
-                    >
-                      <code className="text-cyan-300 text-sm overflow-x-auto">
-                        {cmd}
-                      </code>
+    {/* Commands */}
+    <div className="space-y-2 max-h-44 overflow-y-auto pr-1">
+      {tool.commands.map((cmd, index) => (
+        <div
+          key={`${tool.slug}-${index}`}
+          className="flex items-center justify-between
+          bg-[#020617] rounded-lg px-3 py-2
+          border border-cyan-500/30"
+        >
+          <code className="text-cyan-300 text-sm overflow-x-auto">
+            {cmd}
+          </code>
 
-                      <button
-                        onClick={() => navigator.clipboard.writeText(cmd)}
-                        className="ml-3 text-xs px-3 py-1 rounded-md
-                        border border-cyan-400 text-cyan-400
-                        hover:bg-cyan-400 hover:text-black transition"
-                      >
-                        Copy
-                      </button>
-                    </div>
-                  ))}
-                </div>
+          <button
+            onClick={() => navigator.clipboard.writeText(cmd)}
+            className="ml-3 text-xs px-3 py-1 rounded-md
+            border border-cyan-400 text-cyan-400
+            hover:bg-cyan-400 hover:text-black transition"
+          >
+            Copy
+          </button>
+        </div>
+      ))}
+    </div>
+  </div>
 
-                {/* Learn Button */}
-                <Link
-                  to={`/tools/${tool.slug}`}
-                  className="mt-5 block text-center text-sm py-2 rounded-lg
-                  border border-cyan-400 text-cyan-400
-                  hover:bg-cyan-400 hover:text-black transition"
-                >
-                  Learn {tool.name}
-                </Link>
-              </div>
+  {/* LEARN BUTTON (always at bottom) */}
+  <Link
+    to={`/tools/${tool.slug}`}
+    className="mt-5 block text-center text-sm py-2 rounded-lg
+    border border-cyan-400 text-cyan-400
+    hover:bg-cyan-400 hover:text-black transition"
+  >
+    Learn {tool.name}
+  </Link>
+</div>
             ))}
           </div>
         </section>

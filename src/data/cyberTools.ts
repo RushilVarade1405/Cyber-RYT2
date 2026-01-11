@@ -106,6 +106,24 @@ export const cyberTools: CyberTool[] = [
     commands: ["maltego", "Run standard transforms", "Analyze graph relationships"],
   },
 
+    {
+    category: "OSINT",
+    name: "Google Dorks",
+    slug: "google-dorks",
+    level: "Beginner",
+    use: "Use advanced Google search operators to find exposed files, directories, credentials, admin panels, and sensitive information.",
+    commands: [
+      'site:example.com',
+      'intitle:"index of"',
+      'inurl:admin',
+      'filetype:pdf confidential',
+      'intext:"username" "password"',
+      'ext:sql | ext:db | ext:log',
+      'cache:example.com'
+    ],
+  },
+
+
   // ===============================
   // WEB SECURITY
   // ===============================
