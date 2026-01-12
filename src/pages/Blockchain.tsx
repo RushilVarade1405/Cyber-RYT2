@@ -1,60 +1,105 @@
 import { blockchainData } from "../data/blockchain";
 import { Link } from "react-router-dom";
+import { motion } from "framer-motion";
 
 export default function Blockchain() {
   return (
-    <div className="px-10 py-14 max-w-7xl mx-auto text-white">
-      <h1 className="text-4xl font-bold mb-10">Blockchain</h1>
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      transition={{ duration: 0.6 }}
+      className="relative px-6 sm:px-10 py-14 max-w-7xl mx-auto text-white"
+    >
+      {/* Background glow */}
+      <div className="absolute inset-0 -z-10">
+        <div className="absolute top-24 left-12 w-96 h-96 bg-cyan-500/20 blur-[140px]" />
+        <div className="absolute bottom-10 right-12 w-96 h-96 bg-blue-500/20 blur-[140px]" />
+      </div>
 
-{/* ===============================
-    BLOCKCHAIN LEARNING PAGES
-=============================== */}
-<div className="flex flex-wrap gap-4 mb-14">
-  <Link
-    to="/blockchain/how-it-works"
-    className="px-5 py-2 rounded-lg border border-cyan-400
-    text-cyan-400 hover:bg-cyan-400 hover:text-black transition"
-  >
-    How It Works
-  </Link>
+      {/* ===============================
+          PAGE TITLE
+      =============================== */}
+      <motion.h1
+        initial={{ y: -20, opacity: 0 }}
+        animate={{ y: 0, opacity: 1 }}
+        transition={{ delay: 0.15 }}
+        className="text-4xl font-bold mb-12"
+      >
+        Blockchain
+      </motion.h1>
 
-  <Link
-    to="/blockchain/security"
-    className="px-5 py-2 rounded-lg border border-cyan-400
-    text-cyan-400 hover:bg-cyan-400 hover:text-black transition"
-  >
-    Security
-  </Link>
+      {/* ===============================
+          BLOCKCHAIN NAV
+      =============================== */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.25 }}
+        className="flex flex-wrap gap-4 mb-16"
+      >
+        {[
+          { label: "How It Works", path: "/blockchain/how-it-works" },
+          { label: "Security", path: "/blockchain/security" },
+          { label: "Smart Contracts", path: "/blockchain/smart-contracts" },
+        ].map((item, index) => (
+          <Link
+            key={index}
+            to={item.path}
+            className="
+              px-5 py-2 rounded-lg
+              bg-white/5 backdrop-blur-md
+              border border-white/20
+              text-cyan-400
+              hover:bg-cyan-400 hover:text-black
+              hover:border-cyan-400
+              transition
+            "
+          >
+            {item.label}
+          </Link>
+        ))}
+      </motion.div>
 
-  <Link
-    to="/blockchain/smart-contracts"
-    className="px-5 py-2 rounded-lg border border-cyan-400
-    text-cyan-400 hover:bg-cyan-400 hover:text-black transition"
-  >
-    Smart Contracts
-  </Link>
-</div>
-
+      {/* ===============================
+          CONTENT
+      =============================== */}
       {blockchainData.map((topic, index) => (
-        <div key={index} className="mb-14">
-
-          {/* Title */}
+        <motion.section
+          key={index}
+          initial={{ opacity: 0, y: 40 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.5 }}
+          className="mb-20"
+        >
+          {/* Topic title */}
           <h2 className="text-2xl text-cyan-400 font-semibold mb-2">
             {topic.title}
           </h2>
 
-          {/* Description */}
-          <p className="text-gray-300 mb-6">
+          <p className="text-gray-300 mb-8 max-w-4xl">
             {topic.description}
           </p>
 
-          {/* Sections (theory blocks) */}
+          {/* ===============================
+              THEORY SECTIONS
+          =============================== */}
           {topic.sections &&
             topic.sections.map((section, secIndex) => (
-              <div
+              <motion.div
                 key={secIndex}
-                className="bg-gradient-to-br from-[#0b1224] to-[#0f1a33]
-                border border-cyan-500/30 rounded-xl p-5 mb-4"
+                initial={{ opacity: 0, y: 30 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.4 }}
+                className="
+                  mb-5 p-5 rounded-xl
+                  bg-white/5 backdrop-blur-xl
+                  border border-white/10
+                  hover:border-cyan-400/40
+                  shadow-[0_0_25px_rgba(34,211,238,0.15)]
+                  transition
+                "
               >
                 <h3 className="text-cyan-300 font-semibold mb-2">
                   {section.heading}
@@ -65,18 +110,39 @@ export default function Blockchain() {
                     <li key={pIndex}>{point}</li>
                   ))}
                 </ul>
-              </div>
+              </motion.div>
             ))}
 
-          {/* Blockchain Platforms */}
+          {/* ===============================
+              PLATFORMS
+          =============================== */}
           {topic.platforms && (
-            <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 mt-6">
+            <motion.div
+              initial="hidden"
+              whileInView="visible"
+              viewport={{ once: true }}
+              variants={{
+                visible: { transition: { staggerChildren: 0.15 } },
+              }}
+              className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 mt-10"
+            >
               {topic.platforms.map((platform, pIndex) => (
-                <div
+                <motion.div
                   key={pIndex}
-                  className="bg-gradient-to-br from-[#0b1224] to-[#0f1a33]
-                  border border-cyan-500/30 rounded-xl p-6
-                  transition hover:shadow-[0_0_20px_rgba(34,211,238,0.35)]"
+                  variants={{
+                    hidden: { opacity: 0, y: 40 },
+                    visible: { opacity: 1, y: 0 },
+                  }}
+                  whileHover={{ y: -8 }}
+                  className="
+                    p-6 rounded-xl
+                    bg-white/5 backdrop-blur-xl
+                    border border-white/10
+                    hover:border-cyan-400/50
+                    shadow-[0_0_25px_rgba(34,211,238,0.2)]
+                    hover:shadow-[0_0_45px_rgba(34,211,238,0.35)]
+                    transition-all
+                  "
                 >
                   <h3 className="text-cyan-300 font-semibold text-lg mb-2">
                     {platform.name}
@@ -90,21 +156,21 @@ export default function Blockchain() {
                     href={platform.link}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="inline-block px-4 py-2 rounded-lg
-                    border border-cyan-400 text-cyan-400
-                    hover:bg-cyan-400 hover:text-black
-                    transition font-medium"
+                    className="
+                      inline-block px-4 py-2 rounded-lg
+                      border border-cyan-400 text-cyan-400
+                      hover:bg-cyan-400 hover:text-black
+                      transition font-medium
+                    "
                   >
                     Visit Platform →
                   </a>
-                </div>
-                
+                </motion.div>
               ))}
-            </div>
+            </motion.div>
           )}
-
-        </div>
+        </motion.section>
       ))}
-    </div>
+    </motion.div>
   );
 }

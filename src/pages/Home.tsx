@@ -1,7 +1,8 @@
 import { Link } from "react-router-dom";
+import { motion } from "framer-motion";
 
 /* ===============================
-   DATA CONFIG
+   DATA CONFIG (unchanged)
 =============================== */
 
 const features = [
@@ -67,13 +68,26 @@ const roadmap = [
 
 export default function Home() {
   return (
-    <div className="px-10 py-16 max-w-7xl mx-auto text-white">
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      className="relative px-6 sm:px-10 py-16 max-w-7xl mx-auto text-white"
+    >
+      {/* Ambient background glow */}
+      <div className="absolute inset-0 -z-10">
+        <div className="absolute top-20 left-10 w-96 h-96 bg-cyan-500/20 blur-[140px]" />
+        <div className="absolute bottom-10 right-10 w-96 h-96 bg-blue-500/20 blur-[140px]" />
+      </div>
 
       {/* ===============================
           HERO
       =============================== */}
-      <section className="mb-14">
-        <h1 className="text-5xl font-bold mb-4 tracking-tight">
+      <motion.section
+        initial={{ y: 30, opacity: 0 }}
+        animate={{ y: 0, opacity: 1 }}
+        className="mb-16"
+      >
+        <h1 className="text-4xl sm:text-5xl font-bold mb-4 tracking-tight">
           Learn Cybersecurity from Scratch with{" "}
           <span className="text-cyan-400">Cyber World</span>
         </h1>
@@ -87,17 +101,19 @@ export default function Home() {
         <div className="mt-6 flex gap-4 flex-wrap">
           <Link
             to="/start"
-            className="px-5 py-2 rounded-lg border border-cyan-400
-            text-cyan-400 hover:bg-cyan-400 hover:text-black
-            transition font-medium"
+            className="px-5 py-2 rounded-lg
+            bg-cyan-400 text-black font-medium
+            hover:bg-cyan-300 transition"
           >
             Start Learning Free →
           </Link>
 
           <Link
             to="/about"
-            className="px-5 py-2 rounded-lg border border-cyan-500/30
-            text-gray-300 hover:border-cyan-400 transition"
+            className="px-5 py-2 rounded-lg
+            border border-white/20 text-gray-300
+            backdrop-blur-md bg-white/5
+            hover:border-cyan-400 transition"
           >
             Why this project?
           </Link>
@@ -106,22 +122,38 @@ export default function Home() {
         <p className="mt-4 text-sm text-gray-400">
           Beginner-friendly • Student focused • Practical learning
         </p>
-      </section>
+      </motion.section>
 
       {/* Divider */}
-      <div className="h-px w-full bg-gradient-to-r from-transparent via-cyan-500/40 to-transparent mb-16" />
+      <div className="h-px w-full bg-gradient-to-r from-transparent via-cyan-500/40 to-transparent mb-20" />
 
       {/* ===============================
-          FEATURES
+          FEATURES (GLASS)
       =============================== */}
-      <section className="grid gap-8 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
+      <motion.section
+        initial="hidden"
+        whileInView="visible"
+        viewport={{ once: true }}
+        variants={{ visible: { transition: { staggerChildren: 0.12 } } }}
+        className="grid gap-8 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3"
+      >
         {features.map((item, index) => (
-          <div
+          <motion.div
             key={index}
-            className="group bg-gradient-to-br from-[#0b1224] to-[#0f1a33]
-            border border-cyan-500/20 rounded-2xl p-6
-            transition hover:-translate-y-1
-            hover:shadow-[0_0_30px_rgba(34,211,238,0.25)]"
+            variants={{
+              hidden: { opacity: 0, y: 40 },
+              visible: { opacity: 1, y: 0 },
+            }}
+            whileHover={{ y: -8 }}
+            className="
+              relative p-6 rounded-2xl
+              bg-white/5 backdrop-blur-xl
+              border border-white/10
+              hover:border-cyan-400/40
+              shadow-[0_0_30px_rgba(34,211,238,0.15)]
+              hover:shadow-[0_0_45px_rgba(34,211,238,0.3)]
+              transition-all
+            "
           >
             <h3 className="text-xl text-cyan-400 font-semibold mb-2">
               {item.title}
@@ -131,37 +163,48 @@ export default function Home() {
               {item.text}
             </p>
 
-            {item.path && (
-              <Link
-                to={item.path}
-                className="text-sm text-cyan-400 hover:underline"
-              >
-                Learn more →
-              </Link>
-            )}
-          </div>
+            <Link
+              to={item.path}
+              className="text-sm text-cyan-400 hover:underline"
+            >
+              Learn more →
+            </Link>
+          </motion.div>
         ))}
-      </section>
+      </motion.section>
 
       {/* ===============================
-          ROADMAP
+          ROADMAP (GLASS)
       =============================== */}
-      <section className="mt-24">
-        <h2 className="text-3xl font-bold mb-12 text-center">
+      <section className="mt-28">
+        <h2 className="text-3xl font-bold mb-14 text-center">
           Learning <span className="text-cyan-400">Roadmap</span>
         </h2>
 
-        <div className="grid gap-8 md:grid-cols-3">
+        <motion.div
+          initial="hidden"
+          whileInView="visible"
+          viewport={{ once: true }}
+          variants={{ visible: { transition: { staggerChildren: 0.15 } } }}
+          className="grid gap-8 md:grid-cols-3"
+        >
           {roadmap.map((step, index) => (
-            <div
+            <motion.div
               key={index}
-              className="group p-6 rounded-2xl
-              bg-gradient-to-br from-[#0b1224] to-[#0f1a33]
-              border border-cyan-500/20
-              transition-all duration-300
-              hover:-translate-y-2
-              hover:border-cyan-400
-              hover:shadow-[0_0_30px_rgba(34,211,238,0.35)]"
+              variants={{
+                hidden: { opacity: 0, y: 40 },
+                visible: { opacity: 1, y: 0 },
+              }}
+              whileHover={{ y: -10 }}
+              className="
+                relative p-6 rounded-2xl
+                bg-white/5 backdrop-blur-xl
+                border border-white/10
+                hover:border-cyan-400/50
+                shadow-[0_0_30px_rgba(34,211,238,0.2)]
+                hover:shadow-[0_0_50px_rgba(34,211,238,0.35)]
+                transition-all
+              "
             >
               <span className="inline-block mb-4 px-3 py-1 text-xs font-semibold
                 rounded-full bg-cyan-500/20 text-cyan-400
@@ -203,17 +246,17 @@ export default function Home() {
                   ))}
                 </div>
               )}
-            </div>
+            </motion.div>
           ))}
-        </div>
+        </motion.div>
       </section>
 
       {/* ===============================
           FOOTER NOTE
       =============================== */}
-      <div className="mt-20 text-center text-gray-500 text-sm">
+      <div className="mt-24 text-center text-gray-500 text-sm">
         Cybersecurity may look complex — but with the right guidance, anyone can learn it.
       </div>
-    </div>
+    </motion.div>
   );
 }
