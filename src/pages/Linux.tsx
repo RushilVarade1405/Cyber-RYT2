@@ -1,4 +1,6 @@
 import { linuxCommands, LinuxCommand } from "../data/linux";
+import { Link } from "react-router-dom";
+
 
 /* ===============================
    TYPES & DATA
@@ -90,8 +92,70 @@ export default function Linux() {
               </p>
             </div>
           ))}
+  </div>
+</section>
+
+{/* ===============================
+    LINUX SECTIONS NAVIGATION
+=============================== */}
+<section className="mb-24">
+  <h2 className="text-3xl font-bold mb-6 text-cyan-400">
+    🐧 Linux Learning Sections
+  </h2>
+
+  <p className="text-gray-300 max-w-3xl mb-10 leading-relaxed">
+    Explore Linux fundamentals step by step — from basics to networking and
+    Bash scripting used in real-world cybersecurity.
+  </p>
+
+  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-6">
+    {[
+      {
+        title: "🏠 Linux Home",
+        desc: "Steps to download and install Linux in your system.",
+        path: "/linux/home",
+      },
+      {
+        title: "📘 Linux Basics",
+        desc: "Core commands and Linux fundamentals.",
+        path: "/linux/basics",
+      },
+      {
+        title: "📂 Linux Files",
+        desc: "File systems, permissions, and ownership.",
+        path: "/linux/files",
+      },
+      {
+        title: "🌐 Linux Networking",
+        desc: "Networking commands and services.",
+        path: "/linux/networking",
+      },
+      {
+        title: "💻 Linux Bash",
+        desc: "Bash scripting and automation.",
+        path: "/linux/bash",
+      },
+    ].map((item, index) => (
+      <Link key={index} to={item.path} className="block">
+        <div className={`${cardClass} cursor-pointer`}>
+          <h3 className="text-cyan-400 font-semibold mb-2">
+            {item.title}
+          </h3>
+<p className="text-gray-300 text-sm leading-relaxed mb-4">
+  {item.desc}
+</p>
+
+<div className="flex items-center gap-2 text-cyan-400 text-sm font-medium group">
+  <span className="group-hover:underline">Learn more</span>
+  <span className="transition-transform duration-300 group-hover:translate-x-1">
+    →
+  </span>
+</div>
         </div>
-      </section>
+      </Link>
+    ))}
+  </div>
+</section>
 
       {/* ===============================
           WHY CYBERSECURITY USES LINUX
