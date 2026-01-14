@@ -11,7 +11,7 @@ const fadeUp: Variants = {
     y: 0,
     transition: {
       duration: 0.6,
-      ease: [0.16, 1, 0.3, 1], // ✅ TS-safe easing
+      ease: [0.16, 1, 0.3, 1],
     },
   },
 };
@@ -50,7 +50,9 @@ export default function LinuxFiles() {
       </motion.h1>
 
       <motion.p variants={fadeUp} className="text-gray-300 mb-10">
-        Understand how Linux organizes files, manages permissions, and controls access.
+        Linux treats everything as a file — directories, devices, processes, and
+        configuration files. Understanding the filesystem is essential for
+        system administration, cybersecurity, and ethical hacking.
       </motion.p>
 
       {/* ================= INFO CARDS ================= */}
@@ -58,18 +60,35 @@ export default function LinuxFiles() {
         {[
           {
             title: "📁 Directory Structure",
-            desc: "Linux follows a hierarchical filesystem starting from root (/).",
-            items: ["/home", "/etc", "/bin", "/var", "/tmp"],
+            desc: "Linux uses a single-root hierarchical filesystem starting at (/).",
+            items: [
+              "/home → User files",
+              "/etc → Configuration files",
+              "/bin → Essential binaries",
+              "/var → Logs & variable data",
+              "/tmp → Temporary files",
+            ],
           },
           {
             title: "📄 File Types",
-            desc: "Different file types exist for different system purposes.",
-            items: ["Regular (-)", "Directory (d)", "Symlink (l)", "Device (b/c)"],
+            desc: "Each file has a type that defines its purpose.",
+            items: [
+              "- Regular file",
+              "d Directory",
+              "l Symbolic link",
+              "b/c Block & Character devices",
+              "s Socket / p Pipe",
+            ],
           },
           {
-            title: "🔐 Permissions",
-            desc: "Permissions define who can read, write, or execute files.",
-            items: ["Read (r)", "Write (w)", "Execute (x)"],
+            title: "🔐 Permissions & Ownership",
+            desc: "Permissions decide access for user, group, and others.",
+            items: [
+              "r → read",
+              "w → write",
+              "x → execute",
+              "ugo → user/group/others",
+            ],
           },
         ].map((card, i) => (
           <motion.div
@@ -94,20 +113,74 @@ export default function LinuxFiles() {
         ))}
       </section>
 
-      {/* ================= COMMANDS ================= */}
+      {/* ================= FILE COMMANDS ================= */}
       <motion.section variants={fadeUp} className="mb-16">
         <h2 className="text-2xl font-semibold text-cyan-400 mb-4">
-          🛠️ Essential File Commands
+          🛠️ File & Directory Commands
         </h2>
 
         <div className="grid md:grid-cols-2 gap-4">
           {[
-            "ls – list files",
-            "cd – change directory",
-            "pwd – show current path",
-            "cp – copy files",
-            "mv – move / rename",
-            "rm – delete files",
+            "ls -la → list all files with permissions",
+            "cd /path → change directory",
+            "pwd → show current directory",
+            "touch file.txt → create file",
+            "mkdir dir → create directory",
+            "rm file → delete file",
+            "rm -r dir → delete directory",
+            "cp file1 file2 → copy file",
+            "mv old new → rename/move file",
+            "stat file → detailed file info",
+          ].map((cmd, i) => (
+            <div
+              key={i}
+              className="bg-black/40 rounded-xl p-4 text-gray-300 border border-white/10"
+            >
+              {cmd}
+            </div>
+          ))}
+        </div>
+      </motion.section>
+
+      {/* ================= VIEW & SEARCH ================= */}
+      <motion.section variants={fadeUp} className="mb-16">
+        <h2 className="text-2xl font-semibold text-purple-400 mb-4">
+          🔍 Viewing & Searching Files
+        </h2>
+
+        <div className="grid md:grid-cols-2 gap-4">
+          {[
+            "cat file → view file content",
+            "less file → scroll through file",
+            "head file → first 10 lines",
+            "tail -f file → live log monitoring",
+            "find / -name file.txt → search file",
+            "grep 'text' file → search inside file",
+          ].map((cmd, i) => (
+            <div
+              key={i}
+              className="bg-white/5 rounded-xl p-4 text-gray-300 border border-white/10"
+            >
+              {cmd}
+            </div>
+          ))}
+        </div>
+      </motion.section>
+
+      {/* ================= PERMISSIONS ================= */}
+      <motion.section variants={fadeUp} className="mb-16">
+        <h2 className="text-2xl font-semibold text-yellow-400 mb-4">
+          🔐 Permissions & Ownership Commands
+        </h2>
+
+        <div className="grid md:grid-cols-2 gap-4">
+          {[
+            "chmod 755 file → numeric permissions",
+            "chmod u+x file → symbolic permissions",
+            "chown user file → change owner",
+            "chown user:group file → change owner & group",
+            "id → show user identity",
+            "umask → default permission mask",
           ].map((cmd, i) => (
             <div
               key={i}
@@ -122,16 +195,16 @@ export default function LinuxFiles() {
       {/* ================= BEGINNER TASKS ================= */}
       <motion.section variants={fadeUp}>
         <h2 className="text-2xl font-semibold text-green-400 mb-4">
-          🧪 Beginner Practice Tasks
+          🧪 Hands-On Practice Tasks
         </h2>
 
         <div className="space-y-4">
           {[
-            { task: "Go to home directory", cmd: "cd ~" },
-            { task: "Create a folder", cmd: "mkdir linux_practice" },
-            { task: "Create a file", cmd: "touch linux_practice/test.txt" },
-            { task: "Check permissions", cmd: "ls -l linux_practice" },
-            { task: "Make file executable", cmd: "chmod +x test.txt" },
+            { task: "Create project directory", cmd: "mkdir ~/linux_lab" },
+            { task: "Create files", cmd: "touch ~/linux_lab/a.txt b.txt" },
+            { task: "Set permissions", cmd: "chmod 644 a.txt" },
+            { task: "Search text", cmd: "grep 'root' /etc/passwd" },
+            { task: "Monitor logs", cmd: "tail -f /var/log/syslog" },
           ].map((t, i) => (
             <motion.div
               key={i}

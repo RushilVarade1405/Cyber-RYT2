@@ -1,13 +1,13 @@
 import { motion, type Variants } from "framer-motion";
 import {
   Terminal,
-  Folder,
   ShieldCheck,
   Cpu,
   Copy,
   Check,
 } from "lucide-react";
 import { useState } from "react";
+import { linuxCommands } from "../../data/linux";
 
 /* ===============================
    ANIMATIONS
@@ -36,11 +36,6 @@ const coreConcepts = [
     desc: "The command-line interface used to interact directly with the Linux system.",
   },
   {
-    icon: Folder,
-    title: "Directory Structure",
-    desc: "Linux follows a hierarchical file system starting from the root (/).",
-  },
-  {
     icon: ShieldCheck,
     title: "Permissions",
     desc: "Controls who can read, write, or execute files and directories.",
@@ -53,105 +48,11 @@ const coreConcepts = [
 ];
 
 /* ===============================
-   COMMANDS (MAX + CATEGORIZED)
+   EXCLUDED CATEGORIES
 ================================ */
-const commandCategories = [
-  {
-    category: "📁 File & Directory",
-    commands: [
-      ["ls", "List files and directories"],
-      ["cd", "Change directory"],
-      ["pwd", "Show current path"],
-      ["mkdir", "Create directory"],
-      ["rmdir", "Delete empty directory"],
-      ["touch", "Create empty file"],
-      ["rm -rf", "Delete files/directories"],
-      ["cp -r", "Copy files/directories"],
-      ["mv", "Move or rename files"],
-      ["tree", "Directory tree view"],
-    ],
-  },
-  {
-    category: "🔐 Permissions & Ownership",
-    commands: [
-      ["chmod", "Change file permissions"],
-      ["chown", "Change file owner"],
-      ["chgrp", "Change group"],
-      ["umask", "Default permissions"],
-      ["getfacl", "View ACL permissions"],
-      ["setfacl", "Set ACL permissions"],
-    ],
-  },
-  {
-    category: "⚙ System & Hardware",
-    commands: [
-      ["uname -a", "System info"],
-      ["hostnamectl", "Host info"],
-      ["uptime", "System running time"],
-      ["free -h", "RAM usage"],
-      ["df -h", "Disk usage"],
-      ["du -sh", "Folder size"],
-      ["lsblk", "Block devices"],
-      ["mount", "Mount filesystem"],
-      ["dmesg", "Kernel messages"],
-    ],
-  },
-  {
-    category: "🧠 Process Management",
-    commands: [
-      ["ps aux", "List processes"],
-      ["top", "Live process view"],
-      ["htop", "Advanced process viewer"],
-      ["kill", "Kill process"],
-      ["killall", "Kill by name"],
-      ["bg", "Background job"],
-      ["fg", "Foreground job"],
-      ["jobs", "List jobs"],
-      ["nice", "Set priority"],
-      ["renice", "Change priority"],
-    ],
-  },
-  {
-    category: "🌐 Networking",
-    commands: [
-      ["ip a", "IP addresses"],
-      ["ip r", "Routing table"],
-      ["ping", "Check connectivity"],
-      ["ss -tuln", "Socket stats"],
-      ["netstat -tuln", "Ports list"],
-      ["curl", "Fetch URL data"],
-      ["wget", "Download files"],
-      ["nmap", "Network scanner"],
-      ["traceroute", "Trace route"],
-    ],
-  },
-  {
-    category: "🔍 Search & Text",
-    commands: [
-      ["grep", "Search text"],
-      ["grep -r", "Recursive search"],
-      ["find", "Search files"],
-      ["locate", "Fast search"],
-      ["cat", "View file"],
-      ["less", "Paged view"],
-      ["head", "File start"],
-      ["tail -f", "Live file logs"],
-      ["awk", "Text processing"],
-      ["sed", "Stream editor"],
-    ],
-  },
-  {
-    category: "📦 Package Management (Debian)",
-    commands: [
-      ["apt update", "Update package list"],
-      ["apt upgrade", "Upgrade system"],
-      ["apt install", "Install package"],
-      ["apt remove", "Remove package"],
-      ["apt purge", "Remove config files"],
-      ["apt autoremove", "Remove unused"],
-      ["dpkg -i", "Install .deb file"],
-    ],
-  },
+const EXCLUDED_CATEGORIES = [
+  "File & Directory",
+  "Networking",
 ];
 
 /* ===============================
@@ -165,6 +66,19 @@ export default function LinuxBasics() {
     setCopied(cmd);
     setTimeout(() => setCopied(null), 1200);
   };
+
+  /* ===============================
+     GROUP + FILTER COMMANDS
+  ================================ */
+  const commandCategories = Object.entries(
+    linuxCommands
+      .filter((cmd) => !EXCLUDED_CATEGORIES.includes(cmd.category))
+      .reduce<Record<string, typeof linuxCommands>>((acc, cmd) => {
+        if (!acc[cmd.category]) acc[cmd.category] = [];
+        acc[cmd.category].push(cmd);
+        return acc;
+      }, {})
+  );
 
   return (
     <div className="px-6 py-12 max-w-7xl mx-auto text-white">
@@ -193,7 +107,7 @@ export default function LinuxBasics() {
           📘 Core Linux Concepts
         </h2>
 
-        <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div className="grid md:grid-cols-3 gap-6">
           {coreConcepts.map((c, i) => (
             <motion.div
               key={i}
@@ -220,10 +134,10 @@ export default function LinuxBasics() {
         viewport={{ once: true }}
         className="space-y-14"
       >
-        {commandCategories.map((section, idx) => (
-          <motion.div key={idx} variants={fadeUp}>
+        {commandCategories.map(([category, commands]) => (
+          <motion.div key={category} variants={fadeUp}>
             <h2 className="text-2xl font-semibold text-cyan-300 mb-6">
-              {section.category}
+              {category}
             </h2>
 
             <div className="overflow-x-auto rounded-xl border border-white/10">
@@ -232,23 +146,31 @@ export default function LinuxBasics() {
                   <tr>
                     <th className="p-4 text-left">Command</th>
                     <th className="p-4 text-left">Description</th>
+                    <th className="p-4 text-left">Example</th>
                     <th className="p-4 text-center">Copy</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {section.commands.map(([cmd, desc], i) => (
+                  {commands.map((cmd, i) => (
                     <tr
                       key={i}
                       className="border-t border-white/10 hover:bg-white/5"
                     >
-                      <td className="p-4 font-mono text-cyan-400">{cmd}</td>
-                      <td className="p-4 text-gray-300">{desc}</td>
+                      <td className="p-4 font-mono text-cyan-400">
+                        {cmd.command}
+                      </td>
+                      <td className="p-4 text-gray-300">
+                        {cmd.description}
+                      </td>
+                      <td className="p-4 font-mono text-sm text-gray-400">
+                        {cmd.example ?? "-"}
+                      </td>
                       <td className="p-4 text-center">
                         <button
-                          onClick={() => copyCmd(cmd)}
+                          onClick={() => copyCmd(cmd.command)}
                           className="p-2 rounded-lg bg-white/5 hover:bg-cyan-500/20 transition"
                         >
-                          {copied === cmd ? (
+                          {copied === cmd.command ? (
                             <Check size={18} className="text-green-400" />
                           ) : (
                             <Copy size={18} />

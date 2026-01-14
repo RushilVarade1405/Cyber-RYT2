@@ -8,11 +8,14 @@ import {
   Radar,
   Bug,
   Lock,
+  CheckCircle,
+  BookOpen,
+  Award,
 } from "lucide-react";
 
-/* ===============================
-   ANIMATION VARIANTS (TS SAFE)
-================================ */
+/* =====================================================
+   ANIMATION VARIANTS (STRICT & TS SAFE)
+===================================================== */
 
 const stepVariants: Variants = {
   hidden: { opacity: 0, x: -30 },
@@ -21,7 +24,7 @@ const stepVariants: Variants = {
     x: 0,
     transition: {
       duration: 0.5,
-      ease: [0.25, 0.1, 0.25, 1], // easeOut
+      ease: [0.25, 0.1, 0.25, 1],
     },
   },
 };
@@ -44,29 +47,55 @@ const pulseDot: Variants = {
     transition: {
       duration: 1.8,
       repeat: Infinity,
-      ease: [0.42, 0, 0.58, 1], // easeInOut
+      ease: [0.42, 0, 0.58, 1],
     },
   },
 };
 
-/* ===============================
+/* =====================================================
    TYPES
-================================ */
+===================================================== */
 
 type Role = "SOC" | "VAPT" | "BOTH";
 type Difficulty = "Beginner" | "Intermediate" | "Advanced";
 
-/* ===============================
-   ROADMAP DATA
-================================ */
+interface RoadmapStep {
+  title: string;
+  role: Role;
+  icon: any;
+  description: string;
+  objectives: string[];
+  outcomes: string[];
+  tools: { name: string; slug: string }[];
+  labs: {
+    name: string;
+    url: string;
+    level: Difficulty;
+  }[];
+}
 
-const roadmap = [
+/* =====================================================
+   ROADMAP DATA (DETAILED)
+===================================================== */
+
+const roadmap: RoadmapStep[] = [
   {
     title: "Linux & OS Fundamentals",
-    role: "BOTH" as Role,
+    role: "BOTH",
     icon: Terminal,
     description:
-      "Build command-line confidence and understand OS behavior used across SOC and VAPT roles.",
+      "Strong Linux fundamentals are mandatory for SOC analysts and penetration testers. This phase builds terminal confidence and OS-level understanding.",
+    objectives: [
+      "Understand Linux directory structure",
+      "Master essential commands",
+      "Learn process & service management",
+      "Understand file permissions & ownership",
+    ],
+    outcomes: [
+      "Navigate Linux without GUI",
+      "Analyze system behavior",
+      "Prepare for security tooling",
+    ],
     tools: [
       { name: "Linux", slug: "linux" },
       { name: "Bash", slug: "bash" },
@@ -75,16 +104,26 @@ const roadmap = [
       {
         name: "TryHackMe – Linux Fundamentals",
         url: "https://tryhackme.com",
-        level: "Beginner" as Difficulty,
+        level: "Beginner",
       },
     ],
   },
+
   {
     title: "Networking & Traffic Analysis",
-    role: "SOC" as Role,
+    role: "SOC",
     icon: Network,
     description:
-      "Analyze network traffic and identify suspicious patterns.",
+      "SOC analysts must understand how data flows across networks to detect anomalies and intrusions.",
+    objectives: [
+      "Understand TCP/IP & OSI Model",
+      "Read packet captures",
+      "Identify malicious traffic",
+    ],
+    outcomes: [
+      "Analyze suspicious traffic",
+      "Detect beaconing & scans",
+    ],
     tools: [
       { name: "Wireshark", slug: "wireshark" },
       { name: "tcpdump", slug: "tcpdump" },
@@ -93,21 +132,31 @@ const roadmap = [
       {
         name: "TryHackMe – Network Fundamentals",
         url: "https://tryhackme.com",
-        level: "Beginner" as Difficulty,
+        level: "Beginner",
       },
       {
         name: "Blue Team Labs Online",
         url: "https://blueteamlabs.online",
-        level: "Intermediate" as Difficulty,
+        level: "Intermediate",
       },
     ],
   },
+
   {
     title: "Security Fundamentals",
-    role: "BOTH" as Role,
+    role: "BOTH",
     icon: Shield,
     description:
-      "Understand threat models, attack surfaces, and security principles.",
+      "Learn core cybersecurity concepts, threat modeling, and real-world attack techniques.",
+    objectives: [
+      "Understand CIA Triad",
+      "Learn threat actors & motivations",
+      "Map attacks using MITRE ATT&CK",
+    ],
+    outcomes: [
+      "Think like attacker & defender",
+      "Understand enterprise threats",
+    ],
     tools: [
       { name: "MITRE ATT&CK", slug: "mitre-attck" },
       { name: "SIEM", slug: "siem" },
@@ -116,16 +165,26 @@ const roadmap = [
       {
         name: "TryHackMe – Pre Security",
         url: "https://tryhackme.com",
-        level: "Beginner" as Difficulty,
+        level: "Beginner",
       },
     ],
   },
+
   {
     title: "Reconnaissance & Scanning",
-    role: "VAPT" as Role,
+    role: "VAPT",
     icon: Radar,
     description:
-      "Identify hosts, ports, and exposed services during assessments.",
+      "Learn how attackers enumerate systems, services, and weaknesses.",
+    objectives: [
+      "Host & service discovery",
+      "Port scanning techniques",
+      "OS fingerprinting",
+    ],
+    outcomes: [
+      "Perform professional reconnaissance",
+      "Prepare attack surface mapping",
+    ],
     tools: [
       { name: "Nmap", slug: "nmap" },
       { name: "theHarvester", slug: "theharvester" },
@@ -134,21 +193,31 @@ const roadmap = [
       {
         name: "TryHackMe – Nmap",
         url: "https://tryhackme.com",
-        level: "Beginner" as Difficulty,
+        level: "Beginner",
       },
       {
         name: "Hack The Box – Starting Point",
         url: "https://hackthebox.com",
-        level: "Intermediate" as Difficulty,
+        level: "Intermediate",
       },
     ],
   },
+
   {
     title: "Vulnerability Exploitation",
-    role: "VAPT" as Role,
+    role: "VAPT",
     icon: Bug,
     description:
-      "Exploit vulnerabilities and understand real-world attack paths.",
+      "Exploit real vulnerabilities and understand how breaches occur.",
+    objectives: [
+      "Exploit web vulnerabilities",
+      "Understand CVEs",
+      "Chain attacks",
+    ],
+    outcomes: [
+      "Conduct penetration tests",
+      "Write professional reports",
+    ],
     tools: [
       { name: "Burp Suite", slug: "burp-suite" },
       { name: "SQLmap", slug: "sqlmap" },
@@ -157,21 +226,31 @@ const roadmap = [
       {
         name: "PortSwigger Web Security Academy",
         url: "https://portswigger.net",
-        level: "Intermediate" as Difficulty,
+        level: "Intermediate",
       },
       {
         name: "Hack The Box – Machines",
         url: "https://hackthebox.com",
-        level: "Advanced" as Difficulty,
+        level: "Advanced",
       },
     ],
   },
+
   {
     title: "Monitoring & Incident Response",
-    role: "SOC" as Role,
+    role: "SOC",
     icon: Lock,
     description:
-      "Detect, analyze, and respond to security incidents using logs and alerts.",
+      "Detect threats, investigate alerts, and respond to incidents effectively.",
+    objectives: [
+      "Log analysis",
+      "Alert triage",
+      "Incident response lifecycle",
+    ],
+    outcomes: [
+      "Work as SOC Level 1 Analyst",
+      "Handle real incidents",
+    ],
     tools: [
       { name: "Splunk", slug: "splunk" },
       { name: "Wazuh", slug: "wazuh" },
@@ -180,20 +259,20 @@ const roadmap = [
       {
         name: "TryHackMe – SOC Level 1",
         url: "https://tryhackme.com",
-        level: "Beginner" as Difficulty,
+        level: "Beginner",
       },
       {
         name: "Blue Team Labs Online",
         url: "https://blueteamlabs.online",
-        level: "Intermediate" as Difficulty,
+        level: "Intermediate",
       },
     ],
   },
 ];
 
-/* ===============================
+/* =====================================================
    COMPONENT
-================================ */
+===================================================== */
 
 export default function Start() {
   const [path, setPath] = useState<Role>("SOC");
@@ -204,39 +283,31 @@ export default function Start() {
 
   return (
     <section className="px-5 sm:px-8 py-20 max-w-7xl mx-auto">
-      {/* Back to Home */}
-      <div className="mb-8">
-        <Link
-          to="/"
-          className="
-            inline-flex items-center gap-2
-            text-sm text-gray-300
-            hover:text-cyan-400
-            transition
-          "
-        >
-          <span className="text-lg">←</span>
-          Back to Home
-        </Link>
-      </div>
+      {/* Back */}
+      <Link
+        to="/"
+        className="inline-flex items-center gap-2 text-sm text-gray-300 hover:text-cyan-400 mb-10"
+      >
+        ← Back to Home
+      </Link>
 
-
-      <h1 className="text-3xl sm:text-4xl font-bold mb-4">
+      {/* Header */}
+      <h1 className="text-4xl font-bold mb-4">
         SOC & VAPT <span className="text-cyan-400">Learning Roadmap</span>
       </h1>
 
-      <p className="text-gray-300 mb-10 max-w-3xl">
-        Switch between SOC Analyst and VAPT learning paths and follow
-        difficulty-based labs aligned with industry expectations.
+      <p className="text-gray-300 max-w-3xl mb-12">
+        A structured, industry-aligned roadmap designed to take you from
+        beginner to job-ready SOC Analyst or VAPT professional.
       </p>
 
       {/* Toggle */}
-      <div className="flex gap-4 mb-14">
+      <div className="flex gap-4 mb-16">
         {(["SOC", "VAPT"] as Role[]).map((role) => (
           <button
             key={role}
             onClick={() => setPath(role)}
-            className={`px-5 py-2 rounded-xl font-semibold transition ${
+            className={`px-6 py-2 rounded-xl font-semibold transition ${
               path === role
                 ? "bg-cyan-500 text-black"
                 : "border border-white/20 hover:border-cyan-400/40"
@@ -248,7 +319,7 @@ export default function Start() {
       </div>
 
       {/* Timeline */}
-      <div className="relative border-l border-white/20 pl-6 space-y-14">
+      <div className="relative border-l border-white/20 pl-6 space-y-16">
         {filteredRoadmap.map((item, index) => {
           const Icon = item.icon;
           return (
@@ -257,42 +328,71 @@ export default function Start() {
               variants={stepVariants}
               initial="hidden"
               whileInView="visible"
-              viewport={{ once: true, margin: "-80px" }}
+              viewport={{ once: true }}
               className="relative"
             >
               <motion.div
                 variants={pulseDot}
                 animate="animate"
-                className="absolute -left-[34px] top-2 w-4 h-4 bg-cyan-400 rounded-full shadow-[0_0_15px_rgba(34,211,238,0.8)]"
+                className="absolute -left-[34px] top-3 w-4 h-4 bg-cyan-400 rounded-full"
               />
 
               <motion.div
                 whileHover="hover"
                 variants={cardHover}
-                className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl p-6 transition"
+                className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl p-6"
               >
-                <div className="flex items-center gap-3 mb-2">
+                <div className="flex items-center gap-3 mb-3">
                   <Icon className="w-6 h-6 text-cyan-400" />
-                  <h3 className="text-lg font-semibold">{item.title}</h3>
+                  <h3 className="text-xl font-semibold">{item.title}</h3>
                 </div>
 
-                <p className="text-sm text-gray-300 mb-4">
-                  {item.description}
-                </p>
+                <p className="text-gray-300 mb-6">{item.description}</p>
 
+                {/* Objectives */}
+                <div className="mb-6">
+                  <h4 className="flex items-center gap-2 font-semibold mb-2">
+                    <BookOpen className="w-4 h-4 text-cyan-400" />
+                    Learning Objectives
+                  </h4>
+                  <ul className="space-y-1 text-sm text-gray-300">
+                    {item.objectives.map((obj) => (
+                      <li key={obj} className="flex gap-2">
+                        <CheckCircle className="w-4 h-4 text-green-400" />
+                        {obj}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+
+                {/* Outcomes */}
+                <div className="mb-6">
+                  <h4 className="flex items-center gap-2 font-semibold mb-2">
+                    <Award className="w-4 h-4 text-yellow-400" />
+                    Outcomes
+                  </h4>
+                  <ul className="space-y-1 text-sm text-gray-300">
+                    {item.outcomes.map((out) => (
+                      <li key={out}>• {out}</li>
+                    ))}
+                  </ul>
+                </div>
+
+                {/* Tools */}
                 <div className="flex flex-wrap gap-2 mb-4">
                   {item.tools.map((tool) => (
                     <Link
                       key={tool.slug}
                       to={`/tools/${tool.slug}`}
-                      className="text-xs px-3 py-1 rounded-full bg-cyan-400/10 text-cyan-300 border border-cyan-400/20 hover:bg-cyan-400/20 transition"
+                      className="text-xs px-3 py-1 rounded-full bg-cyan-400/10 text-cyan-300 border border-cyan-400/20 hover:bg-cyan-400/20"
                     >
                       {tool.name}
                     </Link>
                   ))}
                 </div>
 
-                <ul className="space-y-1 text-sm">
+                {/* Labs */}
+                <ul className="space-y-2 text-sm">
                   {item.labs.map((lab) => (
                     <li
                       key={lab.name}
@@ -302,7 +402,7 @@ export default function Start() {
                         href={lab.url}
                         target="_blank"
                         rel="noreferrer"
-                        className="hover:text-cyan-400 transition"
+                        className="hover:text-cyan-400"
                       >
                         {lab.name}
                       </a>

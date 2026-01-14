@@ -1,36 +1,27 @@
-import { linuxCommands, LinuxCommand } from "../data/linux";
 import { Link } from "react-router-dom";
-
+import { motion, type Variants } from "framer-motion";
 
 /* ===============================
-   TYPES & DATA
+   ANIMATIONS
 =============================== */
-type InfoCard = {
-  title: string;
-  text: string;
+const fadeUp: Variants = {
+  hidden: { opacity: 0, y: 30 },
+  visible: {
+    opacity: 1,
+    y: 0,
+    transition: { duration: 0.6, ease: "easeOut" },
+  },
 };
 
-const linuxInfoCards: InfoCard[] = [
-  {
-    title: "🐧 Open Source",
-    text: "Linux is free and open-source, which means anyone can view, study, and improve its code. This makes Linux transparent, flexible, and trusted worldwide.",
+const stagger: Variants = {
+  hidden: {},
+  visible: {
+    transition: { staggerChildren: 0.15 },
   },
-  {
-    title: "🧠 Kernel-Based",
-    text: "The Linux kernel is the core part of the system. It controls hardware, manages memory and processes, and ensures the operating system runs smoothly.",
-  },
-  {
-    title: "🛡️ Secure",
-    text: "Linux is designed with strong security features such as user permissions and process isolation, helping protect systems from unauthorized access.",
-  },
-  {
-    title: "⚙️ Terminal Power",
-    text: "Linux provides powerful command-line tools that allow users to perform tasks quickly, automate operations, and manage systems with precision.",
-  },
-];
+};
 
 /* ===============================
-   SHARED GLASS CARD STYLE
+   SHARED CARD STYLE
 =============================== */
 const cardClass = `
   p-6 rounded-xl
@@ -47,253 +38,192 @@ const cardClass = `
    COMPONENT
 =============================== */
 export default function Linux() {
-  const groupedCommands = linuxCommands.reduce<Record<string, LinuxCommand[]>>(
-    (acc, cmd) => {
-      if (!acc[cmd.category]) acc[cmd.category] = [];
-      acc[cmd.category].push(cmd);
-      return acc;
-    },
-    {}
-  );
-
   return (
-    <div className="relative px-6 sm:px-10 py-14 max-w-7xl mx-auto text-white">
-      {/* Ambient background glow */}
+    <motion.div
+      initial="hidden"
+      animate="visible"
+      variants={stagger}
+      className="relative px-6 sm:px-10 py-16 max-w-7xl mx-auto text-white"
+    >
+      {/* ===============================
+          BACKGROUND GLOW
+      =============================== */}
       <div className="absolute inset-0 -z-10">
-        <div className="absolute top-24 left-10 w-96 h-96 bg-cyan-500/20 blur-[140px]" />
-        <div className="absolute bottom-16 right-10 w-96 h-96 bg-blue-500/20 blur-[140px]" />
+        <div className="absolute top-20 left-10 w-96 h-96 bg-cyan-500/20 blur-[140px]" />
+        <div className="absolute bottom-20 right-10 w-96 h-96 bg-blue-500/20 blur-[140px]" />
       </div>
 
       {/* ===============================
           WHAT IS LINUX
       =============================== */}
-      <section className="mb-24">
+      <motion.section variants={fadeUp} className="mb-24">
         <h1 className="text-4xl font-bold mb-4 text-cyan-400">
           What is Linux?
         </h1>
-
-        <p className="text-gray-300 max-w-3xl mb-12 leading-relaxed">
-          Linux is a reliable, open-source operating system commonly used in
-          cybersecurity, servers, cloud infrastructure, and ethical hacking
-          environments. Its strong security architecture, system stability, and
-          extensive command-line utilities make it ideal for penetration
-          testing, digital forensics, network administration, and secure system
-          management.
+        <p className="text-gray-300 max-w-4xl leading-relaxed">
+          Linux is a free and open-source operating system based on the Linux
+          kernel. It provides users with complete control over hardware,
+          software, and system resources. Linux is widely used in servers,
+          cloud computing, embedded systems, development environments, and
+          cybersecurity labs due to its stability, security, and flexibility.
         </p>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          {linuxInfoCards.map((item, index) => (
-            <div key={index} className={cardClass}>
-              <h3 className="text-cyan-400 font-semibold mb-2">
-                {item.title}
-              </h3>
-              <p className="text-gray-300 text-sm leading-relaxed">
-                {item.text}
-              </p>
-            </div>
-          ))}
-  </div>
-</section>
-
-{/* ===============================
-    LINUX SECTIONS NAVIGATION
-=============================== */}
-<section className="mb-24">
-  <h2 className="text-3xl font-bold mb-6 text-cyan-400">
-    🐧 Linux Learning Sections
-  </h2>
-
-  <p className="text-gray-300 max-w-3xl mb-10 leading-relaxed">
-    Explore Linux fundamentals step by step — from basics to networking and
-    Bash scripting used in real-world cybersecurity.
-  </p>
-
-  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-6">
-    {[
-      {
-        title: "🏠 Linux Home",
-        desc: "Steps to download and install Linux in your system.",
-        path: "/linux/home",
-      },
-      {
-        title: "📘 Linux Basics",
-        desc: "Core commands and Linux fundamentals.",
-        path: "/linux/basics",
-      },
-      {
-        title: "📂 Linux Files",
-        desc: "File systems, permissions, and ownership.",
-        path: "/linux/files",
-      },
-      {
-        title: "🌐 Linux Networking",
-        desc: "Networking commands and services.",
-        path: "/linux/networking",
-      },
-      {
-        title: "💻 Linux Bash",
-        desc: "Bash scripting and automation.",
-        path: "/linux/bash",
-      },
-    ].map((item, index) => (
-      <Link key={index} to={item.path} className="block">
-        <div className={`${cardClass} cursor-pointer`}>
-          <h3 className="text-cyan-400 font-semibold mb-2">
-            {item.title}
-          </h3>
-<p className="text-gray-300 text-sm leading-relaxed mb-4">
-  {item.desc}
-</p>
-
-<div className="flex items-center gap-2 text-cyan-400 text-sm font-medium group">
-  <span className="group-hover:underline">Learn more</span>
-  <span className="transition-transform duration-300 group-hover:translate-x-1">
-    →
-  </span>
-</div>
-        </div>
-      </Link>
-    ))}
-  </div>
-</section>
+      </motion.section>
 
       {/* ===============================
-          WHY CYBERSECURITY USES LINUX
+          HISTORY OF LINUX
       =============================== */}
-      <section className="mb-24">
-        <h2 className="text-3xl font-bold mb-4">
-          🧑‍💻 Why Cybersecurity Professionals Use Linux
+      <motion.section variants={fadeUp} className="mb-24">
+        <h2 className="text-3xl font-bold mb-4 text-cyan-400">
+          📜 History of Linux
         </h2>
-
-        <p className="text-gray-300 max-w-3xl mb-12 leading-relaxed">
-          Linux is widely used in cybersecurity because it provides deep
-          system-level control, strong built-in security mechanisms, and native
-          support for a vast range of security and penetration testing tools.
+        <p className="text-gray-300 max-w-4xl leading-relaxed">
+          Linux was created in 1991 by Linus Torvalds as a personal project.
+          Initially developed as a Unix-like kernel, it quickly grew with
+          contributions from developers worldwide. Today, Linux powers most
+          servers on the internet, Android devices, supercomputers, and
+          enterprise security systems.
         </p>
+      </motion.section>
+
+      {/* ===============================
+          WHY USE LINUX
+      =============================== */}
+      <motion.section variants={stagger} className="mb-24">
+        <h2 className="text-3xl font-bold mb-10 text-cyan-400">
+          ⭐ Why Use Linux?
+        </h2>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           {[
             {
-              title: "🔐 Full System Control",
-              text: "Complete control over files, processes, and system permissions allows security professionals to analyze, test, and harden systems effectively.",
+              title: "🆓 Free & Open Source",
+              text: "Linux is free to use and its source code is publicly available for learning and customization.",
             },
             {
-              title: "🛠️ Security Tools",
-              text: "Most popular penetration testing, vulnerability scanning, and forensic tools are developed primarily for Linux environments.",
+              title: "⚡ High Performance",
+              text: "Linux runs efficiently on both low-end hardware and enterprise-grade servers.",
             },
             {
-              title: "🛡️ Strong Permissions",
-              text: "Linux uses a strict user and permission model that limits access, reducing the risk of malware and unauthorized actions.",
+              title: "🔐 Strong Security",
+              text: "Built-in permission systems and user isolation protect against unauthorized access.",
             },
             {
-              title: "⚡ Lightweight & Fast",
-              text: "Linux runs efficiently even on low-resource systems, making it ideal for servers, virtual machines, and security testing labs.",
+              title: "🛠 Fully Customizable",
+              text: "Users can tailor Linux for desktops, servers, development, or cybersecurity labs.",
             },
-          ].map((item, index) => (
-            <div key={index} className={cardClass}>
+          ].map((item, i) => (
+            <motion.div key={i} variants={fadeUp} className={cardClass}>
               <h3 className="text-cyan-400 font-semibold mb-2">
                 {item.title}
               </h3>
-              <p className="text-gray-300 text-sm leading-relaxed">
-                {item.text}
-              </p>
-            </div>
+              <p className="text-gray-300 text-sm">{item.text}</p>
+            </motion.div>
           ))}
         </div>
-      </section>
+      </motion.section>
 
       {/* ===============================
-          LINUX COMMANDS
+          LINUX LEARNING SECTIONS
       =============================== */}
-      <h1 className="text-4xl font-bold mb-4 text-cyan-400">
-        Linux Commands
-      </h1>
+      <motion.section variants={fadeUp} className="mb-24">
+        <h2 className="text-3xl font-bold mb-10 text-cyan-400">
+          🐧 Linux Learning Sections
+        </h2>
 
-      <p className="text-gray-300 mb-12 max-w-4xl leading-relaxed">
-        Common Linux commands play a crucial role in cybersecurity and system
-        administration by enabling users to control system resources, inspect
-        network activity, manage users and permissions, analyze system logs, and
-        automate security tasks.
-      </p>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-6">
+          {[
+            {
+              title: "🏠 Linux Home",
+              desc: "Learn how to download, install, and configure Linux safely using virtual machines or dual boot.",
+              path: "/linux/home",
+            },
+            {
+              title: "📘 Linux Basics",
+              desc: "Understand Linux fundamentals, terminal usage, and essential system commands.",
+              path: "/linux/basics",
+            },
+            {
+              title: "📂 Linux Files",
+              desc: "Explore Linux file systems, directory hierarchy, permissions, and ownership.",
+              path: "/linux/files",
+            },
+            {
+              title: "🌐 Linux Networking",
+              desc: "Learn networking concepts, ports, services, and Linux networking tools.",
+              path: "/linux/networking",
+            },
+            {
+              title: "🧰 Linux Tools & Commands",
+              desc: "Explore Kali Linux & system tools with real-world command usage examples.",
+              path: "/linux/toolscmd",
+            },
+          ].map((item, index) => (
+            <motion.div
+              key={index}
+              variants={fadeUp}
+              whileHover={{ y: -8 }}
+              className={cardClass}
+            >
+              <h3 className="text-cyan-400 font-semibold mb-3">
+                {item.title}
+              </h3>
+              <p className="text-gray-300 text-sm mb-4">
+                {item.desc}
+              </p>
+              <Link
+                to={item.path}
+                className="inline-flex items-center gap-2 text-cyan-400 text-sm font-medium group"
+              >
+                <span className="group-hover:underline">Learn more</span>
+                <span className="transition-transform group-hover:translate-x-1">
+                  →
+                </span>
+              </Link>
+            </motion.div>
+          ))}
+        </div>
+      </motion.section>
 
-      {Object.entries(groupedCommands).map(
-        ([category, commands]: [string, LinuxCommand[]]) => (
-          <div key={category} className="mb-20">
-            <h2 className="text-2xl font-semibold text-cyan-300 mb-8">
-              {category}
-            </h2>
+      {/* ===============================
+          WHY LINUX FOR CYBERSECURITY
+      =============================== */}
+      <motion.section variants={fadeUp} className="mb-24">
+        <h2 className="text-3xl font-bold mb-4 text-cyan-400">
+          🧑‍💻 Why Linux is Used in Cybersecurity
+        </h2>
+        <p className="text-gray-300 max-w-4xl leading-relaxed">
+          Linux provides deep system access, advanced networking tools, scripting
+          capabilities, and native support for penetration testing, forensics,
+          and security monitoring tools. Most cybersecurity distributions such
+          as Kali Linux are built on Linux because it allows complete system
+          transparency and control.
+        </p>
+      </motion.section>
 
-            <div className="grid gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
-              {commands.map((cmd, index) => (
-                <div
-                  key={index}
-                  className={`${cardClass} hover:shadow-[0_0_40px_rgba(34,211,238,0.45)]`}
-                >
-                  <h3 className="text-cyan-400 font-semibold mb-2">
-                    ›› {cmd.command}
-                  </h3>
-
-                  <p className="text-gray-300 text-sm mb-4 leading-relaxed">
-                    {cmd.description}
-                  </p>
-
-                  {/* Command + Copy + Example */}
-                  {cmd.example && (
-                    <div className="space-y-3">
-                      {/* Command + Copy */}
-                      <div className="flex items-center gap-3">
-                        <div
-                          className="
-                            flex-1 bg-[#020617] rounded-lg px-3 py-2
-                            border border-cyan-500/30
-                            overflow-x-auto
-                            [&::-webkit-scrollbar]:hidden
-                            [-ms-overflow-style:none]
-                            [scrollbar-width:none]
-                          "
-                        >
-                          <code className="text-cyan-300 text-sm font-mono whitespace-nowrap">
-                            {cmd.command}
-                          </code>
-                        </div>
-
-                        <button
-                          onClick={() =>
-                            navigator.clipboard.writeText(cmd.example!)
-                          }
-                          className="
-                            text-sm px-3 py-1 rounded-md
-                            border border-cyan-400 text-cyan-400
-                            hover:bg-cyan-400 hover:text-black transition
-                          "
-                        >
-                          Copy
-                        </button>
-                      </div>
-
-                      {/* Example (scrollbar hidden) */}
-                      <div
-                        className="
-                          bg-[#020617] rounded-lg px-3 py-2
-                          border border-cyan-500/30
-                          overflow-x-auto
-                          [&::-webkit-scrollbar]:hidden
-                          [-ms-overflow-style:none]
-                          [scrollbar-width:none]
-                        "
-                      >
-                        <code className="text-cyan-300 text-sm font-mono whitespace-nowrap block">
-                          {cmd.example}
-                        </code>
-                      </div>
-                    </div>
-                  )}
-                </div>
-              ))}
-            </div>
-          </div>
-        )
-      )}
-    </div>
+      {/* ===============================
+          FINAL WARNING
+      =============================== */}
+      <motion.section
+        variants={fadeUp}
+        className="
+          p-6 rounded-2xl
+          bg-red-500/10 backdrop-blur-xl
+          border border-red-500/30
+          shadow-[0_0_40px_rgba(239,68,68,0.35)]
+        "
+      >
+        <h3 className="text-red-400 font-bold text-xl mb-3">
+          ⚠️ Educational & Ethical Use Only
+        </h3>
+        <p className="text-gray-300 text-sm leading-relaxed">
+          All Linux and cybersecurity content on{" "}
+          <span className="text-red-400 font-semibold">Cyber_World</span> is
+          intended strictly for educational and ethical purposes. We do not
+          promote illegal hacking, unauthorized access, or cybercrime. Users
+          are responsible for complying with all applicable laws and ethical
+          guidelines.
+        </p>
+      </motion.section>
+    </motion.div>
   );
 }

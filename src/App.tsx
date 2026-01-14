@@ -5,7 +5,7 @@ import { useEffect } from "react";
 import Layout from "./components/Layout";
 import Start from "./pages/Start";
 
-// Main Pages
+// ================= MAIN PAGES =================
 import Home from "./pages/Home";
 import Linux from "./pages/Linux";
 import CyberLaws from "./pages/CyberLaws";
@@ -14,44 +14,44 @@ import Cryptography from "./pages/Cryptography";
 import Platforms from "./pages/Platforms";
 import About from "./pages/About";
 
-// Cyber Laws Sub-Pages
+// ================= CYBER LAWS =================
 import LawsHome from "./pages/cyber-laws/LawsHome";
 import CyberCrimes from "./pages/cyber-laws/CyberCrimes";
 import ITAct from "./pages/cyber-laws/ITAct";
 import Ethics from "./pages/cyber-laws/Ethics";
 
-// Linux Sub-Pages
+// ================= LINUX =================
 import LinuxHome from "./pages/linux/LinuxHome";
 import LinuxBasics from "./pages/linux/LinuxBasics";
 import LinuxFiles from "./pages/linux/LinuxFiles";
 import LinuxNetworking from "./pages/linux/LinuxNetworking";
-import LinuxBash from "./pages/linux/LinuxBash";
+import Linuxtoolscmd from "./pages/linux/Linuxtoolscmd";
 
-// 🔥 TOOLS (DYNAMIC)
+// ================= TOOLS (DYNAMIC) =================
 import ToolsHome from "./pages/tools/ToolsHome";
 import ToolPage from "./pages/tools/ToolPage";
 
-// Cryptography Sub-Pages
+// ================= CRYPTOGRAPHY =================
 import CryptoHome from "./pages/cryptography/CryptoHome";
 import Symmetric from "./pages/cryptography/Symmetric";
 import Asymmetric from "./pages/cryptography/Asymmetric";
 import Hashing from "./pages/cryptography/Hashing";
 import DigitalSignatures from "./pages/cryptography/DigitalSignatures";
 
-// Blockchain Sub-Pages
+// ================= BLOCKCHAIN =================
 import BlockchainHome from "./pages/blockchain/BlockchainHome";
 import HowItWorks from "./pages/blockchain/HowItWorks";
 import SmartContracts from "./pages/blockchain/SmartContracts";
 import Security from "./pages/blockchain/Security";
 
-// Cybersecurity Sub-Pages
+// ================= CYBERSECURITY =================
 import CyberHome from "./pages/cybersecurity/CyberHome";
 import Concepts from "./pages/cybersecurity/Concepts";
 import Attacks from "./pages/cybersecurity/Attacks";
 import Vulnerabilities from "./pages/cybersecurity/Vulnerabilities";
 
 /* ===============================
-   SCROLL TO TOP COMPONENT
+   SCROLL TO TOP
 ================================ */
 function ScrollToTop() {
   const { pathname } = useLocation();
@@ -60,13 +60,12 @@ function ScrollToTop() {
     window.scrollTo({
       top: 0,
       left: 0,
-      behavior: "auto", // ✅ lowercase only
+      behavior: "auto",
     });
   }, [pathname]);
 
   return null;
 }
-
 
 /* ===============================
    ANIMATED ROUTES
@@ -107,7 +106,7 @@ function AnimatedRoutes() {
             <Route path="/linux/basics" element={<LinuxBasics />} />
             <Route path="/linux/files" element={<LinuxFiles />} />
             <Route path="/linux/networking" element={<LinuxNetworking />} />
-            <Route path="/linux/bash" element={<LinuxBash />} />
+            <Route path="/linux/toolscmd" element={<Linuxtoolscmd />} />
 
             {/* ================= CRYPTOGRAPHY ================= */}
             <Route path="/cryptography/home" element={<CryptoHome />} />

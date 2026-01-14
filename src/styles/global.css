@@ -15,6 +15,10 @@
   --text-main: #e5e7eb;
   --text-muted: #9ca3af;
   --border-subtle: rgba(255, 255, 255, 0.08);
+
+  /* Cyberpunk accents */
+  --neon-cyan: #22d3ee;
+  --neon-blue: #38bdf8;
 }
 
 /* ===============================
@@ -47,15 +51,11 @@ body {
 /* ===============================
    GLOBAL PAGE CONTAINER (IMPORTANT)
 ================================ */
-/*
-  Use this class once in App.tsx / Layout.tsx
-  All pages will follow responsive padding automatically
-*/
 .page-container {
   max-width: 80rem; /* ~1280px */
   margin-left: auto;
   margin-right: auto;
-  padding-left: 1rem;  /* mobile */
+  padding-left: 1rem;
   padding-right: 1rem;
 }
 
@@ -159,4 +159,125 @@ button {
   body {
     font-size: 17px;
   }
+}
+
+/* =========================================================
+   🚀 FUTURISTIC + 🧊 GLASS + ⚡ CYBERPUNK ADDITIONS
+   (SAFE TO USE ANYWHERE)
+========================================================= */
+
+/* ===============================
+   CYBER GLASS PANEL
+================================ */
+.cyber-glass {
+  background: linear-gradient(
+    180deg,
+    rgba(2, 6, 23, 0.92),
+    rgba(2, 6, 23, 0.68)
+  );
+  backdrop-filter: blur(14px) saturate(160%);
+  -webkit-backdrop-filter: blur(14px) saturate(160%);
+}
+
+/* ===============================
+   NEON CYBER GLOW
+================================ */
+.cyber-glow {
+  box-shadow:
+    0 0 0 1px rgba(34, 211, 238, 0.15),
+    0 0 20px rgba(34, 211, 238, 0.12),
+    0 0 40px rgba(34, 211, 238, 0.08);
+}
+
+/* ===============================
+   NEON TEXT (OPTIONAL)
+================================ */
+.neon-text {
+  color: var(--neon-cyan);
+  text-shadow:
+    0 0 4px rgba(34, 211, 238, 0.6),
+    0 0 12px rgba(34, 211, 238, 0.4);
+}
+
+/* ===============================
+   CYBER BUTTON UTILITY
+================================ */
+.cyber-btn {
+  position: relative;
+  padding: 0.6rem 1.4rem;
+  border: 1px solid rgba(34, 211, 238, 0.4);
+  background: rgba(2, 6, 23, 0.8);
+  color: var(--neon-cyan);
+  border-radius: 0.6rem;
+  overflow: hidden;
+  transition: all 0.25s ease;
+}
+
+.cyber-btn::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    120deg,
+    transparent,
+    rgba(34, 211, 238, 0.25),
+    transparent
+  );
+  transform: translateX(-100%);
+}
+
+.cyber-btn:hover::before {
+  transform: translateX(100%);
+  transition: transform 0.6s ease;
+}
+
+.cyber-btn:hover {
+  box-shadow:
+    0 0 10px rgba(34, 211, 238, 0.4),
+    0 0 30px rgba(34, 211, 238, 0.2);
+}
+
+/* ===============================
+   INPUT / SEARCH GLOW
+================================ */
+.cyber-input {
+  background: transparent;
+  border: none;
+  outline: none;
+  color: var(--text-main);
+}
+
+.cyber-input:focus {
+  box-shadow: inset 0 -1px 0 rgba(34, 211, 238, 0.7);
+}
+
+/* ===============================
+   CYBER TERMINAL BLINK CURSOR
+================================ */
+@keyframes cyber-blink {
+  0%, 100% { opacity: 1 }
+  50% { opacity: 0 }
+}
+
+.cyber-cursor::after {
+  content: "_";
+  margin-left: 4px;
+  animation: cyber-blink 1s infinite;
+  color: var(--neon-cyan);
+}
+
+/* ===============================
+   TEXT SELECTION
+================================ */
+::selection {
+  background: rgba(34, 211, 238, 0.25);
+  color: var(--text-main);
+}
+
+/* ===============================
+   PAGE TRANSITION SMOOTHNESS
+================================ */
+main {
+  min-height: 100vh;
+  will-change: transform, opacity;
 }
