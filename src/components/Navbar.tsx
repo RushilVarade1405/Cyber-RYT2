@@ -12,10 +12,11 @@ const links = [
   { name: "Home", path: "/" },
   { name: "Linux", path: "/linux" },
   { name: "Tools", path: "/tools" },
+  { name: "Cheatsheet", path: "/cheatsheet" }, // ADD THIS LINE
   { name: "Cyber_Laws", path: "/cyber-laws" },
   { name: "Blockchain", path: "/blockchain" },
   { name: "Cryptography", path: "/cryptography" },
-  { name: "Platforms", path: "/platforms" },
+  { name: "Platform", path: "/platforms" },
   { name: "About", path: "/about" },
 ];
 

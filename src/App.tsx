@@ -8,6 +8,7 @@ import Start from "./pages/Start";
 // ================= MAIN PAGES =================
 import Home from "./pages/Home";
 import Linux from "./pages/Linux";
+import Cheatsheet from "./pages/Cheatsheet";
 import CyberLaws from "./pages/CyberLaws";
 import Blockchain from "./pages/Blockchain";
 import Cryptography from "./pages/Cryptography";
@@ -90,6 +91,7 @@ function AnimatedRoutes() {
             <Route path="/blockchain" element={<Blockchain />} />
             <Route path="/cryptography" element={<Cryptography />} />
             <Route path="/platforms" element={<Platforms />} />
+            <Route path="/cheatsheet" element={<Cheatsheet />} /> {/* ADD THIS LINE */}
             <Route path="/about" element={<About />} />
 
             {/* ================= TOOLS (DYNAMIC) ================= */}
