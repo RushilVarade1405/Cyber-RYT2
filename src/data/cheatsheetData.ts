@@ -149,7 +149,7 @@ export interface CheatsheetData {
 }
 
 export const cheatsheetData: CheatsheetData = {
-  title: "Enhanced Penetration Testing Cheatsheet",
+  title: "Penetration Testing Cheatsheet",
   description: "A comprehensive guide with commands, tools, and vulnerability scripts for penetration testing.",
   
   sections: [
