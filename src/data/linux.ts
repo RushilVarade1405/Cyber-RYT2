@@ -4,11 +4,12 @@ export interface LinuxCommand {
   description: string;
   difficulty: "basic" | "intermediate" | "advanced";
   example?: string;
+  flags?: string;
 }
 
 export const linuxCommands: LinuxCommand[] = [
   // ===============================
-  // BASIC / CORE
+  // BEGINNER / CORE
   // ===============================
   {
     category: "Beginner",
@@ -16,6 +17,7 @@ export const linuxCommands: LinuxCommand[] = [
     description: "Lists files and directories in the current folder.",
     difficulty: "basic",
     example: "ls -la",
+    flags: "-l (detailed), -a (show hidden), -h (human readable)",
   },
   {
     category: "Beginner",
@@ -30,6 +32,7 @@ export const linuxCommands: LinuxCommand[] = [
     description: "Changes the current directory to another location.",
     difficulty: "basic",
     example: "cd /home/user/Documents",
+    flags: "cd ~ (home), cd .. (parent), cd - (previous)",
   },
   {
     category: "Beginner",
@@ -43,7 +46,8 @@ export const linuxCommands: LinuxCommand[] = [
     command: "history",
     description: "Shows a list of previously executed commands.",
     difficulty: "basic",
-    example: "history",
+    example: "history | tail -20",
+    flags: "!number (re-run command), !! (last command)",
   },
   {
     category: "Beginner",
@@ -52,9 +56,37 @@ export const linuxCommands: LinuxCommand[] = [
     difficulty: "basic",
     example: "exit",
   },
+  {
+    category: "Beginner",
+    command: "man",
+    description: "Displays the manual page for a command.",
+    difficulty: "basic",
+    example: "man ls",
+  },
+  {
+    category: "Beginner",
+    command: "echo",
+    description: "Prints text or variables to the terminal.",
+    difficulty: "basic",
+    example: "echo 'Hello World'",
+  },
+  {
+    category: "Beginner",
+    command: "which",
+    description: "Shows the full path of shell commands.",
+    difficulty: "basic",
+    example: "which python",
+  },
+  {
+    category: "Beginner",
+    command: "whereis",
+    description: "Locates the binary, source, and manual page files.",
+    difficulty: "basic",
+    example: "whereis bash",
+  },
 
   // ===============================
-  // FILE & DIRECTORY
+  // FILE & DIRECTORY OPERATIONS
   // ===============================
   {
     category: "File & Directory",
@@ -68,7 +100,8 @@ export const linuxCommands: LinuxCommand[] = [
     command: "mkdir",
     description: "Creates a new directory (folder).",
     difficulty: "basic",
-    example: "mkdir projects",
+    example: "mkdir -p projects/2024",
+    flags: "-p (create parent directories)",
   },
   {
     category: "File & Directory",
@@ -82,14 +115,16 @@ export const linuxCommands: LinuxCommand[] = [
     command: "rm",
     description: "Deletes files or directories permanently.",
     difficulty: "basic",
-    example: "rm file.txt",
+    example: "rm -rf folder/",
+    flags: "-r (recursive), -f (force), -i (interactive)",
   },
   {
     category: "File & Directory",
     command: "cp",
     description: "Copies files or directories to another location.",
     difficulty: "basic",
-    example: "cp file.txt backup.txt",
+    example: "cp -r source/ dest/",
+    flags: "-r (recursive), -v (verbose), -u (update)",
   },
   {
     category: "File & Directory",
@@ -97,6 +132,7 @@ export const linuxCommands: LinuxCommand[] = [
     description: "Moves or renames files and directories.",
     difficulty: "basic",
     example: "mv old.txt new.txt",
+    flags: "-i (interactive), -v (verbose)",
   },
   {
     category: "File & Directory",
@@ -108,16 +144,25 @@ export const linuxCommands: LinuxCommand[] = [
   {
     category: "File & Directory",
     command: "less",
-    description: "Views file contents page by page.",
+    description: "Views file contents page by page with navigation.",
     difficulty: "intermediate",
     example: "less /var/log/syslog",
+    flags: "Space (next), b (back), / (search), q (quit)",
+  },
+  {
+    category: "File & Directory",
+    command: "more",
+    description: "Views file contents one screen at a time.",
+    difficulty: "basic",
+    example: "more file.txt",
   },
   {
     category: "File & Directory",
     command: "head",
     description: "Shows the first few lines of a file.",
     difficulty: "basic",
-    example: "head file.txt",
+    example: "head -n 20 file.txt",
+    flags: "-n (number of lines)",
   },
   {
     category: "File & Directory",
@@ -125,6 +170,7 @@ export const linuxCommands: LinuxCommand[] = [
     description: "Shows the last lines of a file, commonly used for logs.",
     difficulty: "basic",
     example: "tail -f /var/log/auth.log",
+    flags: "-f (follow), -n (number of lines)",
   },
   {
     category: "File & Directory",
@@ -138,7 +184,38 @@ export const linuxCommands: LinuxCommand[] = [
     command: "tree",
     description: "Displays directories and files in a tree structure.",
     difficulty: "intermediate",
-    example: "tree /etc",
+    example: "tree -L 2 /etc",
+    flags: "-L (depth level), -a (show hidden)",
+  },
+  {
+    category: "File & Directory",
+    command: "find",
+    description: "Searches for files and directories based on criteria.",
+    difficulty: "intermediate",
+    example: "find /home -name '*.txt'",
+    flags: "-name, -type, -size, -mtime, -exec",
+  },
+  {
+    category: "File & Directory",
+    command: "locate",
+    description: "Quickly finds files using a pre-built database.",
+    difficulty: "basic",
+    example: "locate config.txt",
+  },
+  {
+    category: "File & Directory",
+    command: "ln",
+    description: "Creates hard or symbolic links to files.",
+    difficulty: "intermediate",
+    example: "ln -s /path/to/file link_name",
+    flags: "-s (symbolic link)",
+  },
+  {
+    category: "File & Directory",
+    command: "file",
+    description: "Determines the type of a file.",
+    difficulty: "basic",
+    example: "file document.pdf",
   },
 
   // ===============================
@@ -150,13 +227,15 @@ export const linuxCommands: LinuxCommand[] = [
     description: "Changes file permissions (read, write, execute).",
     difficulty: "intermediate",
     example: "chmod 755 script.sh",
+    flags: "u (user), g (group), o (others), a (all)",
   },
   {
     category: "Permissions",
     command: "chown",
     description: "Changes file or directory ownership.",
     difficulty: "intermediate",
-    example: "sudo chown user:user file.txt",
+    example: "sudo chown user:group file.txt",
+    flags: "-R (recursive)",
   },
   {
     category: "Permissions",
@@ -199,10 +278,24 @@ export const linuxCommands: LinuxCommand[] = [
   },
   {
     category: "User Management",
+    command: "who",
+    description: "Shows who is currently logged into the system.",
+    difficulty: "basic",
+    example: "who -a",
+  },
+  {
+    category: "User Management",
+    command: "w",
+    description: "Shows who is logged in and what they are doing.",
+    difficulty: "basic",
+    example: "w",
+  },
+  {
+    category: "User Management",
     command: "id",
     description: "Shows user ID, group ID, and groups.",
     difficulty: "intermediate",
-    example: "id",
+    example: "id username",
   },
   {
     category: "User Management",
@@ -216,7 +309,8 @@ export const linuxCommands: LinuxCommand[] = [
     command: "useradd",
     description: "Creates a new user account.",
     difficulty: "advanced",
-    example: "sudo useradd newuser",
+    example: "sudo useradd -m -s /bin/bash newuser",
+    flags: "-m (create home), -s (shell), -G (groups)",
   },
   {
     category: "User Management",
@@ -224,13 +318,15 @@ export const linuxCommands: LinuxCommand[] = [
     description: "Modifies an existing user account.",
     difficulty: "advanced",
     example: "sudo usermod -aG sudo user",
+    flags: "-aG (add to group), -l (rename)",
   },
   {
     category: "User Management",
     command: "userdel",
     description: "Deletes a user account.",
     difficulty: "advanced",
-    example: "sudo userdel user",
+    example: "sudo userdel -r user",
+    flags: "-r (remove home directory)",
   },
   {
     category: "User Management",
@@ -244,7 +340,8 @@ export const linuxCommands: LinuxCommand[] = [
     command: "su",
     description: "Switches to another user account.",
     difficulty: "intermediate",
-    example: "su root",
+    example: "su - root",
+    flags: "- (login shell)",
   },
   {
     category: "User Management",
@@ -252,6 +349,14 @@ export const linuxCommands: LinuxCommand[] = [
     description: "Runs a command with administrator privileges.",
     difficulty: "basic",
     example: "sudo apt update",
+    flags: "-i (login shell), -u (user)",
+  },
+  {
+    category: "User Management",
+    command: "last",
+    description: "Shows the last logged-in users.",
+    difficulty: "intermediate",
+    example: "last -n 10",
   },
 
   // ===============================
@@ -263,6 +368,7 @@ export const linuxCommands: LinuxCommand[] = [
     description: "Displays running processes.",
     difficulty: "basic",
     example: "ps aux",
+    flags: "aux (all processes), -ef (full format)",
   },
   {
     category: "Process Management",
@@ -270,6 +376,7 @@ export const linuxCommands: LinuxCommand[] = [
     description: "Shows real-time system and process activity.",
     difficulty: "basic",
     example: "top",
+    flags: "P (sort CPU), M (sort memory), q (quit)",
   },
   {
     category: "Process Management",
@@ -287,10 +394,25 @@ export const linuxCommands: LinuxCommand[] = [
   },
   {
     category: "Process Management",
+    command: "pgrep",
+    description: "Finds processes by name.",
+    difficulty: "intermediate",
+    example: "pgrep firefox",
+  },
+  {
+    category: "Process Management",
+    command: "pidof",
+    description: "Finds the process ID of a running program.",
+    difficulty: "basic",
+    example: "pidof apache2",
+  },
+  {
+    category: "Process Management",
     command: "kill",
     description: "Terminates a process using its PID.",
     difficulty: "intermediate",
-    example: "kill 1234",
+    example: "kill -9 1234",
+    flags: "-9 (SIGKILL), -15 (SIGTERM)",
   },
   {
     category: "Process Management",
@@ -298,6 +420,13 @@ export const linuxCommands: LinuxCommand[] = [
     description: "Terminates processes by name.",
     difficulty: "intermediate",
     example: "killall firefox",
+  },
+  {
+    category: "Process Management",
+    command: "pkill",
+    description: "Kills processes based on name pattern.",
+    difficulty: "intermediate",
+    example: "pkill -f python",
   },
   {
     category: "Process Management",
@@ -318,7 +447,7 @@ export const linuxCommands: LinuxCommand[] = [
     command: "jobs",
     description: "Lists background jobs.",
     difficulty: "intermediate",
-    example: "jobs",
+    example: "jobs -l",
   },
   {
     category: "Process Management",
@@ -334,6 +463,27 @@ export const linuxCommands: LinuxCommand[] = [
     difficulty: "intermediate",
     example: "fg %1",
   },
+  {
+    category: "Process Management",
+    command: "nohup",
+    description: "Runs a command immune to hangups.",
+    difficulty: "intermediate",
+    example: "nohup ./script.sh &",
+  },
+  {
+    category: "Process Management",
+    command: "screen",
+    description: "Creates detachable terminal sessions.",
+    difficulty: "advanced",
+    example: "screen -S session_name",
+  },
+  {
+    category: "Process Management",
+    command: "tmux",
+    description: "Terminal multiplexer for managing sessions.",
+    difficulty: "advanced",
+    example: "tmux new -s work",
+  },
 
   // ===============================
   // SYSTEM INFORMATION
@@ -344,6 +494,7 @@ export const linuxCommands: LinuxCommand[] = [
     description: "Displays system and kernel information.",
     difficulty: "basic",
     example: "uname -a",
+    flags: "-a (all), -r (kernel), -m (machine)",
   },
   {
     category: "System Info",
@@ -364,7 +515,14 @@ export const linuxCommands: LinuxCommand[] = [
     command: "date",
     description: "Displays the current system date and time.",
     difficulty: "basic",
-    example: "date",
+    example: "date '+%Y-%m-%d %H:%M:%S'",
+  },
+  {
+    category: "System Info",
+    command: "cal",
+    description: "Displays a calendar.",
+    difficulty: "basic",
+    example: "cal -3",
   },
   {
     category: "System Info",
@@ -372,6 +530,7 @@ export const linuxCommands: LinuxCommand[] = [
     description: "Shows memory (RAM) usage.",
     difficulty: "basic",
     example: "free -h",
+    flags: "-h (human readable), -m (megabytes)",
   },
   {
     category: "System Info",
@@ -379,6 +538,7 @@ export const linuxCommands: LinuxCommand[] = [
     description: "Displays disk space usage.",
     difficulty: "intermediate",
     example: "df -h",
+    flags: "-h (human readable), -T (filesystem type)",
   },
   {
     category: "System Info",
@@ -386,13 +546,49 @@ export const linuxCommands: LinuxCommand[] = [
     description: "Shows disk usage of files and directories.",
     difficulty: "intermediate",
     example: "du -sh *",
+    flags: "-s (summary), -h (human readable)",
   },
   {
     category: "System Info",
     command: "lsblk",
     description: "Lists block storage devices.",
     difficulty: "intermediate",
-    example: "lsblk",
+    example: "lsblk -f",
+  },
+  {
+    category: "System Info",
+    command: "lscpu",
+    description: "Displays CPU architecture information.",
+    difficulty: "intermediate",
+    example: "lscpu",
+  },
+  {
+    category: "System Info",
+    command: "lspci",
+    description: "Lists all PCI devices.",
+    difficulty: "intermediate",
+    example: "lspci -v",
+  },
+  {
+    category: "System Info",
+    command: "lsusb",
+    description: "Lists USB devices.",
+    difficulty: "intermediate",
+    example: "lsusb",
+  },
+  {
+    category: "System Info",
+    command: "dmidecode",
+    description: "Displays hardware information from BIOS.",
+    difficulty: "advanced",
+    example: "sudo dmidecode -t memory",
+  },
+  {
+    category: "System Info",
+    command: "hwinfo",
+    description: "Comprehensive hardware information tool.",
+    difficulty: "advanced",
+    example: "hwinfo --short",
   },
 
   // ===============================
@@ -403,7 +599,15 @@ export const linuxCommands: LinuxCommand[] = [
     command: "ip",
     description: "Displays and manages network interfaces.",
     difficulty: "intermediate",
-    example: "ip a",
+    example: "ip addr show",
+    flags: "addr (addresses), route (routing), link (interfaces)",
+  },
+  {
+    category: "Networking",
+    command: "ifconfig",
+    description: "Legacy network interface configuration tool.",
+    difficulty: "intermediate",
+    example: "ifconfig eth0",
   },
   {
     category: "Networking",
@@ -411,13 +615,15 @@ export const linuxCommands: LinuxCommand[] = [
     description: "Displays socket and network connection information.",
     difficulty: "intermediate",
     example: "ss -tuln",
+    flags: "-t (TCP), -u (UDP), -l (listening), -n (numeric)",
   },
   {
     category: "Networking",
     command: "ping",
     description: "Tests connectivity to another system.",
     difficulty: "basic",
-    example: "ping google.com",
+    example: "ping -c 4 google.com",
+    flags: "-c (count), -i (interval)",
   },
   {
     category: "Networking",
@@ -432,11 +638,12 @@ export const linuxCommands: LinuxCommand[] = [
     description: "Displays active network connections.",
     difficulty: "intermediate",
     example: "netstat -tuln",
+    flags: "-a (all), -n (numeric), -p (programs)",
   },
   {
     category: "Networking",
     command: "arp",
-    description: "Displays the ARP table.",
+    description: "Displays and modifies the ARP table.",
     difficulty: "advanced",
     example: "arp -a",
   },
@@ -449,17 +656,40 @@ export const linuxCommands: LinuxCommand[] = [
   },
   {
     category: "Networking",
+    command: "dig",
+    description: "DNS lookup utility for querying DNS servers.",
+    difficulty: "intermediate",
+    example: "dig google.com",
+  },
+  {
+    category: "Networking",
+    command: "nslookup",
+    description: "Queries DNS to obtain domain name or IP address mapping.",
+    difficulty: "basic",
+    example: "nslookup google.com",
+  },
+  {
+    category: "Networking",
+    command: "host",
+    description: "Simple DNS lookup utility.",
+    difficulty: "basic",
+    example: "host google.com",
+  },
+  {
+    category: "Networking",
     command: "curl",
     description: "Transfers data from or to a URL.",
     difficulty: "basic",
-    example: "curl https://example.com",
+    example: "curl -I https://example.com",
+    flags: "-I (headers), -o (output), -X (method)",
   },
   {
     category: "Networking",
     command: "wget",
     description: "Downloads files from the internet.",
     difficulty: "basic",
-    example: "wget https://example.com/file.zip",
+    example: "wget -c https://example.com/file.zip",
+    flags: "-c (continue), -r (recursive)",
   },
   {
     category: "Networking",
@@ -467,6 +697,7 @@ export const linuxCommands: LinuxCommand[] = [
     description: "Connects securely to a remote system.",
     difficulty: "intermediate",
     example: "ssh user@192.168.1.10",
+    flags: "-p (port), -i (identity file)",
   },
   {
     category: "Networking",
@@ -474,13 +705,36 @@ export const linuxCommands: LinuxCommand[] = [
     description: "Copies files securely between systems.",
     difficulty: "intermediate",
     example: "scp file.txt user@host:/path",
+    flags: "-r (recursive), -P (port)",
   },
   {
     category: "Networking",
     command: "rsync",
     description: "Synchronizes files between locations efficiently.",
     difficulty: "advanced",
-    example: "rsync -av source/ dest/",
+    example: "rsync -avz source/ dest/",
+    flags: "-a (archive), -v (verbose), -z (compress)",
+  },
+  {
+    category: "Networking",
+    command: "nc",
+    description: "Netcat - network utility for TCP/UDP connections.",
+    difficulty: "advanced",
+    example: "nc -lp 1234",
+  },
+  {
+    category: "Networking",
+    command: "iptables",
+    description: "Configures Linux kernel firewall rules.",
+    difficulty: "advanced",
+    example: "sudo iptables -L",
+  },
+  {
+    category: "Networking",
+    command: "ufw",
+    description: "Uncomplicated Firewall management tool.",
+    difficulty: "intermediate",
+    example: "sudo ufw enable",
   },
 
   // ===============================
@@ -498,7 +752,7 @@ export const linuxCommands: LinuxCommand[] = [
     command: "apt upgrade",
     description: "Upgrades installed packages to the latest version.",
     difficulty: "basic",
-    example: "sudo apt upgrade",
+    example: "sudo apt upgrade -y",
   },
   {
     category: "Package Management",
@@ -521,6 +775,42 @@ export const linuxCommands: LinuxCommand[] = [
     difficulty: "intermediate",
     example: "sudo apt autoremove",
   },
+  {
+    category: "Package Management",
+    command: "apt search",
+    description: "Searches for packages in repositories.",
+    difficulty: "basic",
+    example: "apt search python",
+  },
+  {
+    category: "Package Management",
+    command: "apt show",
+    description: "Displays detailed package information.",
+    difficulty: "basic",
+    example: "apt show nginx",
+  },
+  {
+    category: "Package Management",
+    command: "dpkg",
+    description: "Low-level package manager for Debian/Ubuntu.",
+    difficulty: "intermediate",
+    example: "dpkg -l",
+    flags: "-i (install), -l (list), -r (remove)",
+  },
+  {
+    category: "Package Management",
+    command: "snap",
+    description: "Universal Linux package management system.",
+    difficulty: "intermediate",
+    example: "snap install vlc",
+  },
+  {
+    category: "Package Management",
+    command: "flatpak",
+    description: "Next-generation Linux application deployment.",
+    difficulty: "intermediate",
+    example: "flatpak install spotify",
+  },
 
   // ===============================
   // TEXT PROCESSING
@@ -530,49 +820,59 @@ export const linuxCommands: LinuxCommand[] = [
     command: "grep",
     description: "Searches for patterns within text or files.",
     difficulty: "basic",
-    example: "grep error logfile.txt",
+    example: "grep -r 'error' /var/log/",
+    flags: "-i (ignore case), -r (recursive), -n (line numbers)",
+  },
+  {
+    category: "Text Processing",
+    command: "egrep",
+    description: "Extended grep with regular expressions.",
+    difficulty: "intermediate",
+    example: "egrep 'error|warning' log.txt",
   },
   {
     category: "Text Processing",
     command: "awk",
     description: "Processes and analyzes text using patterns.",
     difficulty: "advanced",
-    example: "awk '{print $1}' file.txt",
+    example: "awk '{print $1,$3}' file.txt",
   },
   {
     category: "Text Processing",
     command: "sed",
     description: "Edits text streams line by line.",
     difficulty: "advanced",
-    example: "sed 's/old/new/' file.txt",
+    example: "sed 's/old/new/g' file.txt",
   },
   {
     category: "Text Processing",
     command: "sort",
     description: "Sorts lines in a text file.",
     difficulty: "basic",
-    example: "sort file.txt",
+    example: "sort -n numbers.txt",
+    flags: "-n (numeric), -r (reverse), -u (unique)",
   },
   {
     category: "Text Processing",
     command: "uniq",
     description: "Removes duplicate lines from sorted input.",
     difficulty: "basic",
-    example: "uniq file.txt",
+    example: "sort file.txt | uniq -c",
   },
   {
     category: "Text Processing",
     command: "cut",
     description: "Extracts specific columns from text.",
     difficulty: "intermediate",
-    example: "cut -d':' -f1 /etc/passwd",
+    example: "cut -d':' -f1,3 /etc/passwd",
+    flags: "-d (delimiter), -f (fields)",
   },
   {
     category: "Text Processing",
     command: "tr",
     description: "Translates or deletes characters.",
     difficulty: "intermediate",
-    example: "tr a-z A-Z",
+    example: "tr a-z A-Z < file.txt",
   },
   {
     category: "Text Processing",
@@ -580,6 +880,42 @@ export const linuxCommands: LinuxCommand[] = [
     description: "Counts lines, words, and characters.",
     difficulty: "basic",
     example: "wc -l file.txt",
+    flags: "-l (lines), -w (words), -c (characters)",
+  },
+  {
+    category: "Text Processing",
+    command: "diff",
+    description: "Compares files line by line.",
+    difficulty: "intermediate",
+    example: "diff file1.txt file2.txt",
+  },
+  {
+    category: "Text Processing",
+    command: "patch",
+    description: "Applies a diff file to an original.",
+    difficulty: "advanced",
+    example: "patch < changes.patch",
+  },
+  {
+    category: "Text Processing",
+    command: "nano",
+    description: "Simple text editor for beginners.",
+    difficulty: "basic",
+    example: "nano file.txt",
+  },
+  {
+    category: "Text Processing",
+    command: "vim",
+    description: "Advanced modal text editor.",
+    difficulty: "advanced",
+    example: "vim file.txt",
+  },
+  {
+    category: "Text Processing",
+    command: "vi",
+    description: "Classic Unix text editor.",
+    difficulty: "intermediate",
+    example: "vi file.txt",
   },
 
   // ===============================
@@ -591,20 +927,23 @@ export const linuxCommands: LinuxCommand[] = [
     description: "Archives multiple files into a single file.",
     difficulty: "intermediate",
     example: "tar -czvf backup.tar.gz folder/",
+    flags: "-c (create), -x (extract), -z (gzip), -v (verbose)",
   },
   {
     category: "Compression",
     command: "zip",
     description: "Creates a ZIP archive.",
     difficulty: "basic",
-    example: "zip files.zip file1 file2",
+    example: "zip -r archive.zip folder/",
+    flags: "-r (recursive), -e (encrypt)",
   },
   {
     category: "Compression",
     command: "unzip",
     description: "Extracts files from a ZIP archive.",
     difficulty: "basic",
-    example: "unzip files.zip",
+    example: "unzip archive.zip",
+    flags: "-l (list), -d (directory)",
   },
   {
     category: "Compression",
@@ -622,62 +961,286 @@ export const linuxCommands: LinuxCommand[] = [
   },
   {
     category: "Compression",
+    command: "bzip2",
+    description: "Compresses files using bzip2 algorithm.",
+    difficulty: "intermediate",
+    example: "bzip2 file.txt",
+  },
+  {
+    category: "Compression",
+    command: "bunzip2",
+    description: "Decompresses bzip2-compressed files.",
+    difficulty: "intermediate",
+    example: "bunzip2 file.txt.bz2",
+  },
+  {
+    category: "Compression",
     command: "xz",
     description: "Compresses files using high-ratio compression.",
     difficulty: "advanced",
     example: "xz file.txt",
   },
+  {
+    category: "Compression",
+    command: "7z",
+    description: "High compression ratio archive tool.",
+    difficulty: "intermediate",
+    example: "7z a archive.7z folder/",
+  },
 
   // ===============================
-  // ADVANCED / SECURITY
+  // DISK & FILESYSTEM
   // ===============================
   {
-    category: "Advanced",
+    category: "Disk Management",
+    command: "fdisk",
+    description: "Partition table manipulator.",
+    difficulty: "advanced",
+    example: "sudo fdisk -l",
+  },
+  {
+    category: "Disk Management",
+    command: "parted",
+    description: "Advanced disk partition editor.",
+    difficulty: "advanced",
+    example: "sudo parted /dev/sda print",
+  },
+  {
+    category: "Disk Management",
+    command: "mount",
+    description: "Mounts a filesystem.",
+    difficulty: "intermediate",
+    example: "sudo mount /dev/sdb1 /mnt",
+  },
+  {
+    category: "Disk Management",
+    command: "umount",
+    description: "Unmounts a filesystem.",
+    difficulty: "intermediate",
+    example: "sudo umount /mnt",
+  },
+  {
+    category: "Disk Management",
+    command: "mkfs",
+    description: "Creates a filesystem on a device.",
+    difficulty: "advanced",
+    example: "sudo mkfs.ext4 /dev/sdb1",
+  },
+  {
+    category: "Disk Management",
+    command: "fsck",
+    description: "Checks and repairs filesystem errors.",
+    difficulty: "advanced",
+    example: "sudo fsck /dev/sdb1",
+  },
+  {
+    category: "Disk Management",
+    command: "dd",
+    description: "Converts and copies files with low-level access.",
+    difficulty: "advanced",
+    example: "dd if=/dev/zero of=file bs=1M count=100",
+  },
+
+  // ===============================
+  // SECURITY & MONITORING
+  // ===============================
+  {
+    category: "Security",
     command: "nmap",
     description: "Scans networks to discover hosts, ports, and services.",
     difficulty: "advanced",
-    example: "nmap 192.168.1.1",
+    example: "nmap -sV 192.168.1.0/24",
+    flags: "-sV (version), -O (OS), -A (aggressive)",
   },
   {
-    category: "Advanced",
+    category: "Security",
     command: "tcpdump",
     description: "Captures and analyzes network packets.",
     difficulty: "advanced",
-    example: "tcpdump -i eth0",
+    example: "sudo tcpdump -i eth0 port 80",
   },
   {
-    category: "Advanced",
+    category: "Security",
+    command: "wireshark",
+    description: "GUI network protocol analyzer.",
+    difficulty: "advanced",
+    example: "wireshark",
+  },
+  {
+    category: "Security",
     command: "lsof",
     description: "Lists open files and the processes using them.",
     difficulty: "advanced",
-    example: "lsof -i",
+    example: "lsof -i :80",
+    flags: "-i (internet), -u (user), -p (PID)",
   },
   {
-    category: "Advanced",
+    category: "Security",
     command: "strace",
     description: "Traces system calls made by a process.",
     difficulty: "advanced",
-    example: "strace ls",
+    example: "strace -p 1234",
   },
   {
-    category: "Advanced",
-    command: "crontab",
-    description: "Schedules recurring tasks using cron.",
+    category: "Security",
+    command: "fail2ban",
+    description: "Bans IPs that show malicious signs.",
     difficulty: "advanced",
-    example: "crontab -e",
+    example: "sudo fail2ban-client status",
   },
   {
-    category: "Advanced",
+    category: "Security",
+    command: "openssl",
+    description: "Cryptography and SSL/TLS toolkit.",
+    difficulty: "advanced",
+    example: "openssl s_client -connect site.com:443",
+  },
+  {
+    category: "Security",
+    command: "gpg",
+    description: "GNU Privacy Guard for encryption.",
+    difficulty: "advanced",
+    example: "gpg --encrypt file.txt",
+  },
+  {
+    category: "Security",
+    command: "lynis",
+    description: "Security auditing tool for Linux systems.",
+    difficulty: "advanced",
+    example: "sudo lynis audit system",
+  },
+  {
+    category: "Security",
+    command: "chkrootkit",
+    description: "Checks for rootkit infections.",
+    difficulty: "advanced",
+    example: "sudo chkrootkit",
+  },
+
+  // ===============================
+  // SYSTEM SERVICES
+  // ===============================
+  {
+    category: "Services",
     command: "systemctl",
     description: "Manages system services.",
     difficulty: "advanced",
     example: "systemctl status ssh",
+    flags: "start, stop, restart, enable, disable",
   },
   {
-    category: "Advanced",
+    category: "Services",
+    command: "service",
+    description: "Legacy service management command.",
+    difficulty: "intermediate",
+    example: "service apache2 status",
+  },
+  {
+    category: "Services",
     command: "journalctl",
     description: "Views system logs managed by systemd.",
     difficulty: "advanced",
     example: "journalctl -xe",
+    flags: "-u (unit), -f (follow), --since",
+  },
+  {
+    category: "Services",
+    command: "dmesg",
+    description: "Displays kernel ring buffer messages.",
+    difficulty: "intermediate",
+    example: "dmesg | tail",
+  },
+  {
+    category: "Services",
+    command: "logger",
+    description: "Adds entries to system log.",
+    difficulty: "intermediate",
+    example: "logger 'System backup completed'",
+  },
+
+  // ===============================
+  // SCHEDULING & AUTOMATION
+  // ===============================
+  {
+    category: "Automation",
+    command: "crontab",
+    description: "Schedules recurring tasks using cron.",
+    difficulty: "advanced",
+    example: "crontab -e",
+    flags: "-e (edit), -l (list), -r (remove)",
+  },
+  {
+    category: "Automation",
+    command: "at",
+    description: "Schedules one-time tasks for later execution.",
+    difficulty: "intermediate",
+    example: "at 2:00 PM",
+  },
+  {
+    category: "Automation",
+    command: "watch",
+    description: "Executes a command periodically.",
+    difficulty: "basic",
+    example: "watch -n 5 df -h",
+  },
+  {
+    category: "Automation",
+    command: "sleep",
+    description: "Delays execution for a specified time.",
+    difficulty: "basic",
+    example: "sleep 10",
+  },
+
+  // ===============================
+  // SHELL & SCRIPTING
+  // ===============================
+  {
+    category: "Shell",
+    command: "bash",
+    description: "Bourne Again Shell - command interpreter.",
+    difficulty: "basic",
+    example: "bash script.sh",
+  },
+  {
+    category: "Shell",
+    command: "sh",
+    description: "Bourne shell - original Unix shell.",
+    difficulty: "basic",
+    example: "sh script.sh",
+  },
+  {
+    category: "Shell",
+    command: "source",
+    description: "Executes commands from a file in current shell.",
+    difficulty: "intermediate",
+    example: "source ~/.bashrc",
+  },
+  {
+    category: "Shell",
+    command: "alias",
+    description: "Creates command shortcuts.",
+    difficulty: "basic",
+    example: "alias ll='ls -la'",
+  },
+  {
+    category: "Shell",
+    command: "export",
+    description: "Sets environment variables.",
+    difficulty: "intermediate",
+    example: "export PATH=$PATH:/new/path",
+  },
+  {
+    category: "Shell",
+    command: "env",
+    description: "Displays environment variables.",
+    difficulty: "basic",
+    example: "env | grep PATH",
+  },
+  {
+    category: "Shell",
+    command: "set",
+    description: "Sets or displays shell options and variables.",
+    difficulty: "intermediate",
+    example: "set -x",
   },
 ];

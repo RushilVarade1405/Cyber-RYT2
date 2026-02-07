@@ -281,3 +281,8 @@ main {
   min-height: 100vh;
   will-change: transform, opacity;
 }
+
+
+code::-webkit-scrollbar {
+  display: none;
+}

@@ -1,38 +1,286 @@
 import { LazyMotion, domAnimation, m, type Variants } from "framer-motion";
+import { memo } from "react";
+import {
+  Target,
+  Globe,
+  Lightbulb,
+  Code,
+  Shield,
+  BookOpen,
+  Rocket,
+  Sparkles,
+  User,
+  Heart,
+  TrendingUp,
+} from "lucide-react";
 
 /* ===============================
-   ANIMATION VARIANTS (STATIC)
+   ANIMATION VARIANTS (ENHANCED)
 ================================ */
 
 const pageFade: Variants = {
   hidden: { opacity: 0 },
-  visible: { opacity: 1, transition: { duration: 0.6 } },
+  visible: { 
+    opacity: 1, 
+    transition: { duration: 0.8, ease: "easeOut" } 
+  },
 };
 
 const fadeUp: Variants = {
-  hidden: { opacity: 0, y: 30 },
+  hidden: { opacity: 0, y: 40 },
   visible: {
     opacity: 1,
     y: 0,
+    transition: { duration: 0.7, ease: [0.25, 0.1, 0.25, 1] },
+  },
+};
+
+const fadeIn: Variants = {
+  hidden: { opacity: 0, scale: 0.95 },
+  visible: {
+    opacity: 1,
+    scale: 1,
     transition: { duration: 0.6, ease: "easeOut" },
   },
 };
 
 const stagger: Variants = {
   hidden: {},
-  visible: { transition: { staggerChildren: 0.15 } },
+  visible: { 
+    transition: { 
+      staggerChildren: 0.12,
+      delayChildren: 0.1,
+    } 
+  },
 };
 
-const hoverLift = {
-  whileHover: {
-    y: -8,
-    boxShadow: "0 0 45px rgba(34,211,238,0.25)",
-    transition: { duration: 0.25 },
+const cardHover: Variants = {
+  rest: { scale: 1, y: 0 },
+  hover: {
+    y: -10,
+    scale: 1.03,
+    boxShadow: "0 0 50px rgba(34,211,238,0.3)",
+    borderColor: "rgba(34,211,238,0.5)",
+    transition: { 
+      duration: 0.3,
+      ease: [0.25, 0.1, 0.25, 1] 
+    },
   },
-} as const;
+};
+
+const iconFloat: Variants = {
+  animate: {
+    y: [-3, 3, -3],
+    transition: {
+      duration: 4,
+      repeat: Infinity,
+      ease: "easeInOut",
+    },
+  },
+};
+
+const shimmer: Variants = {
+  animate: {
+    backgroundPosition: ["200% 0", "-200% 0"],
+    transition: {
+      duration: 8,
+      repeat: Infinity,
+      ease: "linear",
+    },
+  },
+};
 
 /* ===============================
-   COMPONENT
+   TYPES
+================================ */
+
+interface PhilosophyCard {
+  icon: any;
+  title: string;
+  points: string[];
+  gradient: string;
+}
+
+interface RoadmapStep {
+  icon: any;
+  title: string;
+  items: string[];
+  color: string;
+}
+
+/* ===============================
+   DATA
+================================ */
+
+const philosophyItems: PhilosophyCard[] = [
+  {
+    icon: Lightbulb,
+    title: "Clarity First",
+    points: [
+      "Simple explanations before complexity",
+      "Step-by-step learning approach",
+      "No unnecessary technical overload",
+    ],
+    gradient: "from-cyan-500/20 to-blue-500/20",
+  },
+  {
+    icon: Code,
+    title: "Practice Driven",
+    points: [
+      "Hands-on learning with guidance",
+      "Understand tools before using them",
+      "Learning through experimentation",
+    ],
+    gradient: "from-blue-500/20 to-purple-500/20",
+  },
+  {
+    icon: Shield,
+    title: "Ethics & Responsibility",
+    points: [
+      "Strong focus on cyber laws",
+      "Professional security mindset",
+      "No illegal or harmful practices",
+    ],
+    gradient: "from-purple-500/20 to-cyan-500/20",
+  },
+];
+
+const roadmapSteps: RoadmapStep[] = [
+  {
+    icon: BookOpen,
+    title: "Foundations",
+    items: ["Linux basics", "Networking", "Core security concepts"],
+    color: "cyan",
+  },
+  {
+    icon: Rocket,
+    title: "Security Tools",
+    items: ["Reconnaissance", "Scanning", "Intro to VAPT"],
+    color: "blue",
+  },
+  {
+    icon: Shield,
+    title: "Defense & Law",
+    items: ["Cyber laws", "SOC basics", "Incident awareness"],
+    color: "purple",
+  },
+  {
+    icon: TrendingUp,
+    title: "Advanced Domains",
+    items: ["Blockchain security", "Case studies", "Projects"],
+    color: "indigo",
+  },
+];
+
+const learningTopics = [
+  { icon: "💻", text: "Linux and command-line fundamentals" },
+  { icon: "🌐", text: "Networking and system-level concepts" },
+  { icon: "🔧", text: "Security tools with attack & defense context" },
+  { icon: "🔐", text: "Cryptography and secure communications" },
+  { icon: "⚖️", text: "Cyber laws and ethical hacking principles" },
+];
+
+const futureGoals = [
+  { icon: "📚", text: "Structured beginner-to-advanced learning paths" },
+  { icon: "🧪", text: "Guided labs and hands-on walkthroughs" },
+  { icon: "💼", text: "Industry-aligned case studies" },
+  { icon: "👥", text: "Community-driven learning features" },
+];
+
+/* ===============================
+   SUB-COMPONENTS (MEMOIZED)
+================================ */
+
+const PhilosophyCardComponent = memo(({ item }: { item: PhilosophyCard }) => {
+  const Icon = item.icon;
+  
+  return (
+    <m.article
+      variants={fadeUp}
+      initial="rest"
+      whileHover="hover"
+      className="group relative overflow-hidden p-8 rounded-2xl bg-white/5 border border-white/10 backdrop-blur-sm"
+    >
+      {/* Gradient Overlay */}
+      <div className={`absolute inset-0 bg-gradient-to-br ${item.gradient} opacity-0 group-hover:opacity-100 transition-opacity duration-500`} />
+      
+      {/* Content */}
+      <div className="relative z-10">
+        <m.div
+          variants={iconFloat}
+          animate="animate"
+          className="mb-4 w-14 h-14 rounded-xl bg-gradient-to-br from-cyan-500/20 to-blue-500/20 border border-cyan-400/30 flex items-center justify-center"
+        >
+          <Icon className="w-7 h-7 text-cyan-400" />
+        </m.div>
+        
+        <h3 className="text-xl text-cyan-400 font-semibold mb-4 group-hover:text-cyan-300 transition-colors">
+          {item.title}
+        </h3>
+        
+        <ul className="space-y-2.5 text-gray-400 text-sm">
+          {item.points.map((point, idx) => (
+            <li key={idx} className="flex items-start gap-2 group-hover:text-gray-300 transition-colors">
+              <span className="text-cyan-400 mt-1">▸</span>
+              <span>{point}</span>
+            </li>
+          ))}
+        </ul>
+      </div>
+      
+      <m.div variants={cardHover} className="absolute inset-0 pointer-events-none" />
+    </m.article>
+  );
+});
+
+PhilosophyCardComponent.displayName = "PhilosophyCard";
+
+const RoadmapCard = memo(({ step }: { step: RoadmapStep }) => {
+  const Icon = step.icon;
+  
+  return (
+    <m.article
+      variants={fadeUp}
+      initial="rest"
+      whileHover="hover"
+      className="group relative p-6 rounded-2xl bg-white/5 border border-white/10 backdrop-blur-sm overflow-hidden"
+    >
+      {/* Hover Gradient */}
+      <div className="absolute inset-0 bg-gradient-to-br from-cyan-500/0 to-blue-500/0 group-hover:from-cyan-500/10 group-hover:to-blue-500/10 transition-all duration-500" />
+      
+      {/* Content */}
+      <div className="relative z-10">
+        <m.div
+          variants={iconFloat}
+          animate="animate"
+          className={`mb-4 w-12 h-12 rounded-lg bg-${step.color}-500/20 border border-${step.color}-400/30 flex items-center justify-center`}
+        >
+          <Icon className={`w-6 h-6 text-${step.color}-400`} />
+        </m.div>
+        
+        <h3 className="text-lg text-cyan-400 font-semibold mb-3 group-hover:text-cyan-300 transition-colors">
+          {step.title}
+        </h3>
+        
+        <ul className="space-y-1.5 text-gray-400 text-sm">
+          {step.items.map((item, idx) => (
+            <li key={idx} className="flex items-start gap-2 group-hover:text-gray-300 transition-colors">
+              <span className="text-cyan-400">•</span>
+              <span>{item}</span>
+            </li>
+          ))}
+        </ul>
+      </div>
+      
+      <m.div variants={cardHover} className="absolute inset-0 pointer-events-none" />
+    </m.article>
+  );
+});
+
+RoadmapCard.displayName = "RoadmapCard";
+
+/* ===============================
+   MAIN COMPONENT
 ================================ */
 
 export default function About() {
@@ -42,42 +290,57 @@ export default function About() {
         variants={pageFade}
         initial="hidden"
         animate="visible"
-        className="min-h-screen bg-black text-white"
+        className="relative min-h-screen bg-black text-white overflow-hidden"
       >
-        <div className="mx-auto max-w-7xl px-6 sm:px-10 py-16">
+        {/* Animated Background Effects */}
+        <div className="fixed inset-0 -z-10 pointer-events-none">
+          <div className="absolute top-20 left-20 w-96 h-96 bg-cyan-500/20 blur-[140px] animate-pulse" />
+          <div className="absolute bottom-20 right-20 w-96 h-96 bg-blue-500/20 blur-[140px] animate-pulse" />
+          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-purple-500/10 blur-[160px]" />
+        </div>
+
+        <div className="relative mx-auto max-w-7xl px-6 sm:px-10 py-20">
 
           {/* ================= TITLE ================= */}
-          <m.h1
-            variants={fadeUp}
-            initial="hidden"
-            whileInView="visible"
-            viewport={{ once: true, margin: "-80px" }}
-            className="text-4xl sm:text-5xl font-bold mb-10"
-          >
-            About <span className="text-cyan-400">Cyber World</span>
-          </m.h1>
-
-          {/* ================= INTRO ================= */}
           <m.div
             variants={fadeUp}
             initial="hidden"
             whileInView="visible"
             viewport={{ once: true, margin: "-80px" }}
-            className="max-w-3xl mb-20 space-y-4 text-gray-300"
+            className="mb-16"
           >
-            <p>
-              <span className="text-cyan-400 font-semibold">Cyber World</span> is a
-              beginner-focused cybersecurity learning platform designed to make
-              security concepts simple and structured.
-            </p>
-            <p>
-              Learners are guided through fundamentals first, ensuring clarity
-              before advancing to tools, techniques, and real-world scenarios.
-            </p>
-            <p>
-              The platform strongly emphasizes ethical learning and responsible
-              security practices.
-            </p>
+            <h1 className="text-5xl sm:text-6xl font-bold mb-4 bg-gradient-to-r from-white via-cyan-200 to-cyan-400 bg-clip-text text-transparent">
+              About Cyber World
+            </h1>
+            <div className="h-1.5 w-32 bg-gradient-to-r from-cyan-400 to-blue-500 rounded-full" />
+          </m.div>
+
+          {/* ================= INTRO ================= */}
+          <m.div
+            variants={fadeIn}
+            initial="hidden"
+            whileInView="visible"
+            viewport={{ once: true, margin: "-80px" }}
+            className="max-w-4xl mb-24 p-8 rounded-2xl bg-gradient-to-br from-white/10 to-white/5 border border-white/20 backdrop-blur-xl"
+          >
+            <div className="space-y-5 text-lg text-gray-300 leading-relaxed">
+              <p>
+                <span className="text-cyan-400 font-semibold text-xl">Cyber World</span> is a
+                beginner-focused cybersecurity learning platform designed to make
+                security concepts simple, structured, and accessible to everyone.
+              </p>
+              <p>
+                We guide learners through fundamentals first, ensuring crystal-clear
+                understanding before advancing to tools, techniques, and real-world
+                scenarios.
+              </p>
+              <p className="flex items-center gap-2">
+                <Heart className="w-5 h-5 text-red-400" />
+                <span>
+                  The platform strongly emphasizes <span className="text-cyan-400 font-semibold">ethical learning</span> and responsible security practices.
+                </span>
+              </p>
+            </div>
           </m.div>
 
           {/* ================= PURPOSE & VISION ================= */}
@@ -85,221 +348,280 @@ export default function About() {
             variants={stagger}
             initial="hidden"
             whileInView="visible"
-            viewport={{ once: true }}
-            className="grid gap-8 md:grid-cols-2 mb-20"
+            viewport={{ once: true, margin: "-50px" }}
+            className="grid gap-8 md:grid-cols-2 mb-24"
           >
-            <m.div
+            {/* Purpose Card */}
+            <m.article
               variants={fadeUp}
-              {...hoverLift}
-              className="p-6 rounded-2xl bg-white/5 border border-white/10"
+              initial="rest"
+              whileHover="hover"
+              className="group relative overflow-hidden p-8 rounded-2xl bg-white/5 border border-white/10 backdrop-blur-sm"
             >
-              <h3 className="text-xl font-semibold text-cyan-400 mb-3">
-                🎯 Purpose
-              </h3>
-              <p className="text-gray-300 text-sm mb-2">
-                To remove confusion from cybersecurity learning by providing a
-                clear, beginner-friendly path.
-              </p>
-              <p className="text-gray-400 text-sm">
-                Cyber World focuses on understanding concepts before using tools.
-              </p>
-            </m.div>
+              <div className="absolute inset-0 bg-gradient-to-br from-cyan-500/0 to-blue-500/0 group-hover:from-cyan-500/10 group-hover:to-blue-500/10 transition-all duration-500" />
+              
+              <div className="relative z-10">
+                <m.div
+                  variants={iconFloat}
+                  animate="animate"
+                  className="mb-4 w-16 h-16 rounded-xl bg-gradient-to-br from-cyan-500/20 to-blue-500/20 border border-cyan-400/30 flex items-center justify-center"
+                >
+                  <Target className="w-8 h-8 text-cyan-400" />
+                </m.div>
+                
+                <h3 className="text-2xl font-bold text-cyan-400 mb-4 group-hover:text-cyan-300 transition-colors">
+                  Purpose
+                </h3>
+                
+                <p className="text-gray-300 mb-3 leading-relaxed">
+                  To remove confusion from cybersecurity learning by providing a
+                  clear, beginner-friendly path with structured guidance.
+                </p>
+                
+                <p className="text-gray-400 text-sm leading-relaxed">
+                  Cyber World focuses on <span className="text-cyan-400">understanding concepts</span> before using tools, ensuring solid foundations.
+                </p>
+              </div>
+              
+              <m.div variants={cardHover} className="absolute inset-0 pointer-events-none" />
+            </m.article>
 
-            <m.div
+            {/* Vision Card */}
+            <m.article
               variants={fadeUp}
-              {...hoverLift}
-              className="p-6 rounded-2xl bg-white/5 border border-white/10"
+              initial="rest"
+              whileHover="hover"
+              className="group relative overflow-hidden p-8 rounded-2xl bg-white/5 border border-white/10 backdrop-blur-sm"
             >
-              <h3 className="text-xl font-semibold text-cyan-400 mb-3">
-                🌐 Vision
-              </h3>
-              <p className="text-gray-300 text-sm mb-2">
-                To become a trusted starting point for cybersecurity learners.
-              </p>
-              <p className="text-gray-400 text-sm">
-                Encouraging ethical practices and long-term skill development.
-              </p>
-            </m.div>
+              <div className="absolute inset-0 bg-gradient-to-br from-blue-500/0 to-purple-500/0 group-hover:from-blue-500/10 group-hover:to-purple-500/10 transition-all duration-500" />
+              
+              <div className="relative z-10">
+                <m.div
+                  variants={iconFloat}
+                  animate="animate"
+                  className="mb-4 w-16 h-16 rounded-xl bg-gradient-to-br from-blue-500/20 to-purple-500/20 border border-blue-400/30 flex items-center justify-center"
+                >
+                  <Globe className="w-8 h-8 text-blue-400" />
+                </m.div>
+                
+                <h3 className="text-2xl font-bold text-cyan-400 mb-4 group-hover:text-cyan-300 transition-colors">
+                  Vision
+                </h3>
+                
+                <p className="text-gray-300 mb-3 leading-relaxed">
+                  To become a trusted starting point for cybersecurity learners
+                  worldwide, building a community of ethical hackers.
+                </p>
+                
+                <p className="text-gray-400 text-sm leading-relaxed">
+                  Encouraging <span className="text-blue-400">ethical practices</span> and long-term skill development through consistent learning.
+                </p>
+              </div>
+              
+              <m.div variants={cardHover} className="absolute inset-0 pointer-events-none" />
+            </m.article>
           </m.section>
 
           {/* ================= LEARNING PHILOSOPHY ================= */}
-          <m.section
-            variants={stagger}
-            initial="hidden"
-            whileInView="visible"
-            viewport={{ once: true }}
-            className="grid gap-8 md:grid-cols-3 mb-20"
-          >
-            {[
-              {
-                title: "Clarity First",
-                points: [
-                  "Simple explanations before complexity",
-                  "Step-by-step learning approach",
-                  "No unnecessary technical overload",
-                ],
-              },
-              {
-                title: "Practice Driven",
-                points: [
-                  "Hands-on learning with guidance",
-                  "Understand tools before using them",
-                  "Learning through experimentation",
-                ],
-              },
-              {
-                title: "Ethics & Responsibility",
-                points: [
-                  "Strong focus on cyber laws",
-                  "Professional security mindset",
-                  "No illegal or harmful practices",
-                ],
-              },
-            ].map((item, i) => (
-              <m.div
-                key={i}
-                variants={fadeUp}
-                {...hoverLift}
-                className="p-6 rounded-2xl bg-white/5 border border-white/10"
-              >
-                <h3 className="text-cyan-400 font-semibold mb-3">
-                  {item.title}
-                </h3>
-                <ul className="list-disc list-inside text-gray-400 text-sm space-y-1">
-                  {item.points.map((p, idx) => (
-                    <li key={idx}>{p}</li>
-                  ))}
-                </ul>
-              </m.div>
-            ))}
+          <m.section className="mb-24">
+            <m.h2
+              variants={fadeUp}
+              initial="hidden"
+              whileInView="visible"
+              viewport={{ once: true }}
+              className="text-3xl font-bold mb-12 text-center"
+            >
+              Our Learning <span className="text-cyan-400">Philosophy</span>
+            </m.h2>
+
+            <m.div
+              variants={stagger}
+              initial="hidden"
+              whileInView="visible"
+              viewport={{ once: true, margin: "-50px" }}
+              className="grid gap-8 md:grid-cols-3"
+            >
+              {philosophyItems.map((item) => (
+                <PhilosophyCardComponent key={item.title} item={item} />
+              ))}
+            </m.div>
           </m.section>
 
-          {/* ================= WHAT YOU’LL LEARN ================= */}
+          {/* ================= WHAT YOU'LL LEARN ================= */}
           <m.section
-            variants={fadeUp}
+            variants={fadeIn}
             initial="hidden"
             whileInView="visible"
-            viewport={{ once: true }}
-            className="max-w-5xl mx-auto mb-20 p-6 rounded-2xl bg-white/5 border border-white/10"
+            viewport={{ once: true, margin: "-50px" }}
+            className="max-w-5xl mx-auto mb-24"
           >
-            <h2 className="text-2xl text-cyan-400 font-semibold mb-4">
-              🚀 What You’ll Learn
-            </h2>
-            <ul className="list-disc list-inside space-y-2 text-gray-300">
-              <li>Linux and command-line fundamentals</li>
-              <li>Networking and system-level concepts</li>
-              <li>Security tools with attack & defense context</li>
-              <li>Cryptography and secure communications</li>
-              <li>Cyber laws and ethical hacking principles</li>
-            </ul>
+            <div className="relative overflow-hidden p-8 rounded-2xl bg-gradient-to-br from-cyan-500/10 via-blue-500/10 to-purple-500/10 border border-cyan-400/20 backdrop-blur-xl">
+              {/* Shimmer Effect */}
+              <m.div
+                variants={shimmer}
+                animate="animate"
+                className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent"
+                style={{ backgroundSize: "200% 100%" }}
+              />
+              
+              <div className="relative z-10">
+                <div className="flex items-center gap-3 mb-6">
+                  <Sparkles className="w-8 h-8 text-cyan-400" />
+                  <h2 className="text-3xl text-cyan-400 font-bold">
+                    What You'll Learn
+                  </h2>
+                </div>
+                
+                <div className="grid sm:grid-cols-2 gap-4">
+                  {learningTopics.map((topic, idx) => (
+                    <m.div
+                      key={idx}
+                      variants={fadeUp}
+                      className="flex items-start gap-3 p-4 rounded-xl bg-white/5 border border-white/10 hover:bg-white/10 hover:border-cyan-400/30 transition-all duration-300 group"
+                    >
+                      <span className="text-2xl group-hover:scale-110 transition-transform">
+                        {topic.icon}
+                      </span>
+                      <span className="text-gray-300 group-hover:text-white transition-colors">
+                        {topic.text}
+                      </span>
+                    </m.div>
+                  ))}
+                </div>
+              </div>
+            </div>
           </m.section>
 
           {/* ================= ROADMAP ================= */}
-          <m.section
-            variants={stagger}
-            initial="hidden"
-            whileInView="visible"
-            viewport={{ once: true }}
-            className="mb-20"
-          >
-            <h2 className="text-3xl font-bold mb-10 text-center">
+          <m.section className="mb-24">
+            <m.h2
+              variants={fadeUp}
+              initial="hidden"
+              whileInView="visible"
+              viewport={{ once: true }}
+              className="text-4xl font-bold mb-12 text-center"
+            >
               Learning <span className="text-cyan-400">Roadmap</span>
-            </h2>
+            </m.h2>
 
-            <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-4">
-              {[
-                {
-                  title: "Foundations",
-                  items: ["Linux basics", "Networking", "Core security concepts"],
-                },
-                {
-                  title: "Security Tools",
-                  items: ["Reconnaissance", "Scanning", "Intro to VAPT"],
-                },
-                {
-                  title: "Defense & Law",
-                  items: ["Cyber laws", "SOC basics", "Incident awareness"],
-                },
-                {
-                  title: "Advanced Domains",
-                  items: ["Blockchain security", "Case studies", "Projects"],
-                },
-              ].map((step, i) => (
-                <m.div
-                  key={i}
-                  variants={fadeUp}
-                  {...hoverLift}
-                  className="p-6 rounded-2xl bg-white/5 border border-white/10"
-                >
-                  <h3 className="text-cyan-400 font-semibold mb-3">
-                    {step.title}
-                  </h3>
-                  <ul className="list-disc list-inside text-gray-400 text-sm space-y-1">
-                    {step.items.map((it, idx) => (
-                      <li key={idx}>{it}</li>
-                    ))}
-                  </ul>
-                </m.div>
+            <m.div
+              variants={stagger}
+              initial="hidden"
+              whileInView="visible"
+              viewport={{ once: true, margin: "-50px" }}
+              className="grid gap-8 sm:grid-cols-2 lg:grid-cols-4"
+            >
+              {roadmapSteps.map((step) => (
+                <RoadmapCard key={step.title} step={step} />
               ))}
-            </div>
+            </m.div>
           </m.section>
 
           {/* ================= FUTURE GOALS ================= */}
           <m.section
-            variants={fadeUp}
+            variants={fadeIn}
+            initial="hidden"
+            whileInView="visible"
+            viewport={{ once: true, margin: "-50px" }}
+            className="max-w-5xl mx-auto mb-24"
+          >
+            <div className="p-8 rounded-2xl bg-gradient-to-br from-purple-500/10 via-blue-500/10 to-cyan-500/10 border border-purple-400/20 backdrop-blur-xl">
+              <div className="flex items-center gap-3 mb-6">
+                <Rocket className="w-8 h-8 text-purple-400" />
+                <h2 className="text-3xl text-cyan-400 font-bold">
+                  Future Goals
+                </h2>
+              </div>
+              
+              <div className="grid sm:grid-cols-2 gap-4">
+                {futureGoals.map((goal, idx) => (
+                  <m.div
+                    key={idx}
+                    variants={fadeUp}
+                    className="flex items-start gap-3 p-4 rounded-xl bg-white/5 border border-white/10 hover:bg-white/10 hover:border-purple-400/30 transition-all duration-300 group"
+                  >
+                    <span className="text-2xl group-hover:scale-110 transition-transform">
+                      {goal.icon}
+                    </span>
+                    <span className="text-gray-300 group-hover:text-white transition-colors">
+                      {goal.text}
+                    </span>
+                  </m.div>
+                ))}
+              </div>
+            </div>
+          </m.section>
+
+          {/* ================= FOUNDER & CREATOR ================= */}
+          <m.section
+            variants={fadeIn}
+            initial="hidden"
+            whileInView="visible"
+            viewport={{ once: true, margin: "-50px" }}
+            className="max-w-5xl mx-auto mb-24"
+          >
+            <div className="relative overflow-hidden p-10 rounded-2xl bg-gradient-to-br from-white/10 to-white/5 border border-white/20 backdrop-blur-xl">
+              {/* Decorative Elements */}
+              <div className="absolute top-0 right-0 w-40 h-40 bg-cyan-500/10 rounded-full blur-3xl" />
+              <div className="absolute bottom-0 left-0 w-40 h-40 bg-blue-500/10 rounded-full blur-3xl" />
+              
+              <div className="relative z-10">
+                <div className="flex items-center gap-4 mb-6">
+                  <m.div
+                    variants={iconFloat}
+                    animate="animate"
+                    className="w-16 h-16 rounded-full bg-gradient-to-br from-cyan-500/20 to-blue-500/20 border-2 border-cyan-400/30 flex items-center justify-center"
+                  >
+                    <User className="w-8 h-8 text-cyan-400" />
+                  </m.div>
+                  <h2 className="text-3xl text-cyan-400 font-bold">
+                    Founder & Creator
+                  </h2>
+                </div>
+
+                <div className="space-y-5 text-lg text-gray-300 leading-relaxed">
+                  <p>
+                    Hi, I'm <span className="text-cyan-400 font-bold text-xl">RYTNIX OP</span>, a
+                    cybersecurity learner and technology enthusiast with a passion for
+                    ethical hacking, Linux, blockchain, and digital security.
+                  </p>
+
+                  <p>
+                    Cyber World was born as a personal learning project that gradually
+                    evolved into a structured platform for sharing knowledge in a{" "}
+                    <span className="text-cyan-400 font-semibold">simple, practical, and beginner-focused</span> way —
+                    especially for students who are just starting their cybersecurity journey.
+                  </p>
+
+                  <p className="flex items-start gap-3">
+                    <TrendingUp className="w-6 h-6 text-cyan-400 flex-shrink-0 mt-1" />
+                    <span>
+                      This project is continuously evolving as I explore new tools, security
+                      techniques, and emerging technologies, with the goal of learning deeply
+                      and sharing valuable insights along the way.
+                    </span>
+                  </p>
+                </div>
+              </div>
+            </div>
+          </m.section>
+
+          {/* ================= FOOTER CTA ================= */}
+          <m.div
+            variants={fadeIn}
             initial="hidden"
             whileInView="visible"
             viewport={{ once: true }}
-            className="max-w-5xl mx-auto mb-20"
+            className="text-center p-8 rounded-2xl bg-gradient-to-r from-cyan-500/10 to-blue-500/10 border border-cyan-400/20"
           >
-            <h2 className="text-2xl text-cyan-400 font-semibold mb-4">
-              🔮 Future Goals
-            </h2>
-            <ul className="list-disc list-inside space-y-2 text-gray-300">
-              <li>Structured beginner-to-advanced learning paths</li>
-              <li>Guided labs and hands-on walkthroughs</li>
-              <li>Industry-aligned case studies</li>
-              <li>Community-driven learning features</li>
-            </ul>
-          </m.section>
-
-{/* ================= FOUNDER & CREATOR ================= */}
-<m.section
-  variants={fadeUp}
-  initial="hidden"
-  whileInView="visible"
-  viewport={{ once: true }}
-  className="max-w-5xl mx-auto mb-20 p-6 rounded-2xl bg-white/5 border border-white/10"
->
-  <h2 className="text-2xl text-cyan-400 font-semibold mb-4">
-    👨‍💻 Founder & Creator
-  </h2>
-
-  <p className="text-gray-300 leading-relaxed mb-4">
-    Hi, I’m <span className="text-cyan-400 font-semibold">RYTNIX OP</span>, a
-    cybersecurity learner and technology enthusiast with a strong interest in
-    ethical hacking, Linux, blockchain, and digital security.
-  </p>
-
-  <p className="text-gray-300 leading-relaxed mb-4">
-    Cyber World was created as a personal learning project that gradually
-    evolved into a structured platform for sharing knowledge in a simple,
-    practical, and beginner-focused way — especially for students who are just
-    starting their cybersecurity journey.
-  </p>
-
-  <p className="text-gray-300 leading-relaxed">
-    This project is continuously evolving as I explore new tools, security
-    techniques, and emerging technologies, with the goal of learning deeply
-    and sharing valuable insights along the way.
-  </p>
-</m.section>
-
-          {/* ================= FOOTER ================= */}
-          <div className="mt-20 text-center text-gray-500 text-sm">
-            Learn. Practice. Secure.{" "}
-            <span className="text-cyan-400">Cyber World</span>
-          </div>
+            <Sparkles className="w-12 h-12 text-cyan-400 mx-auto mb-4" />
+            <p className="text-2xl font-bold text-white mb-2">
+              Learn. Practice. Secure.
+            </p>
+            <p className="text-cyan-400 text-3xl font-bold">
+              Cyber World
+            </p>
+          </m.div>
 
         </div>
       </m.main>
