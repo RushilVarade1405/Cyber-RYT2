@@ -204,11 +204,11 @@ export default function Home() {
       <motion.section variants={fadeUp} className="mb-24">
         <h1 className="text-4xl sm:text-5xl font-bold mb-4 leading-tight">
           Learn Cybersecurity from Scratch with{" "}
-          <span className="text-cyan-400">Cyber World</span>
+          <span className="text-cyan-400">Cyber_World</span>
         </h1>
 
         <p className="text-gray-300 max-w-3xl leading-relaxed text-lg">
-          Cyber World is a beginner-first learning platform designed to help
+          Cyber_World is a beginner-first learning platform designed to help
           students understand cybersecurity concepts clearly — from Linux and
           tools to cryptography, blockchain, and cyber laws — without confusion
           or unnecessary complexity.
@@ -226,7 +226,7 @@ export default function Home() {
             to="/about"
             className="px-6 py-2.5 rounded-lg border border-white/20 text-gray-300 bg-white/5 hover:border-cyan-400 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-cyan-400 focus:ring-offset-2 focus:ring-offset-gray-900"
           >
-            Why Cyber World?
+            Why Cyber_World?
           </Link>
         </div>
 

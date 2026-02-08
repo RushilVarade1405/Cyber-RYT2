@@ -310,7 +310,7 @@ export default function About() {
             className="mb-16"
           >
             <h1 className="text-5xl sm:text-6xl font-bold mb-4 bg-gradient-to-r from-white via-cyan-200 to-cyan-400 bg-clip-text text-transparent">
-              About Cyber World
+              About Cyber_World  
             </h1>
             <div className="h-1.5 w-32 bg-gradient-to-r from-cyan-400 to-blue-500 rounded-full" />
           </m.div>
@@ -325,7 +325,7 @@ export default function About() {
           >
             <div className="space-y-5 text-lg text-gray-300 leading-relaxed">
               <p>
-                <span className="text-cyan-400 font-semibold text-xl">Cyber World</span> is a
+                <span className="text-cyan-400 font-semibold text-xl">Cyber_World  </span> is a
                 beginner-focused cybersecurity learning platform designed to make
                 security concepts simple, structured, and accessible to everyone.
               </p>
@@ -379,7 +379,7 @@ export default function About() {
                 </p>
                 
                 <p className="text-gray-400 text-sm leading-relaxed">
-                  Cyber World focuses on <span className="text-cyan-400">understanding concepts</span> before using tools, ensuring solid foundations.
+                  Cyber_World   focuses on <span className="text-cyan-400">understanding concepts</span> before using tools, ensuring solid foundations.
                 </p>
               </div>
               
@@ -587,7 +587,7 @@ export default function About() {
                   </p>
 
                   <p>
-                    Cyber World was born as a personal learning project that gradually
+                    Cyber_World   was born as a personal learning project that gradually
                     evolved into a structured platform for sharing knowledge in a{" "}
                     <span className="text-cyan-400 font-semibold">simple, practical, and beginner-focused</span> way —
                     especially for students who are just starting their cybersecurity journey.
@@ -619,7 +619,7 @@ export default function About() {
               Learn. Practice. Secure.
             </p>
             <p className="text-cyan-400 text-3xl font-bold">
-              Cyber World
+              Cyber_World  
             </p>
           </m.div>
 
