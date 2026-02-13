@@ -237,12 +237,12 @@ function formatDate(iso: string): string {
 
 function LivePulse() {
   return (
-    <span className="inline-flex items-center gap-2">
-      <span className="relative flex h-2.5 w-2.5">
+    <span className="inline-flex items-center gap-1.5 sm:gap-2">
+      <span className="relative flex h-2 w-2 sm:h-2.5 sm:w-2.5">
         <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75" />
-        <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-green-400" />
+        <span className="relative inline-flex rounded-full h-2 w-2 sm:h-2.5 sm:w-2.5 bg-green-400" />
       </span>
-      <span className="text-green-400 text-xs font-bold tracking-widest uppercase">
+      <span className="text-green-400 text-[10px] sm:text-xs font-bold tracking-widest uppercase">
         Live Feed
       </span>
     </span>
@@ -253,11 +253,11 @@ function SourcePill({ source }: { source: string }) {
   const sc = getSourceColor(source);
   return (
     <span
-      className={`inline-flex items-center gap-1.5 text-xs font-semibold
-                  px-2.5 py-1 rounded-full bg-white/5 border border-white/10 ${sc.color}`}
+      className={`inline-flex items-center gap-1 sm:gap-1.5 text-[10px] sm:text-xs font-semibold
+                  px-2 sm:px-2.5 py-0.5 sm:py-1 rounded-full bg-white/5 border border-white/10 ${sc.color}`}
     >
-      <span className={`w-1.5 h-1.5 rounded-full ${sc.dot}`} />
-      {source}
+      <span className={`w-1 h-1 sm:w-1.5 sm:h-1.5 rounded-full ${sc.dot}`} />
+      <span className="truncate max-w-[100px] sm:max-w-none">{source}</span>
     </span>
   );
 }
@@ -266,11 +266,11 @@ function SeverityBadge({ severity }: { severity: NewsSeverity }) {
   const sc = severityConfig[severity];
   return (
     <span
-      className={`inline-flex items-center gap-1.5 text-xs font-black
-                  px-3 py-1 rounded-full border
+      className={`inline-flex items-center gap-1 sm:gap-1.5 text-[10px] sm:text-xs font-black
+                  px-2 sm:px-3 py-0.5 sm:py-1 rounded-full border
                   ${sc.bg} ${sc.border} ${sc.color} uppercase tracking-wider`}
     >
-      <span className={`w-1.5 h-1.5 rounded-full ${sc.dot} animate-pulse`} />
+      <span className={`w-1 h-1 sm:w-1.5 sm:h-1.5 rounded-full ${sc.dot} animate-pulse`} />
       {severity}
     </span>
   );
@@ -281,12 +281,13 @@ function CategoryBadge({ category }: { category: NewsCategory }) {
   const Icon = cc.icon;
   return (
     <span
-      className={`inline-flex items-center gap-1.5 text-xs font-bold
-                  px-3 py-1 rounded-full border
+      className={`inline-flex items-center gap-1 sm:gap-1.5 text-[10px] sm:text-xs font-bold
+                  px-2 sm:px-3 py-0.5 sm:py-1 rounded-full border
                   ${cc.bg} ${cc.border} ${cc.color}`}
     >
-      <Icon className="w-3 h-3" />
-      {cc.label}
+      <Icon className="w-2.5 h-2.5 sm:w-3 sm:h-3" />
+      <span className="hidden xs:inline">{cc.label}</span>
+      <span className="inline xs:hidden">{cc.label.split(' ')[0]}</span>
     </span>
   );
 }
@@ -298,21 +299,21 @@ function BreakingTicker({ articles }: { articles: CyberNewsArticle[] }) {
 
   return (
     <div
-      className="relative overflow-hidden rounded-2xl border-2 border-red-500/40
+      className="relative overflow-hidden rounded-xl sm:rounded-2xl border-2 border-red-500/40
                   bg-gradient-to-r from-red-950/60 via-red-900/40 to-red-950/60"
       style={{ boxShadow: "0 0 30px rgba(239,68,68,0.2)" }}
     >
       <div className="flex items-center">
         <div
-          className="shrink-0 flex items-center gap-2 px-5 py-3
+          className="shrink-0 flex items-center gap-1.5 sm:gap-2 px-3 sm:px-5 py-2 sm:py-3
                        bg-red-500/30 border-r-2 border-red-500/40"
         >
-          <Radio className="w-4 h-4 text-red-400 animate-pulse" />
-          <span className="text-red-300 font-black text-xs tracking-[0.2em] uppercase whitespace-nowrap">
+          <Radio className="w-3 h-3 sm:w-4 sm:h-4 text-red-400 animate-pulse" />
+          <span className="text-red-300 font-black text-[10px] sm:text-xs tracking-[0.15em] sm:tracking-[0.2em] uppercase whitespace-nowrap">
             Breaking
           </span>
         </div>
-        <div className="overflow-hidden flex-1 py-3 px-4">
+        <div className="overflow-hidden flex-1 py-2 sm:py-3 px-2 sm:px-4">
           <style>{`
             @keyframes marquee {
               0%   { transform: translateX(0); }
@@ -332,12 +333,12 @@ function BreakingTicker({ articles }: { articles: CyberNewsArticle[] }) {
                 href={a.url}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex items-center gap-3 text-sm text-gray-200
-                           hover:text-red-300 transition-colors duration-300 mr-14"
+                className="inline-flex items-center gap-2 sm:gap-3 text-xs sm:text-sm text-gray-200
+                           hover:text-red-300 transition-colors duration-300 mr-8 sm:mr-14"
               >
-                <AlertCircle className="w-3.5 h-3.5 text-red-400 shrink-0" />
-                <span>{a.title}</span>
-                <span className="text-red-500/50 mx-2">◆</span>
+                <AlertCircle className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-red-400 shrink-0" />
+                <span className="whitespace-nowrap">{a.title}</span>
+                <span className="text-red-500/50 mx-1 sm:mx-2">◆</span>
               </a>
             ))}
           </div>
@@ -348,6 +349,15 @@ function BreakingTicker({ articles }: { articles: CyberNewsArticle[] }) {
 }
 
 function FeaturedCard({ article }: { article: CyberNewsArticle }) {
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    const checkMobile = () => setIsMobile(window.innerWidth < 640);
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
+
   return (
     <motion.a
       href={article.url}
@@ -356,7 +366,7 @@ function FeaturedCard({ article }: { article: CyberNewsArticle }) {
       variants={scaleIn}
       whileHover={{ y: -6, transition: { duration: 0.3 } }}
       style={{ willChange: "transform, opacity" }}
-      className="group relative block overflow-hidden rounded-3xl cursor-pointer
+      className="group relative block overflow-hidden rounded-2xl sm:rounded-3xl cursor-pointer
                  bg-gradient-to-br from-white/5 via-white/[0.03] to-transparent
                  border-2 border-white/10 hover:border-cyan-400/60
                  transition-all duration-400"
@@ -365,17 +375,17 @@ function FeaturedCard({ article }: { article: CyberNewsArticle }) {
         className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500
                     bg-gradient-to-br from-cyan-500/8 via-transparent to-blue-500/8 pointer-events-none"
       />
-      <div className={`h-[4px] w-full bg-gradient-to-r ${severityConfig[article.severity].bar}`} />
+      <div className={`h-[3px] sm:h-[4px] w-full bg-gradient-to-r ${severityConfig[article.severity].bar}`} />
 
-      <div className="relative p-8 sm:p-10 flex flex-col gap-6">
-        <div className="flex flex-wrap items-center justify-between gap-4">
-          <div className="flex flex-wrap items-center gap-3">
+      <div className="relative p-4 sm:p-6 lg:p-10 flex flex-col gap-3 sm:gap-4 lg:gap-6">
+        <div className="flex flex-wrap items-center justify-between gap-2 sm:gap-4">
+          <div className="flex flex-wrap items-center gap-2 sm:gap-3">
             <span
-              className="px-4 py-1.5 rounded-full text-xs font-black tracking-widest uppercase
+              className="px-2.5 sm:px-4 py-1 sm:py-1.5 rounded-full text-[10px] sm:text-xs font-black tracking-widest uppercase
                          bg-gradient-to-r from-cyan-500/30 to-blue-500/30
                          border border-cyan-400/50 text-cyan-300"
             >
-              ⚡ Today's Top Story
+              ⚡ <span className="hidden xs:inline">Today's </span>Top Story
             </span>
             <CategoryBadge category={article.category} />
           </div>
@@ -383,42 +393,49 @@ function FeaturedCard({ article }: { article: CyberNewsArticle }) {
         </div>
 
         <h2
-          className="text-2xl sm:text-3xl lg:text-4xl font-black text-white leading-tight
+          className="text-lg sm:text-2xl lg:text-4xl font-black text-white leading-tight
                      group-hover:text-cyan-100 transition-colors duration-300"
         >
           {article.title}
         </h2>
 
-        <p className="text-gray-300 leading-relaxed text-base">
+        <p className="text-gray-300 leading-relaxed text-sm sm:text-base line-clamp-3 sm:line-clamp-none">
           {article.summary}
         </p>
 
-        <div className="flex flex-wrap gap-2">
-          {article.tags.map((tag, i) => (
+        <div className="flex flex-wrap gap-1.5 sm:gap-2">
+          {article.tags.slice(0, isMobile ? 3 : article.tags.length).map((tag, i) => (
             <span
               key={i}
-              className="px-3 py-1 rounded-xl bg-blue-500/10 border border-blue-400/25
-                         text-blue-300 text-xs font-bold"
+              className="px-2 sm:px-3 py-0.5 sm:py-1 rounded-lg sm:rounded-xl bg-blue-500/10 border border-blue-400/25
+                         text-blue-300 text-[10px] sm:text-xs font-bold"
             >
               #{tag}
             </span>
           ))}
+          {isMobile && article.tags.length > 3 && (
+            <span className="px-2 py-0.5 rounded-lg bg-white/5 border border-white/10 text-gray-500 text-[10px] font-bold">
+              +{article.tags.length - 3}
+            </span>
+          )}
         </div>
 
-        <div className="flex items-center justify-between pt-4 border-t border-white/10">
-          <div className="flex items-center gap-5 flex-wrap">
+        <div className="flex items-center justify-between pt-3 sm:pt-4 border-t border-white/10">
+          <div className="flex items-center gap-3 sm:gap-5 flex-wrap">
             <SourcePill source={article.source} />
-            <span className="flex items-center gap-1.5 text-xs text-gray-500">
-              <CalendarDays className="w-3.5 h-3.5" />
-              {formatDate(article.publishedAt)}
+            <span className="flex items-center gap-1 sm:gap-1.5 text-[10px] sm:text-xs text-gray-500">
+              <CalendarDays className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
+              <span className="hidden sm:inline">{formatDate(article.publishedAt)}</span>
+              <span className="inline sm:hidden">{timeAgo(article.publishedAt)}</span>
             </span>
           </div>
           <span
-            className="flex items-center gap-2 text-sm font-black text-cyan-400
+            className="flex items-center gap-1.5 sm:gap-2 text-xs sm:text-sm font-black text-cyan-400
                        group-hover:text-cyan-300 transition-colors duration-300"
           >
-            Read Full Story
-            <ChevronRight className="w-5 h-5 group-hover:translate-x-1 transition-transform duration-300" />
+            <span className="hidden sm:inline">Read Full Story</span>
+            <span className="inline sm:hidden">Read</span>
+            <ChevronRight className="w-4 h-4 sm:w-5 sm:h-5 group-hover:translate-x-1 transition-transform duration-300" />
           </span>
         </div>
       </div>
@@ -437,65 +454,65 @@ function NewsCard({ article }: { article: CyberNewsArticle }) {
       variants={fadeUp}
       whileHover={{ y: -6, transition: { duration: 0.25 } }}
       style={{ willChange: "transform, opacity" }}
-      className="group relative flex flex-col overflow-hidden rounded-2xl cursor-pointer
+      className="group relative flex flex-col overflow-hidden rounded-xl sm:rounded-2xl cursor-pointer
                  bg-gradient-to-br from-white/5 to-white/[0.02]
                  border border-white/10 hover:border-cyan-400/50
                  transition-all duration-400"
     >
-      <div className={`h-[3px] w-full bg-gradient-to-r ${sc.bar}`} />
+      <div className={`h-[2px] sm:h-[3px] w-full bg-gradient-to-r ${sc.bar}`} />
       <div
         className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-400
                     bg-gradient-to-b from-cyan-500/5 via-transparent to-transparent pointer-events-none"
       />
 
-      <div className="relative flex flex-col flex-1 p-6 gap-4">
+      <div className="relative flex flex-col flex-1 p-4 sm:p-6 gap-3 sm:gap-4">
         <div className="flex items-center justify-between gap-2 flex-wrap">
           <CategoryBadge category={article.category} />
           <SeverityBadge severity={article.severity} />
         </div>
 
         <h3
-          className="text-base font-black text-gray-100 leading-snug
+          className="text-sm sm:text-base font-black text-gray-100 leading-snug
                      group-hover:text-cyan-200 transition-colors duration-300 line-clamp-2"
         >
           {article.title}
         </h3>
 
-        <p className="text-gray-400 text-sm leading-relaxed line-clamp-3 flex-1">
+        <p className="text-gray-400 text-xs sm:text-sm leading-relaxed line-clamp-3 flex-1">
           {article.summary}
         </p>
 
-        <div className="flex flex-wrap gap-1.5">
-          {article.tags.slice(0, 3).map((tag, i) => (
+        <div className="flex flex-wrap gap-1 sm:gap-1.5">
+          {article.tags.slice(0, 2).map((tag, i) => (
             <span
               key={i}
-              className="px-2.5 py-1 rounded-lg bg-blue-500/10 border border-blue-400/20
-                         text-blue-300 text-xs font-semibold"
+              className="px-2 sm:px-2.5 py-0.5 sm:py-1 rounded-md sm:rounded-lg bg-blue-500/10 border border-blue-400/20
+                         text-blue-300 text-[10px] sm:text-xs font-semibold"
             >
               #{tag}
             </span>
           ))}
-          {article.tags.length > 3 && (
-            <span className="px-2.5 py-1 rounded-lg bg-white/5 border border-white/10 text-gray-500 text-xs font-semibold">
-              +{article.tags.length - 3}
+          {article.tags.length > 2 && (
+            <span className="px-2 sm:px-2.5 py-0.5 sm:py-1 rounded-md sm:rounded-lg bg-white/5 border border-white/10 text-gray-500 text-[10px] sm:text-xs font-semibold">
+              +{article.tags.length - 2}
             </span>
           )}
         </div>
 
-        <div className="flex items-center justify-between pt-3 border-t border-white/10">
-          <div className="flex flex-col gap-1.5">
+        <div className="flex items-center justify-between pt-2 sm:pt-3 border-t border-white/10">
+          <div className="flex flex-col gap-1 sm:gap-1.5">
             <SourcePill source={article.source} />
-            <span className="flex items-center gap-1.5 text-xs text-gray-600">
-              <Clock className="w-3 h-3" />
+            <span className="flex items-center gap-1 sm:gap-1.5 text-[10px] sm:text-xs text-gray-600">
+              <Clock className="w-2.5 h-2.5 sm:w-3 sm:h-3" />
               {timeAgo(article.publishedAt)}
             </span>
           </div>
           <div
-            className="flex items-center gap-1.5 text-xs font-bold text-cyan-400
+            className="flex items-center gap-1 sm:gap-1.5 text-[10px] sm:text-xs font-bold text-cyan-400
                         opacity-0 group-hover:opacity-100 transition-all duration-300"
           >
-            Read More
-            <ExternalLink className="w-3.5 h-3.5" />
+            <span className="hidden xs:inline">Read More</span>
+            <ExternalLink className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
           </div>
         </div>
       </div>
@@ -523,17 +540,17 @@ function StatCard({
       variants={fadeUp}
       whileHover={{ scale: 1.04, transition: { duration: 0.25 } }}
       style={{ willChange: "transform, opacity" }}
-      className={`flex items-center gap-4 px-6 py-4 rounded-2xl
+      className={`flex items-center gap-2 sm:gap-4 px-3 sm:px-6 py-3 sm:py-4 rounded-xl sm:rounded-2xl
                   bg-gradient-to-br from-white/5 to-white/[0.02]
-                  border-2 ${borderClass}
+                  border sm:border-2 ${borderClass}
                   transition-all duration-300`}
     >
-      <div className={`p-2.5 rounded-xl ${bgClass} border ${borderClass}`}>
-        <Icon className={`w-5 h-5 ${colorClass}`} />
+      <div className={`p-1.5 sm:p-2.5 rounded-lg sm:rounded-xl ${bgClass} border ${borderClass}`}>
+        <Icon className={`w-4 h-4 sm:w-5 sm:h-5 ${colorClass}`} />
       </div>
       <div>
-        <div className={`text-2xl font-black ${colorClass}`}>{value}</div>
-        <div className="text-xs text-gray-500 font-semibold uppercase tracking-wider">
+        <div className={`text-lg sm:text-2xl font-black ${colorClass}`}>{value}</div>
+        <div className="text-[10px] sm:text-xs text-gray-500 font-semibold uppercase tracking-wider">
           {label}
         </div>
       </div>
@@ -607,24 +624,24 @@ export default function CyberNews() {
       `}</style>
 
       <div className="fixed inset-0 -z-10 overflow-hidden pointer-events-none bg-black">
-        <div className="blob1 absolute top-0 left-1/4 w-[700px] h-[700px] bg-cyan-500/15 blur-[200px] rounded-full" />
-        <div className="blob2 absolute top-1/2 right-0 w-[550px] h-[550px] bg-blue-500/15 blur-[180px] rounded-full" />
-        <div className="blob3 absolute bottom-0 left-1/3 w-[450px] h-[450px] bg-indigo-500/10 blur-[160px] rounded-full" />
-        <div className="blob4 absolute top-1/4 right-1/4 w-[450px] h-[450px] bg-red-500/20 blur-[200px] rounded-full" />
+        <div className="blob1 absolute top-0 left-1/4 w-[400px] sm:w-[700px] h-[400px] sm:h-[700px] bg-cyan-500/15 blur-[120px] sm:blur-[200px] rounded-full" />
+        <div className="blob2 absolute top-1/2 right-0 w-[300px] sm:w-[550px] h-[300px] sm:h-[550px] bg-blue-500/15 blur-[100px] sm:blur-[180px] rounded-full" />
+        <div className="blob3 absolute bottom-0 left-1/3 w-[250px] sm:w-[450px] h-[250px] sm:h-[450px] bg-indigo-500/10 blur-[90px] sm:blur-[160px] rounded-full" />
+        <div className="blob4 absolute top-1/4 right-1/4 w-[250px] sm:w-[450px] h-[250px] sm:h-[450px] bg-red-500/20 blur-[120px] sm:blur-[200px] rounded-full" />
         <div
-          className="absolute inset-0 opacity-[0.02]"
+          className="absolute inset-0 opacity-[0.01] sm:opacity-[0.02]"
           style={{
             backgroundImage: `
               linear-gradient(to right, rgb(34,211,238) 1px, transparent 1px),
               linear-gradient(to bottom, rgb(34,211,238) 1px, transparent 1px)
             `,
-            backgroundSize: "80px 80px",
+            backgroundSize: "60px 60px",
           }}
         />
-        {[...Array(12)].map((_, i) => (
+        {[...Array(8)].map((_, i) => (
           <div
             key={i}
-            className="absolute w-1 h-1 bg-cyan-400/25 rounded-full"
+            className="absolute w-0.5 h-0.5 sm:w-1 sm:h-1 bg-cyan-400/25 rounded-full hidden sm:block"
             style={{
               left: `${(i * 8 + 4) % 100}%`,
               top: `${(i * 13 + 6) % 100}%`,
@@ -640,7 +657,7 @@ export default function CyberNews() {
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ duration: 0.5 }}
-        className="relative px-6 sm:px-10 lg:px-16 pt-6 pb-16 max-w-[1600px] mx-auto"
+        className="relative px-3 sm:px-6 lg:px-16 pt-4 sm:pt-6 pb-10 sm:pb-16 max-w-[1600px] mx-auto"
       >
 
         {/* ─── HERO HEADER ─── */}
@@ -648,36 +665,35 @@ export default function CyberNews() {
           initial="hidden"
           animate="visible"
           variants={stagger}
-          className="mb-10 text-center"
+          className="mb-6 sm:mb-10 text-center"
         >
           <motion.div
             variants={scaleIn}
-            className="inline-flex items-center gap-3 px-6 py-3 mb-6 rounded-full
+            className="inline-flex items-center gap-2 sm:gap-3 px-4 sm:px-6 py-2 sm:py-3 mb-4 sm:mb-6 rounded-full
                        bg-gradient-to-r from-cyan-500/20 via-blue-500/20 to-indigo-500/20
-                       border-2 border-cyan-400/50"
+                       border sm:border-2 border-cyan-400/50"
           >
-            <Rss className="w-4 h-4 text-cyan-400" />
-            <span className="text-cyan-400 font-black text-xs tracking-[0.3em] uppercase">
+            <Rss className="w-3 h-3 sm:w-4 sm:h-4 text-cyan-400" />
+            <span className="text-cyan-400 font-black text-[10px] sm:text-xs tracking-[0.2em] sm:tracking-[0.3em] uppercase">
               Cyber World
             </span>
-            <div className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-pulse" />
+            <div className="w-1 h-1 sm:w-1.5 sm:h-1.5 rounded-full bg-cyan-400 animate-pulse" />
             <LivePulse />
           </motion.div>
 
           <motion.h1
             variants={fadeUp}
-            className="text-4xl sm:text-5xl lg:text-6xl font-black mb-4
+            className="text-3xl sm:text-5xl lg:text-6xl font-black mb-3 sm:mb-4
                        bg-gradient-to-r from-cyan-400 via-blue-400 to-cyan-400
                        bg-clip-text text-transparent leading-tight
                        tracking-tight"
           >
-            Cyber
-            <span className="text-blue-400">News</span>
+            Cyber<span className="text-blue-400">News</span>
           </motion.h1>
 
           <motion.p
             variants={fadeUp}
-            className="text-gray-300 text-base sm:text-lg mb-8 max-w-3xl mx-auto leading-relaxed font-light"
+            className="text-gray-300 text-xs sm:text-base lg:text-lg mb-4 sm:mb-8 max-w-3xl mx-auto leading-relaxed font-light px-4 sm:px-0"
           >
             Daily cybersecurity intelligence aggregated from {RSS_SOURCES.length} trusted security feeds — breaches, vulnerabilities, malware, and
             advisories refreshed every 24 hours.
@@ -685,30 +701,31 @@ export default function CyberNews() {
 
           <motion.div
             variants={fadeUp}
-            className="flex items-center justify-center gap-3 flex-wrap"
+            className="flex items-center justify-center gap-2 sm:gap-3 flex-wrap px-2 sm:px-0"
           >
             <div
-              className={`flex items-center gap-2 px-4 py-2 rounded-full border text-xs font-semibold
+              className={`flex items-center gap-1.5 sm:gap-2 px-2.5 sm:px-4 py-1.5 sm:py-2 rounded-full border text-[10px] sm:text-xs font-semibold
                           ${isOnline
                             ? "bg-green-500/10 border-green-400/40 text-green-400"
                             : "bg-red-500/10 border-red-400/40 text-red-400"}`}
             >
-              {isOnline ? <Wifi className="w-3.5 h-3.5" /> : <WifiOff className="w-3.5 h-3.5" />}
+              {isOnline ? <Wifi className="w-3 h-3 sm:w-3.5 sm:h-3.5" /> : <WifiOff className="w-3 h-3 sm:w-3.5 sm:h-3.5" />}
               {isOnline ? "Connected" : "Offline"}
             </div>
 
-            <div className="flex items-center gap-2 px-4 py-2 rounded-full
+            <div className="hidden sm:flex items-center gap-2 px-4 py-2 rounded-full
                             bg-white/5 border border-white/10 text-gray-300 text-xs font-semibold">
               <CalendarDays className="w-3.5 h-3.5 text-cyan-400" />
               {todayLabel}
             </div>
 
-            <div className="flex items-center gap-2 px-4 py-2 rounded-full
+            <div className="flex items-center gap-1.5 sm:gap-2 px-2.5 sm:px-4 py-1.5 sm:py-2 rounded-full
                             bg-gradient-to-r from-cyan-500/10 to-blue-500/10
-                            border border-cyan-400/30 text-cyan-300 text-xs font-bold
+                            border border-cyan-400/30 text-cyan-300 text-[10px] sm:text-xs font-bold
                             font-mono tracking-wider">
-              <Clock className="w-3.5 h-3.5 text-cyan-400 animate-pulse" />
-              Next update in {formatCountdown(countdown)}
+              <Clock className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-cyan-400 animate-pulse" />
+              <span className="hidden xs:inline">Next update in</span>
+              <span className="inline xs:hidden">Update</span> {formatCountdown(countdown)}
             </div>
 
             <motion.button
@@ -716,14 +733,15 @@ export default function CyberNews() {
               whileTap={{ scale: 0.96 }}
               onClick={handleRefresh}
               disabled={isRefreshing}
-              className="flex items-center gap-2 px-4 py-2 rounded-full
+              className="flex items-center gap-1.5 sm:gap-2 px-2.5 sm:px-4 py-1.5 sm:py-2 rounded-full
                          bg-cyan-500/15 border border-cyan-400/40 text-cyan-400
                          hover:bg-cyan-500/25 hover:border-cyan-400/60
-                         transition-all duration-300 text-xs font-semibold
+                         transition-all duration-300 text-[10px] sm:text-xs font-semibold
                          disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              <RefreshCw className={`w-3.5 h-3.5 ${isRefreshing ? "animate-spin" : ""}`} />
-              {isRefreshing ? "Refreshing…" : "Refresh Feed"}
+              <RefreshCw className={`w-3 h-3 sm:w-3.5 sm:h-3.5 ${isRefreshing ? "animate-spin" : ""}`} />
+              <span className="hidden xs:inline">{isRefreshing ? "Refreshing…" : "Refresh Feed"}</span>
+              <span className="inline xs:hidden">Refresh</span>
             </motion.button>
           </motion.div>
         </motion.div>
@@ -733,12 +751,12 @@ export default function CyberNews() {
           initial="hidden"
           animate="visible"
           variants={stagger}
-          className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-10"
+          className="grid grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-4 mb-6 sm:mb-10"
         >
-          <StatCard icon={Newspaper}     value={stats.total}      label="Total Articles"  colorClass="text-cyan-400"   bgClass="bg-cyan-500/15"   borderClass="border-cyan-400/30" />
-          <StatCard icon={AlertTriangle} value={stats.critical}   label="Critical Alerts" colorClass="text-red-400"    bgClass="bg-red-500/15"    borderClass="border-red-400/30" />
-          <StatCard icon={Globe}         value={stats.sources}    label="RSS Sources"     colorClass="text-blue-400"   bgClass="bg-blue-500/15"   borderClass="border-blue-400/30" />
-          <StatCard icon={Eye}           value={stats.todayCount} label="Today's Stories" colorClass="text-violet-400" bgClass="bg-violet-500/15" borderClass="border-violet-400/30" />
+          <StatCard icon={Newspaper}     value={stats.total}      label="Total"  colorClass="text-cyan-400"   bgClass="bg-cyan-500/15"   borderClass="border-cyan-400/30" />
+          <StatCard icon={AlertTriangle} value={stats.critical}   label="Critical" colorClass="text-red-400"    bgClass="bg-red-500/15"    borderClass="border-red-400/30" />
+          <StatCard icon={Globe}         value={stats.sources}    label="Sources"     colorClass="text-blue-400"   bgClass="bg-blue-500/15"   borderClass="border-blue-400/30" />
+          <StatCard icon={Eye}           value={stats.todayCount} label="Today" colorClass="text-violet-400" bgClass="bg-violet-500/15" borderClass="border-violet-400/30" />
         </motion.div>
 
         {/* ─── BREAKING TICKER ─── */}
@@ -746,7 +764,7 @@ export default function CyberNews() {
           initial={{ opacity: 0, y: 12 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.3, duration: 0.5 }}
-          className="mb-10"
+          className="mb-6 sm:mb-10"
         >
           <BreakingTicker articles={dailyArticles} />
         </motion.div>
@@ -756,22 +774,23 @@ export default function CyberNews() {
           initial={{ opacity: 0, x: -24 }}
           animate={{ opacity: 1, x: 0 }}
           transition={{ delay: 0.4, duration: 0.5 }}
-          className="flex items-center gap-5 mb-8"
+          className="flex items-center gap-3 sm:gap-5 mb-4 sm:mb-8"
         >
-          <div className="flex-1 h-[2px] bg-gradient-to-r from-transparent via-cyan-400/40 to-cyan-400/20 rounded-full" />
-          <div className="flex items-center gap-3 px-6 py-3 rounded-2xl
+          <div className="flex-1 h-[1px] sm:h-[2px] bg-gradient-to-r from-transparent via-cyan-400/40 to-cyan-400/20 rounded-full" />
+          <div className="flex items-center gap-2 sm:gap-3 px-3 sm:px-6 py-2 sm:py-3 rounded-xl sm:rounded-2xl
                           bg-gradient-to-br from-cyan-500/15 to-blue-500/15
-                          border-2 border-cyan-400/40">
-            <TrendingUp className="w-4 h-4 text-cyan-400" />
-            <span className="text-cyan-300 font-black text-xs tracking-[0.15em] uppercase">
-              Today's Intel Briefing
+                          border sm:border-2 border-cyan-400/40">
+            <TrendingUp className="w-3 h-3 sm:w-4 sm:h-4 text-cyan-400" />
+            <span className="text-cyan-300 font-black text-[10px] sm:text-xs tracking-[0.1em] sm:tracking-[0.15em] uppercase">
+              <span className="hidden xs:inline">Today's Intel Briefing</span>
+              <span className="inline xs:hidden">Today's Brief</span>
             </span>
-            <span className="px-2.5 py-0.5 rounded-full bg-cyan-500/20 border border-cyan-400/40
-                             text-cyan-400 text-xs font-black">
-              {dailyArticles.length} stories
+            <span className="px-2 sm:px-2.5 py-0.5 rounded-full bg-cyan-500/20 border border-cyan-400/40
+                             text-cyan-400 text-[10px] sm:text-xs font-black">
+              {dailyArticles.length}
             </span>
           </div>
-          <div className="flex-1 h-[2px] bg-gradient-to-l from-transparent via-cyan-400/40 to-cyan-400/20 rounded-full" />
+          <div className="flex-1 h-[1px] sm:h-[2px] bg-gradient-to-l from-transparent via-cyan-400/40 to-cyan-400/20 rounded-full" />
         </motion.div>
 
         {/* ─── FEATURED CARD ─── */}
@@ -780,7 +799,7 @@ export default function CyberNews() {
             initial="hidden"
             animate="visible"
             variants={stagger}
-            className="mb-8"
+            className="mb-4 sm:mb-8"
           >
             <FeaturedCard article={featuredArticle} />
           </motion.div>
@@ -792,7 +811,7 @@ export default function CyberNews() {
           whileInView="visible"
           viewport={{ once: true, margin: "-40px" }}
           variants={stagger}
-          className="grid gap-5 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4"
+          className="grid gap-3 sm:gap-5 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4"
         >
           {gridArticles.map((article) => (
             <NewsCard key={article.id} article={article} />
@@ -805,42 +824,42 @@ export default function CyberNews() {
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
           transition={{ duration: 0.6 }}
-          className="mt-16 relative p-8 rounded-3xl overflow-hidden
+          className="mt-10 sm:mt-16 relative p-4 sm:p-8 rounded-2xl sm:rounded-3xl overflow-hidden
                      bg-gradient-to-br from-white/5 to-white/[0.02]
-                     border-2 border-cyan-400/20"
+                     border sm:border-2 border-cyan-400/20"
         >
-          <div className="absolute top-0 right-0 w-72 h-72 bg-cyan-500/6 blur-3xl pointer-events-none" />
-          <div className="absolute bottom-0 left-0 w-72 h-72 bg-blue-500/6 blur-3xl pointer-events-none" />
+          <div className="absolute top-0 right-0 w-48 sm:w-72 h-48 sm:h-72 bg-cyan-500/6 blur-2xl sm:blur-3xl pointer-events-none" />
+          <div className="absolute bottom-0 left-0 w-48 sm:w-72 h-48 sm:h-72 bg-blue-500/6 blur-2xl sm:blur-3xl pointer-events-none" />
 
-          <div className="relative grid grid-cols-1 lg:grid-cols-2 gap-10">
+          <div className="relative grid grid-cols-1 lg:grid-cols-2 gap-6 sm:gap-10">
             {/* Left — RSS Sources with Categories */}
             <div>
-              <div className="flex items-center gap-4 mb-6">
-                <div className="p-3 rounded-2xl bg-cyan-500/15 border border-cyan-400/40">
-                  <Rss className="w-6 h-6 text-cyan-400" />
+              <div className="flex items-center gap-3 sm:gap-4 mb-4 sm:mb-6 flex-wrap">
+                <div className="p-2 sm:p-3 rounded-xl sm:rounded-2xl bg-cyan-500/15 border border-cyan-400/40">
+                  <Rss className="w-4 h-4 sm:w-6 sm:h-6 text-cyan-400" />
                 </div>
-                <div>
-                  <h3 className="text-xl font-black text-transparent bg-clip-text
+                <div className="flex-1 min-w-0">
+                  <h3 className="text-base sm:text-xl font-black text-transparent bg-clip-text
                                  bg-gradient-to-r from-cyan-400 to-blue-400">
                     Trusted Intel Sources
                   </h3>
-                  <p className="text-gray-500 text-xs mt-0.5">{RSS_SOURCES.length} curated RSS feeds</p>
+                  <p className="text-gray-500 text-[10px] sm:text-xs mt-0.5">{RSS_SOURCES.length} curated RSS feeds</p>
                 </div>
-                <div className="ml-auto hidden sm:flex items-center gap-2 px-4 py-2 rounded-xl
+                <div className="hidden sm:flex items-center gap-2 px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg sm:rounded-xl
                                 bg-green-500/10 border border-green-400/30">
-                  <span className="w-2 h-2 rounded-full bg-green-400 animate-pulse" />
-                  <span className="text-green-400 text-xs font-bold">Active</span>
+                  <span className="w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full bg-green-400 animate-pulse" />
+                  <span className="text-green-400 text-[10px] sm:text-xs font-bold">Active</span>
                 </div>
               </div>
 
               {/* Organized by category */}
-              <div className="space-y-4">
+              <div className="space-y-3 sm:space-y-4">
                 {/* Core Security */}
                 <div>
-                  <h4 className="text-xs font-black text-cyan-400 uppercase tracking-wider mb-2 px-2">
+                  <h4 className="text-[10px] sm:text-xs font-black text-cyan-400 uppercase tracking-wider mb-1.5 sm:mb-2 px-1 sm:px-2">
                     Core Security News
                   </h4>
-                  <div className="grid grid-cols-2 gap-2">
+                  <div className="grid grid-cols-2 gap-1.5 sm:gap-2">
                     {RSS_SOURCES.slice(0, 4).map((src, i) => (
                       <motion.a
                         key={i}
@@ -853,13 +872,13 @@ export default function CyberNews() {
                         transition={{ delay: i * 0.05 }}
                         whileHover={{ scale: 1.02 }}
                         style={{ willChange: "transform, opacity" }}
-                        className="flex items-center gap-2 px-3 py-2.5 rounded-xl
+                        className="flex items-center gap-1.5 sm:gap-2 px-2 sm:px-3 py-2 sm:py-2.5 rounded-lg sm:rounded-xl
                                    bg-white/5 border border-white/10
                                    hover:border-cyan-400/30 hover:bg-white/[0.07]
                                    transition-all duration-300"
                       >
-                        <span className={`w-2 h-2 rounded-full ${src.dot} animate-pulse`} />
-                        <span className={`text-xs font-semibold ${src.color}`}>{src.name}</span>
+                        <span className={`w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full ${src.dot} animate-pulse`} />
+                        <span className={`text-[10px] sm:text-xs font-semibold ${src.color} truncate`}>{src.name}</span>
                       </motion.a>
                     ))}
                   </div>
@@ -867,10 +886,10 @@ export default function CyberNews() {
 
                 {/* Additional Coverage */}
                 <div>
-                  <h4 className="text-xs font-black text-purple-400 uppercase tracking-wider mb-2 px-2">
+                  <h4 className="text-[10px] sm:text-xs font-black text-purple-400 uppercase tracking-wider mb-1.5 sm:mb-2 px-1 sm:px-2">
                     Additional Coverage
                   </h4>
-                  <div className="grid grid-cols-2 gap-2">
+                  <div className="grid grid-cols-2 gap-1.5 sm:gap-2">
                     {RSS_SOURCES.slice(4, 6).map((src, i) => (
                       <motion.a
                         key={i}
@@ -883,13 +902,13 @@ export default function CyberNews() {
                         transition={{ delay: (i + 4) * 0.05 }}
                         whileHover={{ scale: 1.02 }}
                         style={{ willChange: "transform, opacity" }}
-                        className="flex items-center gap-2 px-3 py-2.5 rounded-xl
+                        className="flex items-center gap-1.5 sm:gap-2 px-2 sm:px-3 py-2 sm:py-2.5 rounded-lg sm:rounded-xl
                                    bg-white/5 border border-white/10
                                    hover:border-purple-400/30 hover:bg-white/[0.07]
                                    transition-all duration-300"
                       >
-                        <span className={`w-2 h-2 rounded-full ${src.dot} animate-pulse`} />
-                        <span className={`text-xs font-semibold ${src.color}`}>{src.name}</span>
+                        <span className={`w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full ${src.dot} animate-pulse`} />
+                        <span className={`text-[10px] sm:text-xs font-semibold ${src.color} truncate`}>{src.name}</span>
                       </motion.a>
                     ))}
                   </div>
@@ -897,10 +916,10 @@ export default function CyberNews() {
 
                 {/* Tech & Dev */}
                 <div>
-                  <h4 className="text-xs font-black text-pink-400 uppercase tracking-wider mb-2 px-2">
+                  <h4 className="text-[10px] sm:text-xs font-black text-pink-400 uppercase tracking-wider mb-1.5 sm:mb-2 px-1 sm:px-2">
                     Tech & Development
                   </h4>
-                  <div className="grid grid-cols-2 gap-2">
+                  <div className="grid grid-cols-2 gap-1.5 sm:gap-2">
                     {RSS_SOURCES.slice(6, 8).map((src, i) => (
                       <motion.a
                         key={i}
@@ -913,13 +932,13 @@ export default function CyberNews() {
                         transition={{ delay: (i + 6) * 0.05 }}
                         whileHover={{ scale: 1.02 }}
                         style={{ willChange: "transform, opacity" }}
-                        className="flex items-center gap-2 px-3 py-2.5 rounded-xl
+                        className="flex items-center gap-1.5 sm:gap-2 px-2 sm:px-3 py-2 sm:py-2.5 rounded-lg sm:rounded-xl
                                    bg-white/5 border border-white/10
                                    hover:border-pink-400/30 hover:bg-white/[0.07]
                                    transition-all duration-300"
                       >
-                        <span className={`w-2 h-2 rounded-full ${src.dot} animate-pulse`} />
-                        <span className={`text-xs font-semibold ${src.color}`}>{src.name}</span>
+                        <span className={`w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full ${src.dot} animate-pulse`} />
+                        <span className={`text-[10px] sm:text-xs font-semibold ${src.color} truncate`}>{src.name}</span>
                       </motion.a>
                     ))}
                   </div>
@@ -927,10 +946,10 @@ export default function CyberNews() {
 
                 {/* Government & CVE */}
                 <div>
-                  <h4 className="text-xs font-black text-yellow-400 uppercase tracking-wider mb-2 px-2">
+                  <h4 className="text-[10px] sm:text-xs font-black text-yellow-400 uppercase tracking-wider mb-1.5 sm:mb-2 px-1 sm:px-2">
                     Government & CVE
                   </h4>
-                  <div className="grid grid-cols-2 gap-2">
+                  <div className="grid grid-cols-2 gap-1.5 sm:gap-2">
                     {RSS_SOURCES.slice(8, 10).map((src, i) => (
                       <motion.a
                         key={i}
@@ -943,13 +962,13 @@ export default function CyberNews() {
                         transition={{ delay: (i + 8) * 0.05 }}
                         whileHover={{ scale: 1.02 }}
                         style={{ willChange: "transform, opacity" }}
-                        className="flex items-center gap-2 px-3 py-2.5 rounded-xl
+                        className="flex items-center gap-1.5 sm:gap-2 px-2 sm:px-3 py-2 sm:py-2.5 rounded-lg sm:rounded-xl
                                    bg-white/5 border border-white/10
                                    hover:border-yellow-400/30 hover:bg-white/[0.07]
                                    transition-all duration-300"
                       >
-                        <span className={`w-2 h-2 rounded-full ${src.dot} animate-pulse`} />
-                        <span className={`text-xs font-semibold ${src.color}`}>{src.name}</span>
+                        <span className={`w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full ${src.dot} animate-pulse`} />
+                        <span className={`text-[10px] sm:text-xs font-semibold ${src.color} truncate`}>{src.name}</span>
                       </motion.a>
                     ))}
                   </div>
@@ -959,20 +978,20 @@ export default function CyberNews() {
 
             {/* Right — How daily rotation works */}
             <div>
-              <div className="flex items-center gap-4 mb-6">
-                <div className="p-3 rounded-2xl bg-indigo-500/15 border border-indigo-400/40">
-                  <Terminal className="w-6 h-6 text-indigo-400" />
+              <div className="flex items-center gap-3 sm:gap-4 mb-4 sm:mb-6 flex-wrap">
+                <div className="p-2 sm:p-3 rounded-xl sm:rounded-2xl bg-indigo-500/15 border border-indigo-400/40">
+                  <Terminal className="w-4 h-4 sm:w-6 sm:h-6 text-indigo-400" />
                 </div>
-                <div>
-                  <h3 className="text-xl font-black text-transparent bg-clip-text
+                <div className="flex-1 min-w-0">
+                  <h3 className="text-base sm:text-xl font-black text-transparent bg-clip-text
                                  bg-gradient-to-r from-indigo-400 to-violet-400">
                     Daily Rotation System
                   </h3>
-                  <p className="text-gray-500 text-xs mt-0.5">How fresh intel is served every day</p>
+                  <p className="text-gray-500 text-[10px] sm:text-xs mt-0.5">How fresh intel is served every day</p>
                 </div>
               </div>
 
-              <div className="space-y-3">
+              <div className="space-y-2 sm:space-y-3">
                 {[
                   {
                     icon: CalendarDays,
@@ -1008,27 +1027,27 @@ export default function CyberNews() {
                       viewport={{ once: true }}
                       transition={{ delay: i * 0.08 }}
                       style={{ willChange: "transform, opacity" }}
-                      className="flex items-start gap-4 p-4 rounded-xl
+                      className="flex items-start gap-2 sm:gap-4 p-3 sm:p-4 rounded-lg sm:rounded-xl
                                  bg-white/5 border border-white/10"
                     >
-                      <div className={`shrink-0 p-2 rounded-lg ${item.bg} border ${item.border}`}>
-                        <Icon className={`w-4 h-4 ${item.color}`} />
+                      <div className={`shrink-0 p-1.5 sm:p-2 rounded-md sm:rounded-lg ${item.bg} border ${item.border}`}>
+                        <Icon className={`w-3 h-3 sm:w-4 sm:h-4 ${item.color}`} />
                       </div>
-                      <div>
-                        <div className={`text-sm font-black ${item.color} mb-1`}>{item.title}</div>
-                        <div className="text-gray-400 text-xs leading-relaxed">{item.desc}</div>
+                      <div className="flex-1 min-w-0">
+                        <div className={`text-xs sm:text-sm font-black ${item.color} mb-0.5 sm:mb-1`}>{item.title}</div>
+                        <div className="text-gray-400 text-[10px] sm:text-xs leading-relaxed">{item.desc}</div>
                       </div>
                     </motion.div>
                   );
                 })}
               </div>
 
-              <div className="mt-4 p-4 rounded-xl bg-indigo-950/50 border border-indigo-400/25">
-                <p className="text-indigo-300 text-xs font-semibold leading-relaxed">
+              <div className="mt-3 sm:mt-4 p-3 sm:p-4 rounded-lg sm:rounded-xl bg-indigo-950/50 border border-indigo-400/25">
+                <p className="text-indigo-300 text-[10px] sm:text-xs font-semibold leading-relaxed">
                   <span className="font-black">Ready for live RSS?</span> Replace{" "}
-                  <code className="bg-white/5 px-1.5 py-0.5 rounded text-cyan-300">getDailyArticles()</code>{" "}
+                  <code className="bg-white/5 px-1 sm:px-1.5 py-0.5 rounded text-cyan-300">getDailyArticles()</code>{" "}
                   with a call to your{" "}
-                  <code className="bg-white/5 px-1.5 py-0.5 rounded text-cyan-300">/api/news</code>{" "}
+                  <code className="bg-white/5 px-1 sm:px-1.5 py-0.5 rounded text-cyan-300">/api/news</code>{" "}
                   endpoint and the UI updates automatically.
                 </p>
               </div>
