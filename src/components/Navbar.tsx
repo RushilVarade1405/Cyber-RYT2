@@ -16,7 +16,7 @@ const links = [
   { name: "Cyber_Laws", path: "/cyber-laws" },
   { name: "Blockchain", path: "/blockchain" },
   { name: "Cryptography", path: "/cryptography" },
-  { name: "Platform", path: "/platforms" },
+  { name: "Cyber_News", path: "/cyber-news" },
   { name: "About", path: "/about" },
 ];
 

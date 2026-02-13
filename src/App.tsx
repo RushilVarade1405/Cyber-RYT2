@@ -12,7 +12,7 @@ import Cheatsheet from "./pages/Cheatsheet";
 import CyberLaws from "./pages/CyberLaws";
 import Blockchain from "./pages/Blockchain";
 import Cryptography from "./pages/Cryptography";
-import Platforms from "./pages/Platforms";
+import CyberNews from "./pages/Cyber_News";
 import About from "./pages/About";
 
 // ================= CYBER LAWS =================
@@ -90,8 +90,8 @@ function AnimatedRoutes() {
             <Route path="/cyber-laws" element={<CyberLaws />} />
             <Route path="/blockchain" element={<Blockchain />} />
             <Route path="/cryptography" element={<Cryptography />} />
-            <Route path="/platforms" element={<Platforms />} />
-            <Route path="/cheatsheet" element={<Cheatsheet />} /> {/* ADD THIS LINE */}
+            <Route path="/cyber-news" element={<CyberNews />} />
+            <Route path="/cheatsheet" element={<Cheatsheet />} />
             <Route path="/about" element={<About />} />
 
             {/* ================= TOOLS (DYNAMIC) ================= */}
