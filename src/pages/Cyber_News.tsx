@@ -217,14 +217,6 @@ function formatDate(iso: string): string {
   });
 }
 
-function formatDateLong(iso: string): string {
-  return new Date(iso).toLocaleDateString("en-US", {
-    weekday: "long",
-    month: "long",
-    day: "numeric",
-    year: "numeric",
-  });
-}
 
 function getDaysAgo(iso: string): number {
   const diff = Date.now() - new Date(iso).getTime();
@@ -395,7 +387,6 @@ function ViewMoreModal({
     
     // Filter by time period
     if (selectedPeriod !== "all") {
-      const now = Date.now();
       filtered = filtered.filter(a => {
         const daysAgo = getDaysAgo(a.publishedAt);
         if (selectedPeriod === "today") return daysAgo === 0;
