@@ -1,4 +1,4 @@
-import { motion, type Variants } from "framer-motion";
+import { motion, type Variants, AnimatePresence } from "framer-motion";
 import { useState, useEffect, useMemo, useCallback } from "react";
 import {
   Rss,
@@ -22,6 +22,10 @@ import {
   ChevronRight,
   Zap,
   Eye,
+  Loader2,
+  X,
+  Filter,
+  ChevronDown,
 } from "lucide-react";
 
 import {
@@ -31,6 +35,13 @@ import {
   type NewsCategory,
   type NewsSeverity,
 } from "../data/News";
+
+import {
+  fetchAllRSSArticles,
+  clearRSSCache,
+  getRSSCacheStatus,
+  RSS_SOURCES,
+} from "../services/rssService";
 
 /* ===============================
    CONFIG MAPS
@@ -110,48 +121,23 @@ const severityConfig: Record<
   },
 };
 
-// OPTIMIZED: Expanded RSS sources with new feeds organized by category
-const RSS_SOURCES = [
-  // Core Security News
-  { name: "The Hacker News",      color: "text-cyan-400",    dot: "bg-cyan-400",    url: "https://feeds.feedburner.com/TheHackersNews" },
-  { name: "BleepingComputer",     color: "text-blue-400",    dot: "bg-blue-400",    url: "https://www.bleepingcomputer.com/feed/" },
-  { name: "Krebs on Security",    color: "text-indigo-400",  dot: "bg-indigo-400",  url: "https://krebsonsecurity.com/feed/" },
-  { name: "Dark Reading",         color: "text-violet-400",  dot: "bg-violet-400",  url: "https://www.darkreading.com/rss.xml" },
-  
-  // Additional Security Coverage
-  { name: "Help Net Security",    color: "text-purple-400",  dot: "bg-purple-400",  url: "https://www.helpnetsecurity.com/feed/" },
-  { name: "Cybersecurity News",   color: "text-fuchsia-400", dot: "bg-fuchsia-400", url: "https://cybersecuritynews.com/feed/" },
-  
-  // Tech & Development
-  { name: "CNX Software",         color: "text-pink-400",    dot: "bg-pink-400",    url: "https://www.cnx-software.com/feed/" },
-  { name: "XDA Developers",       color: "text-rose-400",    dot: "bg-rose-400",    url: "https://www.xda-developers.com/feed/" },
-  
-  // Government & CVE Sources
-  { name: "CISA Alerts",          color: "text-yellow-400",  dot: "bg-yellow-400",  url: "https://www.cisa.gov/news.xml" },
-  { name: "NIST NVD",             color: "text-green-400",   dot: "bg-green-400",   url: "https://nvd.nist.gov/feeds/xml/cve/misc/nvd-rss.xml" },
-];
-
 /* ===============================
    DAILY ROTATION ENGINE
-   OPTIMIZED: Improved sorting and filtering
 =============================== */
 const DAILY_FEED_SIZE = 9;
 
 function getDailyArticles(all: CyberNewsArticle[]): CyberNewsArticle[] {
-  // Sort by newest first so fresh stories bubble up
   const byDate = [...all].sort(
     (a, b) => new Date(b.publishedAt).getTime() - new Date(a.publishedAt).getTime()
   );
 
   const seed = getDayOfYear();
-  // Deterministic shuffle seeded by day-of-year applied within date-sorted list
   const shuffled = [...byDate].sort((a, b) => {
     const hashA = (a.id.charCodeAt(0) * 31 + seed * 7) % byDate.length;
     const hashB = (b.id.charCodeAt(0) * 31 + seed * 7) % byDate.length;
     return hashA - hashB;
   });
 
-  // Always guarantee at least one Critical on top
   const criticals = shuffled.filter((a) => a.severity === "Critical");
   const rest = shuffled.filter((a) => a.severity !== "Critical");
 
@@ -176,7 +162,7 @@ function formatCountdown(seconds: number): string {
 }
 
 /* ===============================
-   ANIMATIONS — PERFORMANCE OPTIMIZED
+   ANIMATIONS
 =============================== */
 const fadeUp: Variants = {
   hidden: { opacity: 0, y: 20 },
@@ -229,6 +215,40 @@ function formatDate(iso: string): string {
     day: "numeric",
     year: "numeric",
   });
+}
+
+function formatDateLong(iso: string): string {
+  return new Date(iso).toLocaleDateString("en-US", {
+    weekday: "long",
+    month: "long",
+    day: "numeric",
+    year: "numeric",
+  });
+}
+
+function getDaysAgo(iso: string): number {
+  const diff = Date.now() - new Date(iso).getTime();
+  return Math.floor(diff / (1000 * 60 * 60 * 24));
+}
+
+function groupArticlesByDate(articles: CyberNewsArticle[]): Record<string, CyberNewsArticle[]> {
+  const groups: Record<string, CyberNewsArticle[]> = {};
+  
+  articles.forEach(article => {
+    const daysAgo = getDaysAgo(article.publishedAt);
+    let key: string;
+    
+    if (daysAgo === 0) key = "Today";
+    else if (daysAgo === 1) key = "Yesterday";
+    else if (daysAgo <= 7) key = "This Week";
+    else if (daysAgo <= 30) key = "This Month";
+    else key = "Older";
+    
+    if (!groups[key]) groups[key] = [];
+    groups[key].push(article);
+  });
+  
+  return groups;
 }
 
 /* ===============================
@@ -292,7 +312,6 @@ function CategoryBadge({ category }: { category: NewsCategory }) {
   );
 }
 
-/** Breaking news scrolling ticker — uses CSS animation for smooth scroll */
 function BreakingTicker({ articles }: { articles: CyberNewsArticle[] }) {
   const critical = articles.filter((a) => a.severity === "Critical");
   if (critical.length === 0) return null;
@@ -345,6 +364,271 @@ function BreakingTicker({ articles }: { articles: CyberNewsArticle[] }) {
         </div>
       </div>
     </div>
+  );
+}
+
+function ViewMoreModal({ 
+  isOpen, 
+  onClose, 
+  articles 
+}: { 
+  isOpen: boolean; 
+  onClose: () => void; 
+  articles: CyberNewsArticle[];
+}) {
+  const [selectedPeriod, setSelectedPeriod] = useState<string>("all");
+  const [selectedCategory, setSelectedCategory] = useState<string>("all");
+  const [selectedSeverity, setSelectedSeverity] = useState<string>("all");
+
+  const groupedArticles = useMemo(() => {
+    let filtered = articles;
+    
+    // Filter by category
+    if (selectedCategory !== "all") {
+      filtered = filtered.filter(a => a.category === selectedCategory);
+    }
+    
+    // Filter by severity
+    if (selectedSeverity !== "all") {
+      filtered = filtered.filter(a => a.severity === selectedSeverity);
+    }
+    
+    // Filter by time period
+    if (selectedPeriod !== "all") {
+      const now = Date.now();
+      filtered = filtered.filter(a => {
+        const daysAgo = getDaysAgo(a.publishedAt);
+        if (selectedPeriod === "today") return daysAgo === 0;
+        if (selectedPeriod === "week") return daysAgo <= 7;
+        if (selectedPeriod === "month") return daysAgo <= 30;
+        return true;
+      });
+    }
+    
+    return groupArticlesByDate(filtered);
+  }, [articles, selectedPeriod, selectedCategory, selectedSeverity]);
+
+  const totalFiltered = useMemo(() => 
+    Object.values(groupedArticles).flat().length, 
+    [groupedArticles]
+  );
+
+  useEffect(() => {
+    if (isOpen) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = 'unset';
+    }
+    return () => { document.body.style.overflow = 'unset'; };
+  }, [isOpen]);
+
+  if (!isOpen) return null;
+
+  return (
+    <AnimatePresence>
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+        className="fixed inset-0 z-50 flex items-start justify-center bg-black/90 backdrop-blur-sm
+                   overflow-y-auto p-2 sm:p-4"
+        onClick={onClose}
+      >
+        <motion.div
+          initial={{ opacity: 0, scale: 0.95, y: 20 }}
+          animate={{ opacity: 1, scale: 1, y: 0 }}
+          exit={{ opacity: 0, scale: 0.95, y: 20 }}
+          transition={{ duration: 0.3 }}
+          onClick={(e) => e.stopPropagation()}
+          className="relative w-full max-w-6xl bg-gradient-to-br from-gray-900 via-black to-gray-900
+                     rounded-2xl sm:rounded-3xl border-2 border-cyan-400/30 mt-4 sm:mt-8 mb-4 sm:mb-8
+                     shadow-2xl"
+          style={{ boxShadow: "0 0 60px rgba(34,211,238,0.2)" }}
+        >
+          {/* Header */}
+          <div className="sticky top-0 z-10 bg-gradient-to-r from-cyan-950/95 via-blue-950/95 to-cyan-950/95
+                          backdrop-blur-xl border-b-2 border-cyan-400/30 px-4 sm:px-8 py-4 sm:py-6
+                          rounded-t-2xl sm:rounded-t-3xl">
+            <div className="flex items-center justify-between gap-4">
+              <div className="flex items-center gap-3 sm:gap-4">
+                <div className="p-2 sm:p-3 rounded-xl bg-cyan-500/15 border-2 border-cyan-400/40">
+                  <Newspaper className="w-5 h-5 sm:w-6 sm:h-6 text-cyan-400" />
+                </div>
+                <div>
+                  <h2 className="text-xl sm:text-3xl font-black text-transparent bg-clip-text
+                                 bg-gradient-to-r from-cyan-400 to-blue-400">
+                    All Cyber News
+                  </h2>
+                  <p className="text-gray-400 text-xs sm:text-sm mt-1">
+                    {totalFiltered} articles • Organized by publish date
+                  </p>
+                </div>
+              </div>
+              <motion.button
+                whileHover={{ scale: 1.1, rotate: 90 }}
+                whileTap={{ scale: 0.9 }}
+                onClick={onClose}
+                className="p-2 sm:p-3 rounded-xl bg-red-500/10 border-2 border-red-400/40
+                           hover:bg-red-500/20 transition-all duration-300"
+              >
+                <X className="w-5 h-5 sm:w-6 sm:h-6 text-red-400" />
+              </motion.button>
+            </div>
+
+            {/* Filters */}
+            <div className="flex flex-wrap gap-2 sm:gap-3 mt-4 sm:mt-6">
+              {/* Time Period Filter */}
+              <select
+                value={selectedPeriod}
+                onChange={(e) => setSelectedPeriod(e.target.value)}
+                className="px-3 sm:px-4 py-2 sm:py-2.5 rounded-lg bg-white/5 border border-white/20
+                           text-cyan-300 text-xs sm:text-sm font-semibold
+                           hover:bg-white/10 focus:outline-none focus:border-cyan-400/50
+                           transition-all duration-300 cursor-pointer"
+              >
+                <option value="all" className="bg-gray-900">All Time</option>
+                <option value="today" className="bg-gray-900">Today</option>
+                <option value="week" className="bg-gray-900">This Week</option>
+                <option value="month" className="bg-gray-900">This Month</option>
+              </select>
+
+              {/* Category Filter */}
+              <select
+                value={selectedCategory}
+                onChange={(e) => setSelectedCategory(e.target.value)}
+                className="px-3 sm:px-4 py-2 sm:py-2.5 rounded-lg bg-white/5 border border-white/20
+                           text-cyan-300 text-xs sm:text-sm font-semibold
+                           hover:bg-white/10 focus:outline-none focus:border-cyan-400/50
+                           transition-all duration-300 cursor-pointer"
+              >
+                <option value="all" className="bg-gray-900">All Categories</option>
+                <option value="Breach" className="bg-gray-900">🔶 Data Breach</option>
+                <option value="Vulnerability" className="bg-gray-900">🔴 Vulnerability</option>
+                <option value="Malware" className="bg-gray-900">🔥 Malware</option>
+                <option value="Advisory" className="bg-gray-900">🛡️ Advisory</option>
+                <option value="Research" className="bg-gray-900">📘 Research</option>
+              </select>
+
+              {/* Severity Filter */}
+              <select
+                value={selectedSeverity}
+                onChange={(e) => setSelectedSeverity(e.target.value)}
+                className="px-3 sm:px-4 py-2 sm:py-2.5 rounded-lg bg-white/5 border border-white/20
+                           text-cyan-300 text-xs sm:text-sm font-semibold
+                           hover:bg-white/10 focus:outline-none focus:border-cyan-400/50
+                           transition-all duration-300 cursor-pointer"
+              >
+                <option value="all" className="bg-gray-900">All Severity</option>
+                <option value="Critical" className="bg-gray-900">🔴 Critical</option>
+                <option value="High" className="bg-gray-900">🟠 High</option>
+                <option value="Medium" className="bg-gray-900">🟡 Medium</option>
+                <option value="Low" className="bg-gray-900">🟢 Low</option>
+              </select>
+
+              {/* Reset Filters */}
+              {(selectedPeriod !== "all" || selectedCategory !== "all" || selectedSeverity !== "all") && (
+                <motion.button
+                  initial={{ scale: 0 }}
+                  animate={{ scale: 1 }}
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  onClick={() => {
+                    setSelectedPeriod("all");
+                    setSelectedCategory("all");
+                    setSelectedSeverity("all");
+                  }}
+                  className="px-3 sm:px-4 py-2 sm:py-2.5 rounded-lg bg-red-500/10 border border-red-400/40
+                             text-red-400 text-xs sm:text-sm font-semibold
+                             hover:bg-red-500/20 transition-all duration-300"
+                >
+                  Reset Filters
+                </motion.button>
+              )}
+            </div>
+          </div>
+
+          {/* Content */}
+          <div className="px-4 sm:px-8 py-6 sm:py-8 max-h-[calc(100vh-300px)] overflow-y-auto
+                          custom-scrollbar">
+            {Object.keys(groupedArticles).length === 0 ? (
+              <div className="text-center py-16">
+                <Filter className="w-16 h-16 sm:w-20 sm:h-20 text-gray-600 mx-auto mb-4" />
+                <p className="text-gray-400 text-base sm:text-lg font-semibold">
+                  No articles match your filters
+                </p>
+                <p className="text-gray-600 text-sm sm:text-base mt-2">
+                  Try adjusting your filter criteria
+                </p>
+              </div>
+            ) : (
+              <div className="space-y-6 sm:space-y-10">
+                {Object.entries(groupedArticles).map(([period, periodArticles]) => (
+                  <motion.div
+                    key={period}
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.4 }}
+                  >
+                    {/* Period Header */}
+                    <div className="flex items-center gap-3 sm:gap-4 mb-4 sm:mb-6">
+                      <div className="flex items-center gap-2 sm:gap-3 px-4 sm:px-6 py-2 sm:py-3 
+                                      rounded-xl bg-gradient-to-r from-cyan-500/15 to-blue-500/15
+                                      border-2 border-cyan-400/30">
+                        <CalendarDays className="w-4 h-4 sm:w-5 sm:h-5 text-cyan-400" />
+                        <span className="text-cyan-300 font-black text-sm sm:text-base tracking-wide uppercase">
+                          {period}
+                        </span>
+                        <span className="px-2 sm:px-3 py-0.5 sm:py-1 rounded-full bg-cyan-500/20 
+                                       border border-cyan-400/40 text-cyan-400 text-xs sm:text-sm font-black">
+                          {periodArticles.length}
+                        </span>
+                      </div>
+                      <div className="flex-1 h-[2px] bg-gradient-to-r from-cyan-400/40 to-transparent" />
+                    </div>
+
+                    {/* Articles Grid */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-5">
+                      {periodArticles.map((article) => (
+                        <NewsCard key={article.id} article={article} />
+                      ))}
+                    </div>
+                  </motion.div>
+                ))}
+              </div>
+            )}
+          </div>
+
+          {/* Footer with count */}
+          <div className="sticky bottom-0 bg-gradient-to-r from-cyan-950/95 via-blue-950/95 to-cyan-950/95
+                          backdrop-blur-xl border-t-2 border-cyan-400/30 px-4 sm:px-8 py-3 sm:py-4
+                          rounded-b-2xl sm:rounded-b-3xl">
+            <div className="flex items-center justify-between text-xs sm:text-sm text-gray-400">
+              <span>Showing {totalFiltered} of {articles.length} articles</span>
+              <span className="text-cyan-400 font-semibold">
+                Press ESC or click outside to close
+              </span>
+            </div>
+          </div>
+
+          <style>{`
+            .custom-scrollbar::-webkit-scrollbar {
+              width: 8px;
+            }
+            .custom-scrollbar::-webkit-scrollbar-track {
+              background: rgba(255,255,255,0.05);
+              border-radius: 10px;
+            }
+            .custom-scrollbar::-webkit-scrollbar-thumb {
+              background: rgba(34,211,238,0.3);
+              border-radius: 10px;
+            }
+            .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+              background: rgba(34,211,238,0.5);
+            }
+          `}</style>
+        </motion.div>
+      </motion.div>
+    </AnimatePresence>
   );
 }
 
@@ -562,13 +846,13 @@ function StatCard({
    MAIN COMPONENT
 =============================== */
 export default function CyberNews() {
-  const dailyArticles = useMemo(() => getDailyArticles(newsArticles), []);
-  const featuredArticle = dailyArticles[0];
-  const gridArticles = dailyArticles.slice(1);
-
+  const [liveArticles, setLiveArticles] = useState<CyberNewsArticle[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [loadError, setLoadError] = useState(false);
   const [isOnline, setIsOnline] = useState(navigator.onLine);
   const [countdown, setCountdown] = useState(getSecondsUntilMidnight());
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const [showViewMore, setShowViewMore] = useState(false);
   const [todayLabel] = useState(() =>
     new Date().toLocaleDateString("en-US", {
       weekday: "long",
@@ -577,6 +861,44 @@ export default function CyberNews() {
       year: "numeric",
     })
   );
+
+  // Load live RSS feeds on mount
+  useEffect(() => {
+    let mounted = true;
+
+    async function loadRSSFeeds() {
+      try {
+        setIsLoading(true);
+        setLoadError(false);
+        const articles = await fetchAllRSSArticles();
+        if (mounted) {
+          setLiveArticles(articles);
+          setIsLoading(false);
+        }
+      } catch (error) {
+        console.error("RSS fetch error:", error);
+        if (mounted) {
+          setLoadError(true);
+          setIsLoading(false);
+        }
+      }
+    }
+
+    loadRSSFeeds();
+    return () => { mounted = false; };
+  }, []);
+
+  // Hybrid mode: use live articles if available, else fallback to static
+  const allArticles = useMemo(() => {
+    if (liveArticles.length > 0) {
+      return liveArticles;
+    }
+    return newsArticles; // Fallback to static data
+  }, [liveArticles]);
+
+  const dailyArticles = useMemo(() => getDailyArticles(allArticles), [allArticles]);
+  const featuredArticle = dailyArticles[0];
+  const gridArticles = dailyArticles.slice(1);
 
   useEffect(() => {
     const on = () => setIsOnline(true);
@@ -594,23 +916,45 @@ export default function CyberNews() {
     return () => clearInterval(tick);
   }, []);
 
+  useEffect(() => {
+    const handleEsc = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setShowViewMore(false);
+    };
+    window.addEventListener('keydown', handleEsc);
+    return () => window.removeEventListener('keydown', handleEsc);
+  }, []);
+
   const handleRefresh = useCallback(async () => {
     setIsRefreshing(true);
-    await new Promise((r) => setTimeout(r, 900));
+    clearRSSCache();
+    try {
+      const articles = await fetchAllRSSArticles();
+      setLiveArticles(articles);
+      setLoadError(false);
+    } catch (error) {
+      console.error("Refresh error:", error);
+      setLoadError(true);
+    }
     setIsRefreshing(false);
   }, []);
 
-  const stats = useMemo(() => ({
-    total:      newsArticles.length,
-    critical:   newsArticles.filter((a) => a.severity === "Critical").length,
-    sources:    RSS_SOURCES.length,
-    todayCount: dailyArticles.length,
-  }), [dailyArticles]);
+  const stats = useMemo(() => {
+    const srcCount = liveArticles.length > 0 ? RSS_SOURCES.filter(s => s.enabled).length : 10;
+    return {
+      total: allArticles.length,
+      critical: allArticles.filter((a) => a.severity === "Critical").length,
+      sources: srcCount,
+      todayCount: dailyArticles.length,
+    };
+  }, [allArticles, dailyArticles, liveArticles]);
+
+  const cacheStatus = getRSSCacheStatus();
+  const isLiveMode = liveArticles.length > 0;
 
   return (
     <div className="relative min-h-screen bg-black">
 
-      {/* ─── BACKGROUND — CSS-only animations ─── */}
+      {/* ─── BACKGROUND ─── */}
       <style>{`
         @keyframes blob1 { 0%,100%{transform:scale(1)   opacity:.2} 50%{transform:scale(1.15) opacity:.35} }
         @keyframes blob2 { 0%,100%{transform:scale(1.1) opacity:.12} 50%{transform:scale(1)   opacity:.25} }
@@ -678,7 +1022,11 @@ export default function CyberNews() {
               Cyber World
             </span>
             <div className="w-1 h-1 sm:w-1.5 sm:h-1.5 rounded-full bg-cyan-400 animate-pulse" />
-            <LivePulse />
+            {isLiveMode ? <LivePulse /> : (
+              <span className="text-yellow-400 text-[10px] sm:text-xs font-bold tracking-widest uppercase">
+                Fallback Mode
+              </span>
+            )}
           </motion.div>
 
           <motion.h1
@@ -695,8 +1043,11 @@ export default function CyberNews() {
             variants={fadeUp}
             className="text-gray-300 text-xs sm:text-base lg:text-lg mb-4 sm:mb-8 max-w-3xl mx-auto leading-relaxed font-light px-4 sm:px-0"
           >
-            Daily cybersecurity intelligence aggregated from {RSS_SOURCES.length} trusted security feeds — breaches, vulnerabilities, malware, and
-            advisories refreshed every 24 hours.
+            {isLiveMode ? (
+              <>Live cybersecurity intelligence from {stats.sources} trusted RSS feeds — breaches, vulnerabilities, malware, and advisories updated in real-time.</>
+            ) : (
+              <>Daily cybersecurity intelligence aggregated from trusted security sources — breaches, vulnerabilities, malware, and advisories.</>
+            )}
           </motion.p>
 
           <motion.div
@@ -712,6 +1063,14 @@ export default function CyberNews() {
               {isOnline ? <Wifi className="w-3 h-3 sm:w-3.5 sm:h-3.5" /> : <WifiOff className="w-3 h-3 sm:w-3.5 sm:h-3.5" />}
               {isOnline ? "Connected" : "Offline"}
             </div>
+
+            {cacheStatus.cached && (
+              <div className="flex items-center gap-2 px-2.5 sm:px-4 py-1.5 sm:py-2 rounded-full
+                              bg-cyan-500/10 border border-cyan-400/30 text-cyan-300 text-[10px] sm:text-xs font-semibold">
+                <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-pulse" />
+                Cached ({Math.floor((cacheStatus.age || 0) / 60000)}m ago)
+              </div>
+            )}
 
             <div className="hidden sm:flex items-center gap-2 px-4 py-2 rounded-full
                             bg-white/5 border border-white/10 text-gray-300 text-xs font-semibold">
@@ -739,62 +1098,107 @@ export default function CyberNews() {
                          transition-all duration-300 text-[10px] sm:text-xs font-semibold
                          disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              <RefreshCw className={`w-3 h-3 sm:w-3.5 sm:h-3.5 ${isRefreshing ? "animate-spin" : ""}`} />
+              {isRefreshing ? (
+                <Loader2 className="w-3 h-3 sm:w-3.5 sm:h-3.5 animate-spin" />
+              ) : (
+                <RefreshCw className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
+              )}
               <span className="hidden xs:inline">{isRefreshing ? "Refreshing…" : "Refresh Feed"}</span>
               <span className="inline xs:hidden">Refresh</span>
             </motion.button>
           </motion.div>
         </motion.div>
 
+        {/* ─── LOADING STATE ─── */}
+        {isLoading && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            className="flex flex-col items-center justify-center py-20"
+          >
+            <Loader2 className="w-12 h-12 sm:w-16 sm:h-16 text-cyan-400 animate-spin mb-4" />
+            <p className="text-cyan-300 text-sm sm:text-base font-semibold">Loading live RSS feeds...</p>
+            <p className="text-gray-500 text-xs sm:text-sm mt-2">Aggregating from {RSS_SOURCES.filter(s => s.enabled).length} sources</p>
+          </motion.div>
+        )}
+
+        {/* ─── ERROR STATE ─── */}
+        {loadError && !isLoading && liveArticles.length === 0 && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="mb-6 sm:mb-10 p-4 sm:p-6 rounded-xl sm:rounded-2xl border-2 border-yellow-400/40
+                       bg-gradient-to-r from-yellow-950/60 via-yellow-900/40 to-yellow-950/60"
+          >
+            <div className="flex items-center gap-3">
+              <AlertTriangle className="w-5 h-5 sm:w-6 sm:h-6 text-yellow-400 shrink-0" />
+              <div>
+                <p className="text-yellow-300 font-bold text-sm sm:text-base">
+                  RSS feeds unavailable — displaying fallback content
+                </p>
+                <p className="text-yellow-400/80 text-xs sm:text-sm mt-1">
+                  Static articles will be shown. Try refreshing in a few minutes.
+                </p>
+              </div>
+            </div>
+          </motion.div>
+        )}
+
         {/* ─── STATS ROW ─── */}
-        <motion.div
-          initial="hidden"
-          animate="visible"
-          variants={stagger}
-          className="grid grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-4 mb-6 sm:mb-10"
-        >
-          <StatCard icon={Newspaper}     value={stats.total}      label="Total"  colorClass="text-cyan-400"   bgClass="bg-cyan-500/15"   borderClass="border-cyan-400/30" />
-          <StatCard icon={AlertTriangle} value={stats.critical}   label="Critical" colorClass="text-red-400"    bgClass="bg-red-500/15"    borderClass="border-red-400/30" />
-          <StatCard icon={Globe}         value={stats.sources}    label="Sources"     colorClass="text-blue-400"   bgClass="bg-blue-500/15"   borderClass="border-blue-400/30" />
-          <StatCard icon={Eye}           value={stats.todayCount} label="Today" colorClass="text-violet-400" bgClass="bg-violet-500/15" borderClass="border-violet-400/30" />
-        </motion.div>
+        {!isLoading && (
+          <motion.div
+            initial="hidden"
+            animate="visible"
+            variants={stagger}
+            className="grid grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-4 mb-6 sm:mb-10"
+          >
+            <StatCard icon={Newspaper}     value={stats.total}      label="Total"  colorClass="text-cyan-400"   bgClass="bg-cyan-500/15"   borderClass="border-cyan-400/30" />
+            <StatCard icon={AlertTriangle} value={stats.critical}   label="Critical" colorClass="text-red-400"    bgClass="bg-red-500/15"    borderClass="border-red-400/30" />
+            <StatCard icon={Globe}         value={stats.sources}    label="Sources"     colorClass="text-blue-400"   bgClass="bg-blue-500/15"   borderClass="border-blue-400/30" />
+            <StatCard icon={Eye}           value={stats.todayCount} label="Today" colorClass="text-violet-400" bgClass="bg-violet-500/15" borderClass="border-violet-400/30" />
+          </motion.div>
+        )}
 
         {/* ─── BREAKING TICKER ─── */}
-        <motion.div
-          initial={{ opacity: 0, y: 12 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.3, duration: 0.5 }}
-          className="mb-6 sm:mb-10"
-        >
-          <BreakingTicker articles={dailyArticles} />
-        </motion.div>
+        {!isLoading && (
+          <motion.div
+            initial={{ opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.3, duration: 0.5 }}
+            className="mb-6 sm:mb-10"
+          >
+            <BreakingTicker articles={dailyArticles} />
+          </motion.div>
+        )}
 
         {/* ─── DAILY EDITION LABEL ─── */}
-        <motion.div
-          initial={{ opacity: 0, x: -24 }}
-          animate={{ opacity: 1, x: 0 }}
-          transition={{ delay: 0.4, duration: 0.5 }}
-          className="flex items-center gap-3 sm:gap-5 mb-4 sm:mb-8"
-        >
-          <div className="flex-1 h-[1px] sm:h-[2px] bg-gradient-to-r from-transparent via-cyan-400/40 to-cyan-400/20 rounded-full" />
-          <div className="flex items-center gap-2 sm:gap-3 px-3 sm:px-6 py-2 sm:py-3 rounded-xl sm:rounded-2xl
-                          bg-gradient-to-br from-cyan-500/15 to-blue-500/15
-                          border sm:border-2 border-cyan-400/40">
-            <TrendingUp className="w-3 h-3 sm:w-4 sm:h-4 text-cyan-400" />
-            <span className="text-cyan-300 font-black text-[10px] sm:text-xs tracking-[0.1em] sm:tracking-[0.15em] uppercase">
-              <span className="hidden xs:inline">Today's Intel Briefing</span>
-              <span className="inline xs:hidden">Today's Brief</span>
-            </span>
-            <span className="px-2 sm:px-2.5 py-0.5 rounded-full bg-cyan-500/20 border border-cyan-400/40
-                             text-cyan-400 text-[10px] sm:text-xs font-black">
-              {dailyArticles.length}
-            </span>
-          </div>
-          <div className="flex-1 h-[1px] sm:h-[2px] bg-gradient-to-l from-transparent via-cyan-400/40 to-cyan-400/20 rounded-full" />
-        </motion.div>
+        {!isLoading && (
+          <motion.div
+            initial={{ opacity: 0, x: -24 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ delay: 0.4, duration: 0.5 }}
+            className="flex items-center gap-3 sm:gap-5 mb-4 sm:mb-8"
+          >
+            <div className="flex-1 h-[1px] sm:h-[2px] bg-gradient-to-r from-transparent via-cyan-400/40 to-cyan-400/20 rounded-full" />
+            <div className="flex items-center gap-2 sm:gap-3 px-3 sm:px-6 py-2 sm:py-3 rounded-xl sm:rounded-2xl
+                            bg-gradient-to-br from-cyan-500/15 to-blue-500/15
+                            border sm:border-2 border-cyan-400/40">
+              <TrendingUp className="w-3 h-3 sm:w-4 sm:h-4 text-cyan-400" />
+              <span className="text-cyan-300 font-black text-[10px] sm:text-xs tracking-[0.1em] sm:tracking-[0.15em] uppercase">
+                <span className="hidden xs:inline">Today's Intel Briefing</span>
+                <span className="inline xs:hidden">Today's Brief</span>
+              </span>
+              <span className="px-2 sm:px-2.5 py-0.5 rounded-full bg-cyan-500/20 border border-cyan-400/40
+                               text-cyan-400 text-[10px] sm:text-xs font-black">
+                {dailyArticles.length}
+              </span>
+            </div>
+            <div className="flex-1 h-[1px] sm:h-[2px] bg-gradient-to-l from-transparent via-cyan-400/40 to-cyan-400/20 rounded-full" />
+          </motion.div>
+        )}
 
         {/* ─── FEATURED CARD ─── */}
-        {featuredArticle && (
+        {!isLoading && featuredArticle && (
           <motion.div
             initial="hidden"
             animate="visible"
@@ -806,254 +1210,214 @@ export default function CyberNews() {
         )}
 
         {/* ─── NEWS GRID ─── */}
-        <motion.div
-          initial="hidden"
-          whileInView="visible"
-          viewport={{ once: true, margin: "-40px" }}
-          variants={stagger}
-          className="grid gap-3 sm:gap-5 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4"
-        >
-          {gridArticles.map((article) => (
-            <NewsCard key={article.id} article={article} />
-          ))}
-        </motion.div>
+        {!isLoading && (
+          <motion.div
+            initial="hidden"
+            whileInView="visible"
+            viewport={{ once: true, margin: "-40px" }}
+            variants={stagger}
+            className="grid gap-3 sm:gap-5 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4"
+          >
+            {gridArticles.map((article) => (
+              <NewsCard key={article.id} article={article} />
+            ))}
+          </motion.div>
+        )}
 
-        {/* ─── INFO PANEL — OPTIMIZED WITH NEW SOURCES ─── */}
-        <motion.div
-          initial={{ opacity: 0, y: 30 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.6 }}
-          className="mt-10 sm:mt-16 relative p-4 sm:p-8 rounded-2xl sm:rounded-3xl overflow-hidden
-                     bg-gradient-to-br from-white/5 to-white/[0.02]
-                     border sm:border-2 border-cyan-400/20"
-        >
-          <div className="absolute top-0 right-0 w-48 sm:w-72 h-48 sm:h-72 bg-cyan-500/6 blur-2xl sm:blur-3xl pointer-events-none" />
-          <div className="absolute bottom-0 left-0 w-48 sm:w-72 h-48 sm:h-72 bg-blue-500/6 blur-2xl sm:blur-3xl pointer-events-none" />
-
-          <div className="relative grid grid-cols-1 lg:grid-cols-2 gap-6 sm:gap-10">
-            {/* Left — RSS Sources with Categories */}
-            <div>
-              <div className="flex items-center gap-3 sm:gap-4 mb-4 sm:mb-6 flex-wrap">
-                <div className="p-2 sm:p-3 rounded-xl sm:rounded-2xl bg-cyan-500/15 border border-cyan-400/40">
-                  <Rss className="w-4 h-4 sm:w-6 sm:h-6 text-cyan-400" />
+        {/* ─── VIEW MORE BUTTON ─── */}
+        {!isLoading && allArticles.length > DAILY_FEED_SIZE && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.5, duration: 0.5 }}
+            className="mt-8 sm:mt-12 flex justify-center"
+          >
+            <motion.button
+              whileHover={{ scale: 1.05, y: -2 }}
+              whileTap={{ scale: 0.98 }}
+              onClick={() => setShowViewMore(true)}
+              className="group relative px-6 sm:px-10 py-4 sm:py-5 rounded-xl sm:rounded-2xl
+                         bg-gradient-to-r from-cyan-500/20 via-blue-500/20 to-cyan-500/20
+                         border-2 border-cyan-400/50 hover:border-cyan-400/80
+                         transition-all duration-400 overflow-hidden"
+              style={{ boxShadow: "0 0 30px rgba(34,211,238,0.2)" }}
+            >
+              {/* Animated background */}
+              <div className="absolute inset-0 bg-gradient-to-r from-cyan-500/0 via-cyan-500/20 to-cyan-500/0
+                              opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+              
+              {/* Button content */}
+              <div className="relative flex items-center gap-3 sm:gap-4">
+                <Newspaper className="w-5 h-5 sm:w-6 sm:h-6 text-cyan-400 group-hover:scale-110 transition-transform duration-300" />
+                <div className="text-left">
+                  <div className="flex items-center gap-2 sm:gap-3">
+                    <span className="text-base sm:text-xl font-black text-transparent bg-clip-text
+                                   bg-gradient-to-r from-cyan-400 to-blue-400">
+                      View All Cyber News
+                    </span>
+                    <span className="px-2 sm:px-3 py-0.5 sm:py-1 rounded-full bg-cyan-500/20 border border-cyan-400/40
+                                   text-cyan-400 text-xs sm:text-sm font-black">
+                      {allArticles.length}
+                    </span>
+                  </div>
+                  <p className="text-gray-400 text-xs sm:text-sm mt-1">
+                    Browse by date, category, and severity
+                  </p>
                 </div>
-                <div className="flex-1 min-w-0">
-                  <h3 className="text-base sm:text-xl font-black text-transparent bg-clip-text
-                                 bg-gradient-to-r from-cyan-400 to-blue-400">
-                    Trusted Intel Sources
-                  </h3>
-                  <p className="text-gray-500 text-[10px] sm:text-xs mt-0.5">{RSS_SOURCES.length} curated RSS feeds</p>
-                </div>
-                <div className="hidden sm:flex items-center gap-2 px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg sm:rounded-xl
-                                bg-green-500/10 border border-green-400/30">
-                  <span className="w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full bg-green-400 animate-pulse" />
-                  <span className="text-green-400 text-[10px] sm:text-xs font-bold">Active</span>
-                </div>
+                <ChevronDown className="w-5 h-5 sm:w-6 sm:h-6 text-cyan-400 animate-bounce" />
               </div>
 
-              {/* Organized by category */}
-              <div className="space-y-3 sm:space-y-4">
-                {/* Core Security */}
-                <div>
-                  <h4 className="text-[10px] sm:text-xs font-black text-cyan-400 uppercase tracking-wider mb-1.5 sm:mb-2 px-1 sm:px-2">
-                    Core Security News
-                  </h4>
+              {/* Glow effect */}
+              <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500
+                              bg-gradient-to-r from-transparent via-cyan-400/10 to-transparent blur-xl" />
+            </motion.button>
+          </motion.div>
+        )}
+
+        {/* ─── VIEW MORE MODAL ─── */}
+        <ViewMoreModal 
+          isOpen={showViewMore}
+          onClose={() => setShowViewMore(false)}
+          articles={allArticles}
+        />
+
+        {/* ─── INFO PANEL ─── */}
+        {!isLoading && (
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.6 }}
+            className="mt-10 sm:mt-16 relative p-4 sm:p-8 rounded-2xl sm:rounded-3xl overflow-hidden
+                       bg-gradient-to-br from-white/5 to-white/[0.02]
+                       border sm:border-2 border-cyan-400/20"
+          >
+            <div className="absolute top-0 right-0 w-48 sm:w-72 h-48 sm:h-72 bg-cyan-500/6 blur-2xl sm:blur-3xl pointer-events-none" />
+            <div className="absolute bottom-0 left-0 w-48 sm:w-72 h-48 sm:h-72 bg-blue-500/6 blur-2xl sm:blur-3xl pointer-events-none" />
+
+            <div className="relative grid grid-cols-1 lg:grid-cols-2 gap-6 sm:gap-10">
+              {/* Left — RSS Sources */}
+              <div>
+                <div className="flex items-center gap-3 sm:gap-4 mb-4 sm:mb-6 flex-wrap">
+                  <div className="p-2 sm:p-3 rounded-xl sm:rounded-2xl bg-cyan-500/15 border border-cyan-400/40">
+                    <Rss className="w-4 h-4 sm:w-6 sm:h-6 text-cyan-400" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <h3 className="text-base sm:text-xl font-black text-transparent bg-clip-text
+                                   bg-gradient-to-r from-cyan-400 to-blue-400">
+                      {isLiveMode ? "Live RSS Sources" : "Trusted Sources"}
+                    </h3>
+                    <p className="text-gray-500 text-[10px] sm:text-xs mt-0.5">
+                      {isLiveMode ? `${RSS_SOURCES.filter(s => s.enabled).length} active feeds` : "Curated security intelligence"}
+                    </p>
+                  </div>
+                  {isLiveMode && (
+                    <div className="flex items-center gap-2 px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg sm:rounded-xl
+                                    bg-green-500/10 border border-green-400/30">
+                      <span className="w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full bg-green-400 animate-pulse" />
+                      <span className="text-green-400 text-[10px] sm:text-xs font-bold">Active</span>
+                    </div>
+                  )}
+                </div>
+
+                <div className="space-y-2 sm:space-y-3">
                   <div className="grid grid-cols-2 gap-1.5 sm:gap-2">
-                    {RSS_SOURCES.slice(0, 4).map((src, i) => (
-                      <motion.a
+                    {RSS_SOURCES.filter(s => s.enabled).slice(0, 12).map((src, i) => (
+                      <motion.div
                         key={i}
-                        href={src.url}
-                        target="_blank"
-                        rel="noopener noreferrer"
                         initial={{ opacity: 0, y: 10 }}
                         whileInView={{ opacity: 1, y: 0 }}
                         viewport={{ once: true }}
-                        transition={{ delay: i * 0.05 }}
-                        whileHover={{ scale: 1.02 }}
-                        style={{ willChange: "transform, opacity" }}
+                        transition={{ delay: i * 0.03 }}
                         className="flex items-center gap-1.5 sm:gap-2 px-2 sm:px-3 py-2 sm:py-2.5 rounded-lg sm:rounded-xl
                                    bg-white/5 border border-white/10
                                    hover:border-cyan-400/30 hover:bg-white/[0.07]
                                    transition-all duration-300"
                       >
-                        <span className={`w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full ${src.dot} animate-pulse`} />
+                        <span className={`w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full ${src.dot} ${isLiveMode ? 'animate-pulse' : ''}`} />
                         <span className={`text-[10px] sm:text-xs font-semibold ${src.color} truncate`}>{src.name}</span>
-                      </motion.a>
+                      </motion.div>
                     ))}
                   </div>
                 </div>
+              </div>
 
-                {/* Additional Coverage */}
-                <div>
-                  <h4 className="text-[10px] sm:text-xs font-black text-purple-400 uppercase tracking-wider mb-1.5 sm:mb-2 px-1 sm:px-2">
-                    Additional Coverage
-                  </h4>
-                  <div className="grid grid-cols-2 gap-1.5 sm:gap-2">
-                    {RSS_SOURCES.slice(4, 6).map((src, i) => (
-                      <motion.a
-                        key={i}
-                        href={src.url}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        initial={{ opacity: 0, y: 10 }}
-                        whileInView={{ opacity: 1, y: 0 }}
-                        viewport={{ once: true }}
-                        transition={{ delay: (i + 4) * 0.05 }}
-                        whileHover={{ scale: 1.02 }}
-                        style={{ willChange: "transform, opacity" }}
-                        className="flex items-center gap-1.5 sm:gap-2 px-2 sm:px-3 py-2 sm:py-2.5 rounded-lg sm:rounded-xl
-                                   bg-white/5 border border-white/10
-                                   hover:border-purple-400/30 hover:bg-white/[0.07]
-                                   transition-all duration-300"
-                      >
-                        <span className={`w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full ${src.dot} animate-pulse`} />
-                        <span className={`text-[10px] sm:text-xs font-semibold ${src.color} truncate`}>{src.name}</span>
-                      </motion.a>
-                    ))}
+              {/* Right — How it works */}
+              <div>
+                <div className="flex items-center gap-3 sm:gap-4 mb-4 sm:mb-6 flex-wrap">
+                  <div className="p-2 sm:p-3 rounded-xl sm:rounded-2xl bg-indigo-500/15 border border-indigo-400/40">
+                    <Terminal className="w-4 h-4 sm:w-6 sm:h-6 text-indigo-400" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <h3 className="text-base sm:text-xl font-black text-transparent bg-clip-text
+                                   bg-gradient-to-r from-indigo-400 to-violet-400">
+                      {isLiveMode ? "Live Aggregation" : "Daily Rotation"}
+                    </h3>
+                    <p className="text-gray-500 text-[10px] sm:text-xs mt-0.5">
+                      {isLiveMode ? "Real-time RSS parsing & categorization" : "Static content with daily rotation"}
+                    </p>
                   </div>
                 </div>
 
-                {/* Tech & Dev */}
-                <div>
-                  <h4 className="text-[10px] sm:text-xs font-black text-pink-400 uppercase tracking-wider mb-1.5 sm:mb-2 px-1 sm:px-2">
-                    Tech & Development
-                  </h4>
-                  <div className="grid grid-cols-2 gap-1.5 sm:gap-2">
-                    {RSS_SOURCES.slice(6, 8).map((src, i) => (
-                      <motion.a
+                <div className="space-y-2 sm:space-y-3">
+                  {[
+                    {
+                      icon: Zap,
+                      color: "text-cyan-400",
+                      bg: "bg-cyan-500/10",
+                      border: "border-cyan-400/30",
+                      title: isLiveMode ? "Parallel Fetching" : "Newest First",
+                      desc: isLiveMode 
+                        ? "Fetches from 30+ RSS feeds in parallel batches for optimal speed and resilience."
+                        : "Articles sorted by publish date before rotation so latest news surfaces first.",
+                    },
+                    {
+                      icon: AlertTriangle,
+                      color: "text-red-400",
+                      bg: "bg-red-500/10",
+                      border: "border-red-400/30",
+                      title: isLiveMode ? "Smart Categorization" : "Critical First",
+                      desc: isLiveMode
+                        ? "AI-powered keyword analysis auto-categorizes articles by severity and type."
+                        : "Critical severity articles always prioritized to top regardless of date.",
+                    },
+                    {
+                      icon: Shield,
+                      color: "text-yellow-400",
+                      bg: "bg-yellow-500/10",
+                      border: "border-yellow-400/30",
+                      title: isLiveMode ? "15-Min Cache" : "Easy Updates",
+                      desc: isLiveMode
+                        ? "Intelligent caching reduces load while keeping content fresh and performant."
+                        : "Simply add new articles to News.ts — automatically included in rotation.",
+                    },
+                  ].map((item, i) => {
+                    const Icon = item.icon;
+                    return (
+                      <motion.div
                         key={i}
-                        href={src.url}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        initial={{ opacity: 0, y: 10 }}
-                        whileInView={{ opacity: 1, y: 0 }}
+                        initial={{ opacity: 0, x: 16 }}
+                        whileInView={{ opacity: 1, x: 0 }}
                         viewport={{ once: true }}
-                        transition={{ delay: (i + 6) * 0.05 }}
-                        whileHover={{ scale: 1.02 }}
-                        style={{ willChange: "transform, opacity" }}
-                        className="flex items-center gap-1.5 sm:gap-2 px-2 sm:px-3 py-2 sm:py-2.5 rounded-lg sm:rounded-xl
-                                   bg-white/5 border border-white/10
-                                   hover:border-pink-400/30 hover:bg-white/[0.07]
-                                   transition-all duration-300"
+                        transition={{ delay: i * 0.08 }}
+                        className="flex items-start gap-2 sm:gap-4 p-3 sm:p-4 rounded-lg sm:rounded-xl
+                                   bg-white/5 border border-white/10"
                       >
-                        <span className={`w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full ${src.dot} animate-pulse`} />
-                        <span className={`text-[10px] sm:text-xs font-semibold ${src.color} truncate`}>{src.name}</span>
-                      </motion.a>
-                    ))}
-                  </div>
-                </div>
-
-                {/* Government & CVE */}
-                <div>
-                  <h4 className="text-[10px] sm:text-xs font-black text-yellow-400 uppercase tracking-wider mb-1.5 sm:mb-2 px-1 sm:px-2">
-                    Government & CVE
-                  </h4>
-                  <div className="grid grid-cols-2 gap-1.5 sm:gap-2">
-                    {RSS_SOURCES.slice(8, 10).map((src, i) => (
-                      <motion.a
-                        key={i}
-                        href={src.url}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        initial={{ opacity: 0, y: 10 }}
-                        whileInView={{ opacity: 1, y: 0 }}
-                        viewport={{ once: true }}
-                        transition={{ delay: (i + 8) * 0.05 }}
-                        whileHover={{ scale: 1.02 }}
-                        style={{ willChange: "transform, opacity" }}
-                        className="flex items-center gap-1.5 sm:gap-2 px-2 sm:px-3 py-2 sm:py-2.5 rounded-lg sm:rounded-xl
-                                   bg-white/5 border border-white/10
-                                   hover:border-yellow-400/30 hover:bg-white/[0.07]
-                                   transition-all duration-300"
-                      >
-                        <span className={`w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full ${src.dot} animate-pulse`} />
-                        <span className={`text-[10px] sm:text-xs font-semibold ${src.color} truncate`}>{src.name}</span>
-                      </motion.a>
-                    ))}
-                  </div>
+                        <div className={`shrink-0 p-1.5 sm:p-2 rounded-md sm:rounded-lg ${item.bg} border ${item.border}`}>
+                          <Icon className={`w-3 h-3 sm:w-4 sm:h-4 ${item.color}`} />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <div className={`text-xs sm:text-sm font-black ${item.color} mb-0.5 sm:mb-1`}>{item.title}</div>
+                          <div className="text-gray-400 text-[10px] sm:text-xs leading-relaxed">{item.desc}</div>
+                        </div>
+                      </motion.div>
+                    );
+                  })}
                 </div>
               </div>
             </div>
-
-            {/* Right — How daily rotation works */}
-            <div>
-              <div className="flex items-center gap-3 sm:gap-4 mb-4 sm:mb-6 flex-wrap">
-                <div className="p-2 sm:p-3 rounded-xl sm:rounded-2xl bg-indigo-500/15 border border-indigo-400/40">
-                  <Terminal className="w-4 h-4 sm:w-6 sm:h-6 text-indigo-400" />
-                </div>
-                <div className="flex-1 min-w-0">
-                  <h3 className="text-base sm:text-xl font-black text-transparent bg-clip-text
-                                 bg-gradient-to-r from-indigo-400 to-violet-400">
-                    Daily Rotation System
-                  </h3>
-                  <p className="text-gray-500 text-[10px] sm:text-xs mt-0.5">How fresh intel is served every day</p>
-                </div>
-              </div>
-
-              <div className="space-y-2 sm:space-y-3">
-                {[
-                  {
-                    icon: CalendarDays,
-                    color: "text-cyan-400",
-                    bg: "bg-cyan-500/10",
-                    border: "border-cyan-400/30",
-                    title: "Newest First",
-                    desc: "Articles are sorted by publish date descending before rotation, so the latest cybersecurity news always surfaces first.",
-                  },
-                  {
-                    icon: AlertTriangle,
-                    color: "text-red-400",
-                    bg: "bg-red-500/10",
-                    border: "border-red-400/30",
-                    title: "Critical First",
-                    desc: "Critical severity articles are always prioritized to the top of the daily feed regardless of publish date.",
-                  },
-                  {
-                    icon: Zap,
-                    color: "text-yellow-400",
-                    bg: "bg-yellow-500/10",
-                    border: "border-yellow-400/30",
-                    title: "Add New Articles",
-                    desc: "Simply add new objects to News.ts. They are automatically included in the daily rotation without any code changes.",
-                  },
-                ].map((item, i) => {
-                  const Icon = item.icon;
-                  return (
-                    <motion.div
-                      key={i}
-                      initial={{ opacity: 0, x: 16 }}
-                      whileInView={{ opacity: 1, x: 0 }}
-                      viewport={{ once: true }}
-                      transition={{ delay: i * 0.08 }}
-                      style={{ willChange: "transform, opacity" }}
-                      className="flex items-start gap-2 sm:gap-4 p-3 sm:p-4 rounded-lg sm:rounded-xl
-                                 bg-white/5 border border-white/10"
-                    >
-                      <div className={`shrink-0 p-1.5 sm:p-2 rounded-md sm:rounded-lg ${item.bg} border ${item.border}`}>
-                        <Icon className={`w-3 h-3 sm:w-4 sm:h-4 ${item.color}`} />
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <div className={`text-xs sm:text-sm font-black ${item.color} mb-0.5 sm:mb-1`}>{item.title}</div>
-                        <div className="text-gray-400 text-[10px] sm:text-xs leading-relaxed">{item.desc}</div>
-                      </div>
-                    </motion.div>
-                  );
-                })}
-              </div>
-
-              <div className="mt-3 sm:mt-4 p-3 sm:p-4 rounded-lg sm:rounded-xl bg-indigo-950/50 border border-indigo-400/25">
-                <p className="text-indigo-300 text-[10px] sm:text-xs font-semibold leading-relaxed">
-                  <span className="font-black">Ready for live RSS?</span> Replace{" "}
-                  <code className="bg-white/5 px-1 sm:px-1.5 py-0.5 rounded text-cyan-300">getDailyArticles()</code>{" "}
-                  with a call to your{" "}
-                  <code className="bg-white/5 px-1 sm:px-1.5 py-0.5 rounded text-cyan-300">/api/news</code>{" "}
-                  endpoint and the UI updates automatically.
-                </p>
-              </div>
-            </div>
-          </div>
-        </motion.div>
+          </motion.div>
+        )}
 
       </motion.div>
     </div>

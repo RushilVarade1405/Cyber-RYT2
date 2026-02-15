@@ -11,7 +11,7 @@ import { motion, AnimatePresence } from "framer-motion";
 const links = [
   { name: "Home", path: "/" },
   { name: "Linux", path: "/linux" },
-  { name: "Tools", path: "/tools" },
+  { name: "Tools", path: "/Tools" },
   { name: "Cheatsheet", path: "/cheatsheet" },
   { name: "Cyber_Laws", path: "/cyber-laws" },
   { name: "Blockchain", path: "/blockchain" },
@@ -129,7 +129,7 @@ function SearchModal({
       >
         {/* Glowing border effect */}
         <div className="absolute -inset-[1px] bg-gradient-to-r from-cyan-500 via-blue-500 to-cyan-500 rounded-xl opacity-75 blur-sm animate-pulse" />
-        
+
         <div className="relative rounded-xl bg-[#040812] border border-cyan-500/30 overflow-hidden shadow-2xl shadow-cyan-500/20">
           {/* Search input header */}
           <div className="flex items-center gap-3 px-5 py-4 border-b border-cyan-500/20 bg-gradient-to-r from-cyan-500/5 to-transparent">
@@ -300,10 +300,9 @@ export default function Navbar() {
                     <span
                       className={`
                         relative text-sm font-medium transition-all duration-300
-                        ${
-                          isActive
-                            ? "text-cyan-400"
-                            : "text-gray-300 group-hover:text-cyan-300"
+                        ${isActive
+                          ? "text-cyan-400"
+                          : "text-gray-300 group-hover:text-cyan-300"
                         }
                       `}
                     >
@@ -454,15 +453,14 @@ export default function Navbar() {
                           className={`
                             relative px-4 py-3 rounded-lg text-sm font-medium
                             transition-all duration-200
-                            ${
-                              isActive
-                                ? "text-cyan-400 bg-cyan-500/10 border-l-2 border-cyan-400"
-                                : "text-gray-300 hover:text-cyan-300 hover:bg-cyan-500/5 border-l-2 border-transparent"
+                            ${isActive
+                              ? "text-cyan-400 bg-cyan-500/10 border-l-2 border-cyan-400"
+                              : "text-gray-300 hover:text-cyan-300 hover:bg-cyan-500/5 border-l-2 border-transparent"
                             }
                           `}
                         >
                           {link.name}
-                          
+
                           {/* Active indicator glow */}
                           {isActive && (
                             <motion.div

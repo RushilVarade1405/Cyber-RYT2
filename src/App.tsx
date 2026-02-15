@@ -29,7 +29,7 @@ import LinuxNetworking from "./pages/linux/LinuxNetworking";
 import Linuxtoolscmd from "./pages/linux/Linuxtoolscmd";
 
 // ================= TOOLS (DYNAMIC) =================
-import ToolsHome from "./pages/tools/ToolsHome";
+import ToolsHome from "./pages/Tools";
 import ToolPage from "./pages/tools/ToolPage";
 
 // ================= CRYPTOGRAPHY =================
