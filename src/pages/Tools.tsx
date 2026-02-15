@@ -161,7 +161,7 @@ export default function Tools() {
             className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold mb-4 md:mb-6
                        text-white tracking-tight"
           >
-            Cybersecurity <span className="text-cyan-400">Tools</span>
+            <span className="text-cyan-400">Cybersecurity </span>Tools
           </motion.h1>
 
           <motion.p
