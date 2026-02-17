@@ -928,7 +928,7 @@ export default function CyberNews() {
             className="fluid-hero font-black mb-3
                        bg-gradient-to-r from-cyan-400 via-blue-400 to-cyan-400
                        bg-clip-text text-transparent leading-tight tracking-tight">
-            Cyber<span className="text-blue-400">News</span>
+            Cyber_<span className="text-blue-400">News</span>
           </motion.h1>
 
           {/* Subtitle */}
