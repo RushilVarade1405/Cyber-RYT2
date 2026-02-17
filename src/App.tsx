@@ -14,6 +14,7 @@ import Blockchain from "./pages/Blockchain";
 import Cryptography from "./pages/Cryptography";
 import CyberNews from "./pages/Cyber_News";
 import About from "./pages/About";
+import Admin from "./pages/admin";
 
 // ================= CYBER LAWS =================
 import LawsHome from "./pages/cyber-laws/LawsHome";
@@ -93,6 +94,7 @@ function AnimatedRoutes() {
             <Route path="/cyber-news" element={<CyberNews />} />
             <Route path="/cheatsheet" element={<Cheatsheet />} />
             <Route path="/about" element={<About />} />
+            <Route path="/admin" element={<Admin />} />
 
             {/* ================= TOOLS (DYNAMIC) ================= */}
             <Route path="/tools/:toolId" element={<ToolPage />} />
