@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ShieldX, Terminal, Lock, Cpu, Phone, ChevronRight, Zap } from 'lucide-react';
+import { ShieldX, Terminal, Lock, Cpu, ChevronRight, Zap } from 'lucide-react';
 
 const Admin = () => {
   const canvasRef      = useRef<HTMLCanvasElement>(null);
