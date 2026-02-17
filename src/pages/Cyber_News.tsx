@@ -4,7 +4,7 @@ import {
   Rss, Shield, AlertTriangle, Bug, RefreshCw, ExternalLink,
   Clock, Newspaper, Globe, Radio, BookOpen, AlertCircle, Terminal,
   Flame, CalendarDays, TrendingUp, Wifi, WifiOff, ChevronRight,
-  Eye, Loader2, X, Filter, ChevronDown, CheckCircle2, RotateCcw,
+  Eye, Loader2, X, Filter, ChevronDown, RotateCcw,
 } from "lucide-react";
 
 import {
@@ -128,47 +128,6 @@ function groupArticlesByDate(articles: CyberNewsArticle[]): Record<string, Cyber
   return ordered;
 }
 
-/* ─────────────────────────────────────────────────────────────
-   AUTO-REFRESH TYPE
-───────────────────────────────────────────────────────────── */
-type AutoRefreshReason = "page-visit" | "tab-focus" | null;
-
-/* ─────────────────────────────────────────────────────────────
-   AUTO-REFRESH TOAST
-───────────────────────────────────────────────────────────── */
-function AutoRefreshToast({ reason, isRefreshing }: { reason: AutoRefreshReason; isRefreshing: boolean }) {
-  if (!reason) return null;
-  const label = reason === "page-visit" ? "Auto-refreshing feed…" : "Tab back — syncing…";
-  return (
-    <AnimatePresence>
-      {isRefreshing && (
-        <motion.div
-          key="auto-toast"
-          initial={{ opacity: 0, y: -16, scale: 0.94 }}
-          animate={{ opacity: 1, y: 0,   scale: 1    }}
-          exit   ={{ opacity: 0, y: -12, scale: 0.94 }}
-          transition={{ type: "spring", stiffness: 380, damping: 28 }}
-          className="fixed top-4 left-1/2 -translate-x-1/2 z-[70] flex items-center gap-2 px-3 py-2
-                     rounded-xl backdrop-blur-xl border border-violet-400/60 shadow-2xl
-                     bg-gradient-to-r from-violet-600/95 via-indigo-600/95 to-violet-600/95"
-          style={{ maxWidth: "calc(100vw - 2rem)", boxShadow: "0 0 28px rgba(139,92,246,0.45)" }}
-        >
-          <motion.div animate={{ rotate: 360 }} transition={{ repeat: Infinity, duration: 1.1, ease: "linear" }}>
-            <RotateCcw className="w-3.5 h-3.5 text-violet-200 shrink-0" />
-          </motion.div>
-          <span className="text-white font-bold text-xs truncate">{label}</span>
-          <div className="w-12 h-0.5 rounded-full bg-white/20 overflow-hidden shrink-0">
-            <motion.div
-              className="h-full rounded-full bg-gradient-to-r from-violet-300 to-indigo-300"
-              initial={{ x: "-100%" }} animate={{ x: "0%" }}
-              transition={{ duration: 6, ease: "linear" }}
-            />
-          </div>
-        </motion.div>
-      )}
-    </AnimatePresence>
-  );
-}
 
 /* ─────────────────────────────────────────────────────────────
    LIVE PULSE
@@ -769,7 +728,6 @@ function ViewMoreModal({ isOpen, onClose, articles }: {
 export default function CyberNews() {
   const [displayedArticles, setDisplayedArticles] = useState<CyberNewsArticle[]>(newsArticles);
   const [isRefreshing,      setIsRefreshing]       = useState(false);
-  const [refreshSuccess,    setRefreshSuccess]     = useState(false);
   const [loadError,         setLoadError]          = useState(false);
   const [isLiveMode,        setIsLiveMode]         = useState(false);
   const [isOnline,          setIsOnline]           = useState(
@@ -778,7 +736,7 @@ export default function CyberNews() {
   const [countdown,         setCountdown]          = useState(getSecondsUntilMidnight());
   const [showViewMore,      setShowViewMore]       = useState(false);
   const [gridKey,           setGridKey]            = useState(0);
-  const [autoRefreshReason, setAutoRefreshReason]  = useState<AutoRefreshReason>(null);
+
 
   const lastFetchTimeRef  = useRef<number>(0);
   const isInitialFetchRef = useRef<boolean>(true);
@@ -828,18 +786,14 @@ export default function CyberNews() {
     let mounted = true;
     async function pageVisitFetch() {
       setIsRefreshing(true);
-      setAutoRefreshReason("page-visit");
       const articles = await fetchFeed();
       if (!mounted) return;
       if (articles && articles.length > 0) {
         applyArticles(articles);
-        setRefreshSuccess(true);
-        successTimerRef.current = setTimeout(() => setRefreshSuccess(false), 3000);
       } else {
         setLoadError(true);
       }
       setIsRefreshing(false);
-      setAutoRefreshReason(null);
       isInitialFetchRef.current = false;
     }
     pageVisitFetch();
@@ -855,19 +809,15 @@ export default function CyberNews() {
       if (isRefreshing || isInitialFetchRef.current) return;
       if (Date.now() - lastFetchTimeRef.current < MIN) return;
       setIsRefreshing(true);
-      setAutoRefreshReason("tab-focus");
       try {
         const articles = await fetchAllRSSArticles();
         if (articles && articles.length > 0) {
           applyArticles(articles);
-          setRefreshSuccess(true);
-          successTimerRef.current = setTimeout(() => setRefreshSuccess(false), 3000);
         }
       } catch (err) {
         console.error("Tab-focus refresh failed:", err);
       } finally {
         setIsRefreshing(false);
-        setAutoRefreshReason(null);
       }
     }
     document.addEventListener("visibilitychange", onVisibility);
@@ -902,23 +852,17 @@ export default function CyberNews() {
   const handleRefresh = useCallback(async () => {
     if (isRefreshing) return;
     setIsRefreshing(true);
-    setRefreshSuccess(false);
-    setAutoRefreshReason(null);
     if (successTimerRef.current) clearTimeout(successTimerRef.current);
     try {
       clearRSSCache();
       const articles = await fetchAllRSSArticles();
       if (articles.length > 0) {
         applyArticles(articles);
-        setRefreshSuccess(true);
-        successTimerRef.current = setTimeout(() => setRefreshSuccess(false), 3000);
       } else {
         await new Promise((r) => setTimeout(r, 1500));
         const retry = await fetchAllRSSArticles();
         if (retry.length > 0) {
           applyArticles(retry);
-          setRefreshSuccess(true);
-          successTimerRef.current = setTimeout(() => setRefreshSuccess(false), 3000);
         }
       }
     } catch (err) {
@@ -975,41 +919,8 @@ export default function CyberNews() {
         className="relative px-3 sm:px-5 md:px-8 lg:px-12 xl:px-16
                    pt-4 sm:pt-6 pb-10 sm:pb-16 max-w-[1600px] mx-auto">
 
-        {/* toasts */}
-        <AutoRefreshToast reason={autoRefreshReason} isRefreshing={isRefreshing && autoRefreshReason !== null} />
 
-        <AnimatePresence>
-          {isRefreshing && autoRefreshReason === null && (
-            <motion.div key="manual-toast"
-              initial={{ opacity:0, y:-14 }} animate={{ opacity:1, y:0 }} exit={{ opacity:0, y:-10 }}
-              className="fixed top-4 left-1/2 -translate-x-1/2 z-[60]
-                         flex items-center gap-2 px-3 py-2 rounded-xl backdrop-blur-xl shadow-2xl
-                         bg-gradient-to-r from-cyan-600/95 via-blue-600/95 to-cyan-600/95
-                         border border-cyan-400/60"
-              style={{ maxWidth:"calc(100vw - 2rem)", boxShadow:"0 0 28px rgba(34,211,238,0.4)" }}>
-              <Loader2 className="w-3.5 h-3.5 text-white animate-spin shrink-0" />
-              <span className="text-white font-bold text-xs truncate">Fetching latest news…</span>
-            </motion.div>
-          )}
-        </AnimatePresence>
 
-        <AnimatePresence>
-          {refreshSuccess && !isRefreshing && (
-            <motion.div key="success-toast"
-              initial={{ opacity:0, y:-14, scale:0.9 }} animate={{ opacity:1, y:0, scale:1 }}
-              exit={{ opacity:0, y:-10, scale:0.9 }}
-              className="fixed top-4 left-1/2 -translate-x-1/2 z-[60]
-                         flex items-center gap-2 px-3 py-2 rounded-xl backdrop-blur-xl shadow-2xl
-                         bg-gradient-to-r from-green-600/95 via-emerald-600/95 to-green-600/95
-                         border border-green-400/60"
-              style={{ maxWidth:"calc(100vw - 2rem)", boxShadow:"0 0 28px rgba(34,197,94,0.4)" }}>
-              <motion.div initial={{ scale:0 }} animate={{ scale:1 }} transition={{ delay:0.1, type:"spring" }}>
-                <CheckCircle2 className="w-3.5 h-3.5 text-white shrink-0" />
-              </motion.div>
-              <span className="text-white font-bold text-xs">Feed refreshed!</span>
-            </motion.div>
-          )}
-        </AnimatePresence>
 
         {/* ── HERO ── */}
         <motion.div initial="hidden" animate="visible" variants={stagger}
@@ -1058,22 +969,6 @@ export default function CyberNews() {
                   : <WifiOff className="w-2.5 h-2.5 shrink-0" />}
                 {isOnline ? "Online" : "Offline"}
               </div>
-
-              <AnimatePresence>
-                {autoRefreshReason && isRefreshing && (
-                  <motion.div key="ar-chip"
-                    initial={{ opacity:0, scale:0.8 }} animate={{ opacity:1, scale:1 }}
-                    exit={{ opacity:0, scale:0.8 }}
-                    className="flex items-center gap-1 px-2.5 py-1.5 rounded-full
-                               bg-violet-500/15 border border-violet-400/40 text-violet-300 text-[10px] font-semibold">
-                    <motion.span animate={{ rotate:360 }}
-                      transition={{ repeat:Infinity, duration:1.2, ease:"linear" }} className="inline-block">
-                      <RotateCcw className="w-2.5 h-2.5" />
-                    </motion.span>
-                    {autoRefreshReason === "page-visit" ? "Syncing" : "Tab sync"}
-                  </motion.div>
-                )}
-              </AnimatePresence>
 
               {cacheStatus.cached && !isRefreshing && (() => {
                 const age   = Math.floor((cacheStatus.age || 0) / 60000);
