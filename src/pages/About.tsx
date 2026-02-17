@@ -290,14 +290,14 @@ export default function About() {
         variants={pageFade}
         initial="hidden"
         animate="visible"
-        className="relative min-h-screen bg-black text-white overflow-hidden"
+        /* ✅ FIX: removed bg-black so MatrixRain shows through.
+           text-white kept. overflow-hidden kept for animations. */
+        className="relative min-h-screen text-white overflow-hidden"
       >
-        {/* Animated Background Effects */}
-        <div className="fixed inset-0 -z-10 pointer-events-none">
-          <div className="absolute top-20 left-20 w-96 h-96 bg-cyan-500/20 blur-[140px] animate-pulse" />
-          <div className="absolute bottom-20 right-20 w-96 h-96 bg-blue-500/20 blur-[140px] animate-pulse" />
-          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-purple-500/10 blur-[160px]" />
-        </div>
+        {/* ✅ FIX: Removed the fixed inset-0 background blob div entirely.
+            Those blobs (bg-cyan-500/20, bg-blue-500/20, bg-purple-500/10 with blur)
+            were covering the MatrixRain canvas from Layout.tsx.
+            MatrixRain already provides the animated background. */}
 
         <div className="relative mx-auto max-w-7xl px-6 sm:px-10 py-20">
 
@@ -321,7 +321,7 @@ export default function About() {
             initial="hidden"
             whileInView="visible"
             viewport={{ once: true, margin: "-80px" }}
-            className="max-w-4xl mb-24 p-8 rounded-2xl bg-gradient-to-br from-white/10 to-white/5 border border-white/20 backdrop-blur-xl"
+            className="max-w-4xl mb-24 p-8 rounded-2xl bg-black/50 border border-white/20 backdrop-blur-xl"
           >
             <div className="space-y-5 text-lg text-gray-300 leading-relaxed">
               <p>
@@ -455,7 +455,7 @@ export default function About() {
             viewport={{ once: true, margin: "-50px" }}
             className="max-w-5xl mx-auto mb-24"
           >
-            <div className="relative overflow-hidden p-8 rounded-2xl bg-gradient-to-br from-cyan-500/10 via-blue-500/10 to-purple-500/10 border border-cyan-400/20 backdrop-blur-xl">
+            <div className="relative overflow-hidden p-8 rounded-2xl bg-black/40 border border-cyan-400/20 backdrop-blur-xl">
               {/* Shimmer Effect */}
               <m.div
                 variants={shimmer}
@@ -525,7 +525,7 @@ export default function About() {
             viewport={{ once: true, margin: "-50px" }}
             className="max-w-5xl mx-auto mb-24"
           >
-            <div className="p-8 rounded-2xl bg-gradient-to-br from-purple-500/10 via-blue-500/10 to-cyan-500/10 border border-purple-400/20 backdrop-blur-xl">
+            <div className="p-8 rounded-2xl bg-black/40 border border-purple-400/20 backdrop-blur-xl">
               <div className="flex items-center gap-3 mb-6">
                 <Rocket className="w-8 h-8 text-purple-400" />
                 <h2 className="text-3xl text-cyan-400 font-bold">
@@ -560,10 +560,11 @@ export default function About() {
             viewport={{ once: true, margin: "-50px" }}
             className="max-w-5xl mx-auto mb-24"
           >
-            <div className="relative overflow-hidden p-10 rounded-2xl bg-gradient-to-br from-white/10 to-white/5 border border-white/20 backdrop-blur-xl">
-              {/* Decorative Elements */}
-              <div className="absolute top-0 right-0 w-40 h-40 bg-cyan-500/10 rounded-full blur-3xl" />
-              <div className="absolute bottom-0 left-0 w-40 h-40 bg-blue-500/10 rounded-full blur-3xl" />
+            <div className="relative overflow-hidden p-10 rounded-2xl bg-black/50 border border-white/20 backdrop-blur-xl">
+              {/* Decorative corner glows — these are relative/absolute inside
+                  the card only, so they don't block MatrixRain ✅ */}
+              <div className="absolute top-0 right-0 w-40 h-40 bg-cyan-500/10 rounded-full blur-3xl pointer-events-none" />
+              <div className="absolute bottom-0 left-0 w-40 h-40 bg-blue-500/10 rounded-full blur-3xl pointer-events-none" />
               
               <div className="relative z-10">
                 <div className="flex items-center gap-4 mb-6">
@@ -612,7 +613,7 @@ export default function About() {
             initial="hidden"
             whileInView="visible"
             viewport={{ once: true }}
-            className="text-center p-8 rounded-2xl bg-gradient-to-r from-cyan-500/10 to-blue-500/10 border border-cyan-400/20"
+            className="text-center p-8 rounded-2xl bg-black/40 border border-cyan-400/20 backdrop-blur-sm"
           >
             <Sparkles className="w-12 h-12 text-cyan-400 mx-auto mb-4" />
             <p className="text-2xl font-bold text-white mb-2">

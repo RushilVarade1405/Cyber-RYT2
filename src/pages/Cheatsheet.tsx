@@ -27,11 +27,6 @@ export default function Cheatsheet() {
       transition={{ duration: 0.5 }}
       className="min-h-screen bg-black text-cyan-400"
     >
-      {/* Background Effects */}
-      <div className="fixed inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute inset-0 bg-[linear-gradient(to_right,#0a0a0a_1px,transparent_1px),linear-gradient(to_bottom,#0a0a0a_1px,transparent_1px)] bg-[size:4rem_4rem] [mask-image:radial-gradient(ellipse_80%_50%_at_50%_0%,#000_70%,transparent_110%)] opacity-20" />
-      </div>
-
       <div className="relative z-10">
         {/* Header */}
         <motion.header
@@ -524,7 +519,7 @@ export default function Cheatsheet() {
         </div>
 
         {/* Footer */}
-        <footer className="border-t border-cyan-900/30 bg-black/50 backdrop-blur-xl py-6 sm:py-8 mt-8 sm:mt-12 md:mt-16">
+        <footer className="border-t border-cyan-900/30 bg-black/70 backdrop-blur-xl py-6 sm:py-8 mt-8 sm:mt-12 md:mt-16">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 text-center">
             <p className="text-red-500 font-bold text-sm sm:text-base mb-2">⚠ FOR AUTHORIZED SECURITY TESTING ONLY ⚠</p>
             <p className="text-cyan-700 text-xs sm:text-sm font-mono">

@@ -122,12 +122,10 @@ function groupArticlesByDate(articles: CyberNewsArticle[]): Record<string, Cyber
     if (!groups[key]) groups[key] = [];
     groups[key].push(article);
   });
-  // Return in chronological order
   const ordered: Record<string, CyberNewsArticle[]> = {};
   ORDER.forEach((k) => { if (groups[k]) ordered[k] = groups[k]; });
   return ordered;
 }
-
 
 /* ─────────────────────────────────────────────────────────────
    LIVE PULSE
@@ -245,7 +243,7 @@ function NewsCard({ article }: { article: CyberNewsArticle }) {
       whileHover={{ y: -4, transition: { duration: 0.2 } }}
       style={{ willChange: "transform, opacity" }}
       className="group relative flex flex-col overflow-hidden rounded-xl cursor-pointer h-full
-                 bg-gradient-to-br from-white/5 to-white/[0.02]
+                 bg-black/40 backdrop-blur-sm
                  border border-white/10 hover:border-cyan-400/50 transition-all duration-300"
     >
       <div className={`h-0.5 w-full bg-gradient-to-r shrink-0 ${sc.bar}`} />
@@ -301,7 +299,7 @@ function FeaturedCard({ article }: { article: CyberNewsArticle }) {
       whileHover={{ y: -4, transition: { duration: 0.22 } }}
       style={{ willChange: "transform, opacity" }}
       className="group relative block overflow-hidden rounded-2xl cursor-pointer
-                 bg-gradient-to-br from-white/5 via-white/[0.03] to-transparent
+                 bg-black/50 backdrop-blur-sm
                  border-2 border-white/10 hover:border-cyan-400/60 transition-all duration-300"
     >
       <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500
@@ -369,7 +367,7 @@ function StatCard({ icon: Icon, value, label, colorClass, bgClass, borderClass }
     <motion.div variants={fadeUp} whileHover={{ scale: 1.03, transition: { duration: 0.2 } }}
       style={{ willChange: "transform, opacity" }}
       className={`flex items-center gap-2.5 sm:gap-3 px-3 sm:px-4 py-3 sm:py-3.5 rounded-xl
-                  bg-gradient-to-br from-white/5 to-white/[0.02] border ${borderClass} transition-all duration-300`}
+                  bg-black/40 backdrop-blur-sm border ${borderClass} transition-all duration-300`}
     >
       <div className={`p-2 rounded-lg ${bgClass} border ${borderClass} shrink-0`}>
         <Icon className={`w-3.5 h-3.5 sm:w-4 sm:h-4 ${colorClass}`} />
@@ -386,10 +384,6 @@ function StatCard({ icon: Icon, value, label, colorClass, bgClass, borderClass }
 
 /* ─────────────────────────────────────────────────────────────
    VIEW-MORE MODAL
-   FIX: Use a CSS-driven approach for both desktop centering and
-   mobile bottom-sheet. No Framer Motion y-transforms on desktop
-   to avoid fighting with translate(-50%, -50%) centering.
-   Uses a single portal-style overlay with CSS classes for layout.
 ───────────────────────────────────────────────────────────── */
 function ViewMoreModal({ isOpen, onClose, articles }: {
   isOpen: boolean; onClose: () => void; articles: CyberNewsArticle[];
@@ -415,17 +409,12 @@ function ViewMoreModal({ isOpen, onClose, articles }: {
   const totalFiltered = useMemo(() => Object.values(groupedArticles).flat().length, [groupedArticles]);
   const hasFilters    = selectedPeriod !== "all" || selectedCategory !== "all" || selectedSeverity !== "all";
 
-  /* Lock body scroll when open */
   useEffect(() => {
-    if (isOpen) {
-      document.body.style.overflow = "hidden";
-    } else {
-      document.body.style.overflow = "";
-    }
+    if (isOpen) { document.body.style.overflow = "hidden"; }
+    else        { document.body.style.overflow = ""; }
     return () => { document.body.style.overflow = ""; };
   }, [isOpen]);
 
-  /* ESC to close */
   useEffect(() => {
     if (!isOpen) return;
     const h = (e: KeyboardEvent) => { if (e.key === "Escape") onClose(); };
@@ -460,7 +449,6 @@ function ViewMoreModal({ isOpen, onClose, articles }: {
     <AnimatePresence>
       {isOpen && (
         <>
-          {/* ── Backdrop ── */}
           <motion.div
             key="modal-backdrop"
             initial={{ opacity: 0 }}
@@ -469,34 +457,18 @@ function ViewMoreModal({ isOpen, onClose, articles }: {
             transition={{ duration: 0.25 }}
             onClick={onClose}
             style={{
-              position: "fixed",
-              inset: 0,
-              zIndex: 200,
+              position: "fixed", inset: 0, zIndex: 200,
               background: "rgba(0,0,0,0.88)",
-              backdropFilter: "blur(6px)",
-              WebkitBackdropFilter: "blur(6px)",
+              backdropFilter: "blur(6px)", WebkitBackdropFilter: "blur(6px)",
             }}
           />
-
-          {/*
-           * ── Modal container ──
-           * We use a wrapper div (pointer-events:none) that fills the screen
-           * and centers its child with flexbox. This avoids Framer Motion
-           * transform conflicts entirely for the desktop centered layout.
-           *
-           * On mobile (<640px) we switch to a bottom-sheet via CSS.
-           */}
           <div
             style={{
-              position: "fixed",
-              inset: 0,
-              zIndex: 201,
-              display: "flex",
-              alignItems: "flex-end",      /* mobile: stick to bottom */
-              justifyContent: "center",
+              position: "fixed", inset: 0, zIndex: 201,
+              display: "flex", alignItems: "flex-end", justifyContent: "center",
               pointerEvents: "none",
             }}
-            className="sm:items-center"   /* desktop: center vertically */
+            className="sm:items-center"
           >
             <motion.div
               key="modal-panel"
@@ -506,39 +478,21 @@ function ViewMoreModal({ isOpen, onClose, articles }: {
               transition={{ duration: 0.3, ease: [0.22, 1, 0.36, 1] }}
               onClick={(e) => e.stopPropagation()}
               style={{
-                pointerEvents: "auto",
-                width: "100%",
-                maxWidth: "min(92vw, 1200px)",
-                /* Mobile: full width, slide up from bottom */
-                maxHeight: "92dvh",
+                pointerEvents: "auto", width: "100%",
+                maxWidth: "min(92vw, 1200px)", maxHeight: "92dvh",
                 boxShadow: "0 0 80px rgba(34,211,238,0.2), 0 40px 100px rgba(0,0,0,0.8)",
               }}
-              className="
-                flex flex-col
-                rounded-t-2xl sm:rounded-2xl
-                bg-gradient-to-br from-gray-900 via-[#0a0a0f] to-gray-900
-                border-t-2 border-x-2 sm:border-2 border-cyan-400/30
-                overflow-hidden
-              "
+              className="flex flex-col rounded-t-2xl sm:rounded-2xl
+                         bg-gradient-to-br from-gray-900 via-[#0a0a0f] to-gray-900
+                         border-t-2 border-x-2 sm:border-2 border-cyan-400/30 overflow-hidden"
             >
-              {/* Drag handle — mobile only */}
               <div className="flex justify-center pt-3 pb-1 sm:hidden shrink-0">
                 <div className="w-10 h-1 rounded-full bg-white/25" />
               </div>
 
-              {/* ── Header ── */}
-              <div
-                className="
-                  shrink-0
-                  bg-gradient-to-r from-[#020d18]/95 via-[#020b1a]/95 to-[#020d18]/95
-                  backdrop-blur-xl
-                  border-b border-cyan-400/25
-                  px-4 sm:px-6
-                  pt-3 sm:pt-4
-                  pb-3
-                "
-              >
-                {/* Title row */}
+              {/* Header */}
+              <div className="shrink-0 bg-gradient-to-r from-[#020d18]/95 via-[#020b1a]/95 to-[#020d18]/95
+                              backdrop-blur-xl border-b border-cyan-400/25 px-4 sm:px-6 pt-3 sm:pt-4 pb-3">
                 <div className="flex items-center justify-between gap-3 mb-3">
                   <div className="flex items-center gap-2.5 min-w-0">
                     <div className="p-1.5 sm:p-2 rounded-lg bg-cyan-500/15 border border-cyan-400/40 shrink-0">
@@ -555,44 +509,24 @@ function ViewMoreModal({ isOpen, onClose, articles }: {
                       </p>
                     </div>
                   </div>
-
                   <motion.button
-                    whileHover={{ scale: 1.1, rotate: 90 }}
-                    whileTap={{ scale: 0.9 }}
+                    whileHover={{ scale: 1.1, rotate: 90 }} whileTap={{ scale: 0.9 }}
                     onClick={onClose}
-                    className="
-                      p-1.5 sm:p-2 rounded-lg
-                      bg-red-500/10 border border-red-400/40
-                      hover:bg-red-500/25 hover:border-red-400/70
-                      transition-all duration-200 shrink-0
-                    "
+                    className="p-1.5 sm:p-2 rounded-lg bg-red-500/10 border border-red-400/40
+                               hover:bg-red-500/25 hover:border-red-400/70 transition-all duration-200 shrink-0"
                   >
                     <X className="w-4 h-4 sm:w-5 sm:h-5 text-red-400" />
                   </motion.button>
                 </div>
 
-                {/* Filter row */}
-                <div
-                  className="flex items-center gap-2 overflow-x-auto pb-1"
-                  style={{ scrollbarWidth: "none" }}
-                >
+                <div className="flex items-center gap-2 overflow-x-auto pb-1" style={{ scrollbarWidth: "none" }}>
                   {filterDefs.map(({ val, set, opts }, fi) => (
                     <div key={fi} className="relative shrink-0">
-                      <select
-                        value={val}
-                        onChange={(e) => set(e.target.value)}
-                        className="
-                          appearance-none
-                          pl-2.5 pr-6 py-1.5
-                          rounded-lg
-                          bg-white/5 border border-white/20
-                          text-cyan-300 text-[11px] font-semibold
-                          cursor-pointer
-                          hover:bg-white/10 hover:border-cyan-400/50
-                          focus:outline-none focus:border-cyan-400/70
-                          transition-all duration-200
-                        "
-                      >
+                      <select value={val} onChange={(e) => set(e.target.value)}
+                        className="appearance-none pl-2.5 pr-6 py-1.5 rounded-lg
+                                   bg-white/5 border border-white/20 text-cyan-300 text-[11px] font-semibold
+                                   cursor-pointer hover:bg-white/10 hover:border-cyan-400/50
+                                   focus:outline-none focus:border-cyan-400/70 transition-all duration-200">
                         {opts.map(([v, l]) => (
                           <option key={v} value={v} className="bg-gray-900 text-white">{l}</option>
                         ))}
@@ -600,37 +534,25 @@ function ViewMoreModal({ isOpen, onClose, articles }: {
                       <ChevronDown className="absolute right-1.5 top-1/2 -translate-y-1/2 w-3 h-3 text-cyan-400/60 pointer-events-none" />
                     </div>
                   ))}
-
                   <AnimatePresence>
                     {hasFilters && (
                       <motion.button
-                        initial={{ opacity: 0, scale: 0.8 }}
-                        animate={{ opacity: 1, scale: 1 }}
-                        exit={{ opacity: 0, scale: 0.8 }}
-                        whileTap={{ scale: 0.95 }}
+                        initial={{ opacity: 0, scale: 0.8 }} animate={{ opacity: 1, scale: 1 }}
+                        exit={{ opacity: 0, scale: 0.8 }} whileTap={{ scale: 0.95 }}
                         onClick={resetFilters}
-                        className="
-                          shrink-0 flex items-center gap-1
-                          px-2.5 py-1.5 rounded-lg
-                          bg-red-500/10 border border-red-400/40
-                          text-red-400 text-[11px] font-semibold whitespace-nowrap
-                          hover:bg-red-500/20 hover:border-red-400/60
-                          transition-all duration-200
-                        "
-                      >
-                        <X className="w-2.5 h-2.5" />
-                        Reset
+                        className="shrink-0 flex items-center gap-1 px-2.5 py-1.5 rounded-lg
+                                   bg-red-500/10 border border-red-400/40 text-red-400 text-[11px] font-semibold
+                                   whitespace-nowrap hover:bg-red-500/20 hover:border-red-400/60 transition-all duration-200">
+                        <X className="w-2.5 h-2.5" /> Reset
                       </motion.button>
                     )}
                   </AnimatePresence>
                 </div>
               </div>
 
-              {/* ── Scrollable body ── */}
-              <div
-                className="flex-1 overflow-y-auto px-4 sm:px-6 py-4 sm:py-5"
-                style={{ scrollbarWidth: "thin", scrollbarColor: "rgba(34,211,238,0.25) transparent" }}
-              >
+              {/* Body */}
+              <div className="flex-1 overflow-y-auto px-4 sm:px-6 py-4 sm:py-5"
+                   style={{ scrollbarWidth: "thin", scrollbarColor: "rgba(34,211,238,0.25) transparent" }}>
                 {Object.keys(groupedArticles).length === 0 ? (
                   <div className="flex flex-col items-center justify-center py-16 sm:py-24 gap-4">
                     <div className="p-5 rounded-2xl bg-white/5 border border-white/10">
@@ -640,25 +562,19 @@ function ViewMoreModal({ isOpen, onClose, articles }: {
                       <p className="text-gray-300 text-sm font-bold">No articles match</p>
                       <p className="text-gray-600 text-xs mt-1">Try adjusting your filters</p>
                     </div>
-                    <motion.button
-                      whileHover={{ scale: 1.04 }} whileTap={{ scale: 0.96 }}
+                    <motion.button whileHover={{ scale: 1.04 }} whileTap={{ scale: 0.96 }}
                       onClick={resetFilters}
                       className="px-4 py-2 rounded-lg bg-cyan-500/15 border border-cyan-400/40
-                                 text-cyan-400 text-xs font-semibold hover:bg-cyan-500/25 transition-all"
-                    >
+                                 text-cyan-400 text-xs font-semibold hover:bg-cyan-500/25 transition-all">
                       Clear filters
                     </motion.button>
                   </div>
                 ) : (
                   <div className="space-y-7 sm:space-y-10">
                     {Object.entries(groupedArticles).map(([period, periodArticles], gi) => (
-                      <motion.div
-                        key={period}
-                        initial={{ opacity: 0, y: 12 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ duration: 0.3, delay: gi * 0.05 }}
-                      >
-                        {/* Period header */}
+                      <motion.div key={period}
+                        initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}
+                        transition={{ duration: 0.3, delay: gi * 0.05 }}>
                         <div className="flex items-center gap-3 mb-4">
                           <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg
                                           bg-gradient-to-r from-cyan-500/15 to-blue-500/15
@@ -674,14 +590,8 @@ function ViewMoreModal({ isOpen, onClose, articles }: {
                           </div>
                           <div className="flex-1 h-px bg-gradient-to-r from-cyan-400/40 to-transparent" />
                         </div>
-
-                        {/* Articles grid */}
-                        <motion.div
-                          className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3"
-                          initial="hidden"
-                          animate="visible"
-                          variants={stagger}
-                        >
+                        <motion.div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3"
+                          initial="hidden" animate="visible" variants={stagger}>
                           {periodArticles.map((article) => (
                             <NewsCard key={article.id} article={article} />
                           ))}
@@ -692,16 +602,9 @@ function ViewMoreModal({ isOpen, onClose, articles }: {
                 )}
               </div>
 
-              {/* ── Footer ── */}
-              <div
-                className="
-                  shrink-0
-                  bg-gradient-to-r from-[#020d18]/95 via-[#020b1a]/95 to-[#020d18]/95
-                  backdrop-blur-xl
-                  border-t border-cyan-400/20
-                  px-4 sm:px-6 py-2.5
-                "
-              >
+              {/* Footer */}
+              <div className="shrink-0 bg-gradient-to-r from-[#020d18]/95 via-[#020b1a]/95 to-[#020d18]/95
+                              backdrop-blur-xl border-t border-cyan-400/20 px-4 sm:px-6 py-2.5">
                 <div className="flex items-center justify-between text-[10px] sm:text-xs text-gray-500">
                   <span>
                     Showing <span className="text-cyan-400 font-bold">{totalFiltered}</span> of{" "}
@@ -736,7 +639,6 @@ export default function CyberNews() {
   const [countdown,         setCountdown]          = useState(getSecondsUntilMidnight());
   const [showViewMore,      setShowViewMore]       = useState(false);
   const [gridKey,           setGridKey]            = useState(0);
-
 
   const lastFetchTimeRef  = useRef<number>(0);
   const isInitialFetchRef = useRef<boolean>(true);
@@ -781,18 +683,14 @@ export default function CyberNews() {
     return null;
   }, []);
 
-  /* page-visit fetch */
   useEffect(() => {
     let mounted = true;
     async function pageVisitFetch() {
       setIsRefreshing(true);
       const articles = await fetchFeed();
       if (!mounted) return;
-      if (articles && articles.length > 0) {
-        applyArticles(articles);
-      } else {
-        setLoadError(true);
-      }
+      if (articles && articles.length > 0) { applyArticles(articles); }
+      else { setLoadError(true); }
       setIsRefreshing(false);
       isInitialFetchRef.current = false;
     }
@@ -801,7 +699,6 @@ export default function CyberNews() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  /* tab-focus refresh */
   useEffect(() => {
     const MIN = 5 * 60 * 1000;
     async function onVisibility() {
@@ -811,20 +708,14 @@ export default function CyberNews() {
       setIsRefreshing(true);
       try {
         const articles = await fetchAllRSSArticles();
-        if (articles && articles.length > 0) {
-          applyArticles(articles);
-        }
-      } catch (err) {
-        console.error("Tab-focus refresh failed:", err);
-      } finally {
-        setIsRefreshing(false);
-      }
+        if (articles && articles.length > 0) { applyArticles(articles); }
+      } catch (err) { console.error("Tab-focus refresh failed:", err); }
+      finally { setIsRefreshing(false); }
     }
     document.addEventListener("visibilitychange", onVisibility);
     return () => document.removeEventListener("visibilitychange", onVisibility);
   }, [applyArticles, isRefreshing, fetchFeed]);
 
-  /* 15-min background refresh */
   useEffect(() => {
     const id = setInterval(async () => {
       try { const a = await fetchAllRSSArticles(); applyArticles(a ?? []); }
@@ -833,7 +724,6 @@ export default function CyberNews() {
     return () => clearInterval(id);
   }, [applyArticles]);
 
-  /* online/offline */
   useEffect(() => {
     const on  = () => setIsOnline(true);
     const off = () => setIsOnline(false);
@@ -842,13 +732,11 @@ export default function CyberNews() {
     return () => { window.removeEventListener("online", on); window.removeEventListener("offline", off); };
   }, []);
 
-  /* countdown */
   useEffect(() => {
     const id = setInterval(() => setCountdown(getSecondsUntilMidnight()), 1000);
     return () => clearInterval(id);
   }, []);
 
-  /* manual refresh */
   const handleRefresh = useCallback(async () => {
     if (isRefreshing) return;
     setIsRefreshing(true);
@@ -861,16 +749,12 @@ export default function CyberNews() {
       } else {
         await new Promise((r) => setTimeout(r, 1500));
         const retry = await fetchAllRSSArticles();
-        if (retry.length > 0) {
-          applyArticles(retry);
-        }
+        if (retry.length > 0) { applyArticles(retry); }
       }
     } catch (err) {
       console.error("Manual refresh failed:", err);
       if (displayedArticles.length === 0) setLoadError(true);
-    } finally {
-      setIsRefreshing(false);
-    }
+    } finally { setIsRefreshing(false); }
   }, [isRefreshing, applyArticles, displayedArticles.length]);
 
   useEffect(() => () => { if (successTimerRef.current) clearTimeout(successTimerRef.current); }, []);
@@ -881,46 +765,21 @@ export default function CyberNews() {
      RENDER
   ════════════════════════════════════════════════════════════ */
   return (
-    <div className="relative min-h-screen bg-black">
+    /* ✅ FIX 1: removed bg-black from outer wrapper so MatrixRain shows through */
+    <div className="relative min-h-screen">
 
       <style>{`
-        @keyframes blob1    { 0%,100%{transform:scale(1);opacity:.16}    50%{transform:scale(1.1);opacity:.28}  }
-        @keyframes blob2    { 0%,100%{transform:scale(1.06);opacity:.09} 50%{transform:scale(1);opacity:.18}    }
-        @keyframes blob3    { 0%,100%{transform:scale(1);opacity:.05}    50%{transform:scale(1.12);opacity:.13} }
-        @keyframes floatDot { 0%,100%{transform:translateY(0);opacity:0} 50%{transform:translateY(-55px);opacity:.45} }
-        .blob1{animation:blob1  9s ease-in-out infinite;will-change:transform;}
-        .blob2{animation:blob2 11s ease-in-out infinite;will-change:transform;}
-        .blob3{animation:blob3 14s ease-in-out infinite;will-change:transform;}
-        .fluid-hero{font-size:clamp(1.75rem,5.5vw,3.75rem);}
+        .fluid-hero { font-size: clamp(1.75rem, 5.5vw, 3.75rem); }
       `}</style>
 
-      {/* animated background */}
-      <div className="fixed inset-0 -z-10 overflow-hidden pointer-events-none bg-black">
-        <div className="blob1 absolute top-0 left-1/4 w-[min(600px,60vw)] h-[min(600px,60vw)]
-                        bg-cyan-500/15 blur-[100px] sm:blur-[160px] rounded-full" />
-        <div className="blob2 absolute top-1/2 right-0 w-[min(500px,50vw)] h-[min(500px,50vw)]
-                        bg-blue-500/15 blur-[80px] sm:blur-[140px] rounded-full" />
-        <div className="blob3 absolute bottom-0 left-1/3 w-[min(420px,45vw)] h-[min(420px,45vw)]
-                        bg-indigo-500/10 blur-[70px] sm:blur-[120px] rounded-full" />
-        <div className="absolute inset-0 opacity-[0.015]"
-             style={{ backgroundImage: `linear-gradient(to right,rgb(34,211,238) 1px,transparent 1px),
-                                        linear-gradient(to bottom,rgb(34,211,238) 1px,transparent 1px)`,
-                      backgroundSize: "60px 60px" }} />
-        {[...Array(6)].map((_, i) => (
-          <div key={i} className="absolute w-1 h-1 bg-cyan-400/20 rounded-full hidden xl:block"
-               style={{ left: `${(i*14+6)%100}%`, top: `${(i*17+8)%100}%`,
-                        animation: `floatDot ${4+(i%3)}s ease-in-out ${i*0.6}s infinite`,
-                        willChange: "transform,opacity" }} />
-        ))}
-      </div>
+      {/* ✅ FIX 2: deleted the entire fixed inset-0 blob background div that was
+          covering the MatrixRain canvas. The bg-black inside it was the culprit.
+          MatrixRain from Layout.tsx already handles the animated background. */}
 
       {/* page wrapper */}
       <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.4 }}
         className="relative px-3 sm:px-5 md:px-8 lg:px-12 xl:px-16
                    pt-4 sm:pt-6 pb-10 sm:pb-16 max-w-[1600px] mx-auto">
-
-
-
 
         {/* ── HERO ── */}
         <motion.div initial="hidden" animate="visible" variants={stagger}
@@ -959,7 +818,6 @@ export default function CyberNews() {
 
           <motion.div variants={fadeUp} className="flex flex-col items-center gap-2">
             <div className="flex items-center justify-center gap-1.5 flex-wrap px-3">
-
               <div className={`flex items-center gap-1 px-2.5 py-1.5 rounded-full border text-[10px] font-semibold
                               ${isOnline
                                 ? "bg-green-500/10 border-green-400/40 text-green-400"
@@ -1130,7 +988,7 @@ export default function CyberNews() {
         <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }} transition={{ duration: 0.5 }}
           className="mt-9 sm:mt-14 relative p-4 sm:p-6 lg:p-8 rounded-2xl overflow-hidden
-                     bg-gradient-to-br from-white/5 to-white/[0.02] border border-cyan-400/20">
+                     bg-black/40 backdrop-blur-sm border border-cyan-400/20">
           <div className="absolute top-0 right-0 w-40 h-40 bg-cyan-500/5 blur-3xl pointer-events-none" />
           <div className="absolute bottom-0 left-0 w-40 h-40 bg-blue-500/5 blur-3xl pointer-events-none" />
 
