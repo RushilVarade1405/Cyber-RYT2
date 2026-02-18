@@ -39,12 +39,12 @@ export default function MatrixRain() {
         // Leading character — bright white-blue glow
         if (drops[i] <= 2) {
           ctx.fillStyle = "rgba(220, 240, 255, 0.95)";
-          ctx.shadowColor = "rgba(0, 180, 255, 0.9)";
+          ctx.shadowColor = "rgba(119, 158, 175, 0.9)";
           ctx.shadowBlur = 8;
         } else {
           // Trail — vivid blue, clearly visible
-          ctx.fillStyle = "rgba(0, 180, 255, 0.75)";
-          ctx.shadowColor = "rgba(0, 180, 255, 0.4)";
+          ctx.fillStyle = "hsla(220, 5%, 49%, 0.75)";
+          ctx.shadowColor = "rgba(54, 65, 70, 0.4)";
           ctx.shadowBlur = 3;
         }
 
