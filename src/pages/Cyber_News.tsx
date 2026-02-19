@@ -772,10 +772,6 @@ export default function CyberNews() {
         .fluid-hero { font-size: clamp(1.75rem, 5.5vw, 3.75rem); }
       `}</style>
 
-      {/* ✅ FIX 2: deleted the entire fixed inset-0 blob background div that was
-          covering the MatrixRain canvas. The bg-black inside it was the culprit.
-          MatrixRain from Layout.tsx already handles the animated background. */}
-
       {/* page wrapper */}
       <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.4 }}
         className="relative px-3 sm:px-5 md:px-8 lg:px-12 xl:px-16
@@ -790,7 +786,7 @@ export default function CyberNews() {
                        bg-gradient-to-r from-cyan-500/20 via-blue-500/20 to-indigo-500/20
                        border border-cyan-400/50">
             <Rss className="w-3 h-3 text-cyan-400 shrink-0" />
-            <span className="text-cyan-400 font-black text-[10px] tracking-[0.25em] uppercase">Cyber World</span>
+            <span className="text-cyan-400 font-black text-[10px] tracking-[0.25em] uppercase">Cyber_World</span>
             <div className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-pulse" />
             {isLiveMode
               ? <LivePulse />

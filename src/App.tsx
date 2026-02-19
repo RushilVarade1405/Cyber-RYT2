@@ -15,6 +15,7 @@ import Cryptography from "./pages/Cryptography";
 import CyberNews from "./pages/Cyber_News";
 import About from "./pages/About";
 import Admin from "./pages/admin";
+import PortfolioCVSection from "./pages/PortfolioCVSection"; // ✅ standalone portfolio page
 
 // ================= CYBER LAWS =================
 import LawsHome from "./pages/cyber-laws/LawsHome";
@@ -57,15 +58,9 @@ import Vulnerabilities from "./pages/cybersecurity/Vulnerabilities";
 ================================ */
 function ScrollToTop() {
   const { pathname } = useLocation();
-
   useEffect(() => {
-    window.scrollTo({
-      top: 0,
-      left: 0,
-      behavior: "auto",
-    });
+    window.scrollTo({ top: 0, left: 0, behavior: "auto" });
   }, [pathname]);
-
   return null;
 }
 
@@ -78,7 +73,6 @@ function AnimatedRoutes() {
   return (
     <>
       <ScrollToTop />
-
       <AnimatePresence mode="wait">
         <Routes location={location} key={location.pathname}>
           <Route element={<Layout />}>
@@ -95,6 +89,9 @@ function AnimatedRoutes() {
             <Route path="/cheatsheet" element={<Cheatsheet />} />
             <Route path="/about" element={<About />} />
             <Route path="/admin" element={<Admin />} />
+
+            {/* ✅ Standalone portfolio page — linked from About.tsx button */}
+            <Route path="/portfolio" element={<PortfolioCVSection />} />
 
             {/* ================= TOOLS (DYNAMIC) ================= */}
             <Route path="/tools/:toolId" element={<ToolPage />} />
@@ -117,28 +114,19 @@ function AnimatedRoutes() {
             <Route path="/cryptography/symmetric" element={<Symmetric />} />
             <Route path="/cryptography/asymmetric" element={<Asymmetric />} />
             <Route path="/cryptography/hashing" element={<Hashing />} />
-            <Route
-              path="/cryptography/digital-signatures"
-              element={<DigitalSignatures />}
-            />
+            <Route path="/cryptography/digital-signatures" element={<DigitalSignatures />} />
 
             {/* ================= BLOCKCHAIN ================= */}
             <Route path="/blockchain/home" element={<BlockchainHome />} />
             <Route path="/blockchain/how-it-works" element={<HowItWorks />} />
-            <Route
-              path="/blockchain/smart-contracts"
-              element={<SmartContracts />}
-            />
+            <Route path="/blockchain/smart-contracts" element={<SmartContracts />} />
             <Route path="/blockchain/security" element={<Security />} />
 
             {/* ================= CYBERSECURITY ================= */}
             <Route path="/cybersecurity/home" element={<CyberHome />} />
             <Route path="/cybersecurity/concepts" element={<Concepts />} />
             <Route path="/cybersecurity/attacks" element={<Attacks />} />
-            <Route
-              path="/cybersecurity/vulnerabilities"
-              element={<Vulnerabilities />}
-            />
+            <Route path="/cybersecurity/vulnerabilities" element={<Vulnerabilities />} />
 
           </Route>
         </Routes>

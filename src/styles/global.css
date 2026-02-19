@@ -613,3 +613,9 @@ code::-webkit-scrollbar {
     transition-duration: 0.01ms !important;
   }
 }
+
+/* 3. Add to your global CSS (for pulse animations) */
+@keyframes ping-slow { 0%,100%{opacity:.4;transform:scale(1)} 50%{opacity:0;transform:scale(1.5)} }
+@keyframes pulse-slow { 0%,100%{opacity:1} 50%{opacity:.75} }
+.animate-ping-slow  { animation: ping-slow  2.5s ease-in-out infinite; }
+.animate-pulse-slow { animation: pulse-slow 2.5s ease-in-out infinite; }
