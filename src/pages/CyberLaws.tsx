@@ -13,7 +13,7 @@ type BadgeProps = {
 
 const Badge = ({ text, className = "" }: BadgeProps) => (
   <span
-    className={`inline-block px-3 py-1.5 text-xs font-semibold rounded-full ${className}`}
+    className={`inline-block px-3 py-1 text-xs font-semibold rounded-full tracking-wide ${className}`}
   >
     {text}
   </span>
@@ -31,31 +31,33 @@ const SectionCard = ({ heading, points, index }: SectionCardProps) => (
     whileInView={{ opacity: 1, y: 0 }}
     viewport={{ once: true, margin: "-50px" }}
     transition={{ duration: 0.4, delay: index * 0.05 }}
-    whileHover={{ y: -4 }}
+    whileHover={{ y: -4, transition: { duration: 0.2 } }}
     className="
-      group relative p-6 rounded-xl overflow-hidden
-      bg-gradient-to-br from-white/5 to-white/[0.02]
-      backdrop-blur-xl
-      border border-cyan-400/20
-      hover:border-cyan-400/50
-      shadow-[0_0_25px_rgba(34,211,238,0.1)]
-      hover:shadow-[0_0_35px_rgba(34,211,238,0.25)]
+      group relative p-6 rounded-2xl overflow-hidden
+      bg-white/[0.03] backdrop-blur-xl
+      border border-white/[0.07]
+      hover:border-cyan-400/40
       transition-all duration-300
     "
   >
     {/* Corner glow */}
-    <div className="absolute -top-10 -right-10 w-40 h-40 bg-cyan-400/20 rounded-full blur-3xl opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-    
+    <div className="absolute -top-8 -right-8 w-36 h-36 bg-cyan-400/15 rounded-full blur-3xl opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+
+    {/* Top accent line */}
+    <div className="absolute top-0 left-0 w-full h-px bg-gradient-to-r from-transparent via-cyan-400/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+
     {/* Left accent bar */}
-    <div className="absolute left-0 top-1/4 bottom-1/4 w-1 bg-gradient-to-b from-transparent via-cyan-400 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+    <div className="absolute left-0 top-6 bottom-6 w-0.5 bg-gradient-to-b from-transparent via-cyan-400 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded-full" />
 
     <div className="relative">
-      <h3 className="text-xl font-semibold text-cyan-400 mb-4 flex items-center gap-2">
-        <span className="w-2 h-2 bg-cyan-400 rounded-full" />
-        {heading}
+      <h3 className="text-lg font-semibold text-white mb-4 flex items-center gap-3">
+        <span className="flex-shrink-0 w-6 h-6 rounded-md bg-cyan-500/20 border border-cyan-500/30 flex items-center justify-center">
+          <span className="w-1.5 h-1.5 bg-cyan-400 rounded-full" />
+        </span>
+        <span className="text-cyan-300">{heading}</span>
       </h3>
 
-      <ul className="space-y-3">
+      <ul className="space-y-2.5 pl-1">
         {points.map((point, i) => (
           <motion.li
             key={i}
@@ -63,17 +65,25 @@ const SectionCard = ({ heading, points, index }: SectionCardProps) => (
             whileInView={{ opacity: 1, x: 0 }}
             viewport={{ once: true }}
             transition={{ delay: i * 0.03 }}
-            className="flex items-start gap-3 text-gray-300"
+            className="flex items-start gap-3 text-gray-400 text-sm leading-relaxed"
           >
-            <span className="text-cyan-400 mt-1 text-sm">▹</span>
-            <span className="flex-1">{point}</span>
+            <svg
+              className="w-4 h-4 text-cyan-500/70 flex-shrink-0 mt-0.5"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+              strokeWidth={2.5}
+            >
+              <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4" />
+            </svg>
+            <span>{point}</span>
           </motion.li>
         ))}
       </ul>
     </div>
 
     {/* Bottom accent line */}
-    <div className="absolute bottom-0 left-0 w-full h-1 bg-gradient-to-r from-cyan-400 to-blue-500 transform scale-x-0 group-hover:scale-x-100 transition-transform duration-500 origin-left" />
+    <div className="absolute bottom-0 left-0 w-full h-px bg-gradient-to-r from-cyan-400 to-blue-500 transform scale-x-0 group-hover:scale-x-100 transition-transform duration-500 origin-left" />
   </motion.div>
 );
 
@@ -86,14 +96,25 @@ export default function CyberLaws() {
     <motion.div
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
-      transition={{ duration: 0.6 }}
-      className="relative px-6 sm:px-10 py-16 max-w-7xl mx-auto text-white"
+      transition={{ duration: 0.7 }}
+      className="relative px-6 sm:px-10 py-20 max-w-7xl mx-auto text-white"
     >
-      {/* Enhanced Background glow */}
+      {/* ===============================
+          AMBIENT BACKGROUND
+      =============================== */}
       <div className="absolute inset-0 -z-10 overflow-hidden">
-        <div className="absolute top-24 left-10 w-96 h-96 bg-cyan-500/20 blur-[140px] animate-pulse" />
-        <div className="absolute bottom-16 right-10 w-96 h-96 bg-blue-500/20 blur-[140px] animate-pulse" style={{ animationDelay: '1s' }} />
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-cyan-400/5 blur-[180px]" />
+        <div className="absolute top-10 left-0 w-[600px] h-[600px] bg-cyan-500/10 blur-[180px] rounded-full" />
+        <div className="absolute bottom-0 right-0 w-[500px] h-[500px] bg-blue-600/15 blur-[160px] rounded-full" />
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[700px] h-[700px] bg-cyan-900/10 blur-[200px] rounded-full" />
+        {/* Subtle grid */}
+        <div
+          className="absolute inset-0 opacity-[0.025]"
+          style={{
+            backgroundImage:
+              "linear-gradient(rgba(34,211,238,0.5) 1px, transparent 1px), linear-gradient(90deg, rgba(34,211,238,0.5) 1px, transparent 1px)",
+            backgroundSize: "60px 60px",
+          }}
+        />
       </div>
 
       {/* ===============================
@@ -105,112 +126,142 @@ export default function CyberLaws() {
         transition={{ delay: 0.15 }}
         className="mb-16"
       >
-        <h1 className="text-5xl font-bold mb-4 bg-gradient-to-r from-cyan-400 via-blue-400 to-cyan-500 bg-clip-text text-transparent">
-          Cyber Laws
-        </h1>
-        <div className="h-1 w-32 bg-gradient-to-r from-cyan-400 to-blue-500 rounded-full mb-6" />
+        {/* Eyebrow */}
+        <motion.div
+          initial={{ opacity: 0, x: -20 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ duration: 0.5 }}
+          className="inline-flex items-center gap-2 mb-4 px-3 py-1 rounded-full border border-cyan-500/30 bg-cyan-500/10 text-cyan-400 text-xs font-mono tracking-widest uppercase"
+        >
+          <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-pulse" />
+          Legal Framework
+        </motion.div>
 
-        <p className="text-gray-300 text-lg max-w-3xl leading-relaxed">
-          A comprehensive overview of national and international cyber laws, regulations, 
+        <h1 className="text-5xl sm:text-6xl font-bold mb-5 leading-tight">
+          <span className="text-white">Cyber </span>
+          <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-blue-400">
+            Laws
+          </span>
+        </h1>
+
+        {/* Decorative line */}
+        <motion.div
+          initial={{ scaleX: 0 }}
+          animate={{ scaleX: 1 }}
+          transition={{ duration: 0.8, delay: 0.3 }}
+          className="origin-left h-px w-48 bg-gradient-to-r from-cyan-500 to-transparent mb-6"
+        />
+
+        <p className="text-gray-400 text-lg max-w-3xl leading-relaxed">
+          A comprehensive overview of national and international cyber laws, regulations,
           and landmark case studies relevant to cybersecurity, digital forensics, and data protection.
         </p>
       </motion.header>
 
-{/* ===============================
-    QUICK NAVIGATION - Enhanced Cards (FIXED)
-================================ */}
-<motion.div
-  initial={{ opacity: 0, y: 20 }}
-  animate={{ opacity: 1, y: 0 }}
-  transition={{ delay: 0.3 }}
-  className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6 mb-24"
->
-  {[
-    { 
-      path: "/cyber-laws/cyber-crimes", 
-      icon: "⚠️", 
-      label: "Cyber Crimes",
-      color: "red",
-      gradient: "from-red-500 to-orange-500"
-    },
-    { 
-      path: "/cyber-laws/it-act", 
-      icon: "📜", 
-      label: "IT Act, 2000",
-      color: "emerald",
-      gradient: "from-emerald-500 to-cyan-500"
-    },
-    { 
-      path: "/cyber-laws/ethics", 
-      icon: "🧠", 
-      label: "Cyber Ethics",
-      color: "purple",
-      gradient: "from-purple-500 to-pink-500"
-    },
-  ].map((item, index) => (
-    <motion.div
-      key={item.path}
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ delay: 0.4 + index * 0.1 }}
-      whileHover={{ scale: 1.02 }}
-      whileTap={{ scale: 0.98 }}
-    >
-      <Link
-        to={item.path}
-        className={`
-          group relative flex items-center
-          h-[56px]                     /* ✅ pill height */
-          px-6                         /* ✅ horizontal padding */
-          rounded-2xl
-          overflow-hidden
-          bg-gradient-to-br from-${item.color}-500/10 to-${item.color}-600/5
-          border border-${item.color}-400/30
-          hover:border-${item.color}-400
-          transition-all duration-300
-        `}
+      {/* ===============================
+          QUICK NAVIGATION
+      =============================== */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.3 }}
+        className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-24"
       >
-        {/* Gradient overlay */}
-        <div
-          className={`absolute inset-0 bg-gradient-to-br ${item.gradient} opacity-0 group-hover:opacity-10 transition-all duration-300`}
-        />
+        {[
+          {
+            path: "/cyber-laws/cyber-crimes",
+            icon: "⚠️",
+            label: "Cyber Crimes",
+            desc: "Types, methods & penalties",
+            colorClass: "red",
+          },
+          {
+            path: "/cyber-laws/it-act",
+            icon: "📜",
+            label: "IT Act, 2000",
+            desc: "India's digital legal backbone",
+            colorClass: "emerald",
+          },
+          {
+            path: "/cyber-laws/ethics",
+            icon: "🧠",
+            label: "Cyber Ethics",
+            desc: "Principles of digital conduct",
+            colorClass: "purple",
+          },
+        ].map((item, index) => {
+          const colors: Record<string, { border: string; bg: string; text: string; glow: string; icon: string }> = {
+            red: {
+              border: "border-red-400/25 hover:border-red-400/60",
+              bg: "bg-red-500/5 hover:bg-red-500/10",
+              text: "text-red-400",
+              glow: "group-hover:shadow-[0_0_30px_rgba(239,68,68,0.2)]",
+              icon: "bg-red-500/10 border-red-400/20",
+            },
+            emerald: {
+              border: "border-emerald-400/25 hover:border-emerald-400/60",
+              bg: "bg-emerald-500/5 hover:bg-emerald-500/10",
+              text: "text-emerald-400",
+              glow: "group-hover:shadow-[0_0_30px_rgba(52,211,153,0.2)]",
+              icon: "bg-emerald-500/10 border-emerald-400/20",
+            },
+            purple: {
+              border: "border-purple-400/25 hover:border-purple-400/60",
+              bg: "bg-purple-500/5 hover:bg-purple-500/10",
+              text: "text-purple-400",
+              glow: "group-hover:shadow-[0_0_30px_rgba(168,85,247,0.2)]",
+              icon: "bg-purple-500/10 border-purple-400/20",
+            },
+          };
+          const c = colors[item.colorClass];
 
-        {/* Icon box */}
-        <div
-          className={`
-            relative flex items-center justify-center
-            w-10 h-10                   /* ✅ small icon box */
-            rounded-lg
-            bg-${item.color}-400/10
-            border border-${item.color}-400/30
-            mr-4
-          `}
-        >
-          <span className="text-lg">{item.icon}</span>
-        </div>
+          return (
+            <motion.div
+              key={item.path}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.4 + index * 0.1 }}
+              whileHover={{ y: -4, transition: { duration: 0.2 } }}
+            >
+              <Link
+                to={item.path}
+                className={`
+                  group relative flex items-center gap-4
+                  px-5 py-4 rounded-2xl overflow-hidden
+                  border backdrop-blur-xl
+                  transition-all duration-300
+                  ${c.border} ${c.bg} ${c.glow}
+                `}
+              >
+                {/* Icon */}
+                <div className={`flex-shrink-0 w-11 h-11 rounded-xl border flex items-center justify-center text-xl ${c.icon}`}>
+                  {item.icon}
+                </div>
 
-        {/* Label */}
-        <span
-          className={`
-            relative
-            text-${item.color}-400
-            group-hover:text-${item.color}-300
-            font-medium
-            text-sm
-            transition-colors
-          `}
-        >
-          {item.label}
-        </span>
+                {/* Text */}
+                <div className="flex-1 min-w-0">
+                  <div className={`font-semibold text-sm ${c.text}`}>{item.label}</div>
+                  <div className="text-gray-500 text-xs mt-0.5">{item.desc}</div>
+                </div>
 
-        {/* Bottom glow line */}
-        <div
-          className={`absolute bottom-0 left-0 w-full h-[2px] bg-gradient-to-r ${item.gradient} scale-x-0 group-hover:scale-x-100 transition-transform duration-500 origin-left`}
-        />
-      </Link>
-    </motion.div>
-  ))}
-</motion.div>
+                {/* Arrow */}
+                <svg
+                  className={`w-4 h-4 flex-shrink-0 opacity-0 group-hover:opacity-100 -translate-x-2 group-hover:translate-x-0 transition-all duration-300 ${c.text}`}
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                  strokeWidth={2}
+                >
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
+                </svg>
+
+                {/* Bottom line */}
+                <div className={`absolute bottom-0 left-0 w-full h-px bg-gradient-to-r from-transparent via-current to-transparent scale-x-0 group-hover:scale-x-100 transition-transform duration-500 origin-left ${c.text} opacity-40`} />
+              </Link>
+            </motion.div>
+          );
+        })}
+      </motion.div>
 
       {/* ===============================
           LAW CONTENT
@@ -228,30 +279,32 @@ export default function CyberLaws() {
             transition={{ duration: 0.5 }}
             className="mb-32 last:mb-8"
           >
-            {/* Region Badge */}
-            <motion.div
-              initial={{ opacity: 0, x: -20 }}
-              whileInView={{ opacity: 1, x: 0 }}
-              viewport={{ once: true }}
-              className="mb-6"
-            >
-              <Badge
-                text={law.region}
-                className={`
-                  ${law.region === 'India' 
-                    ? 'bg-cyan-500/20 text-cyan-400 border border-cyan-400/30' 
-                    : 'bg-emerald-500/20 text-emerald-400 border border-emerald-400/30'
-                  }
-                `}
-              />
-            </motion.div>
-
-            {/* Section Title */}
+            {/* Region Badge + Section Title */}
             <div className="mb-8">
-              <h2 className="text-4xl font-bold mb-3 text-cyan-400">
-                {law.title}
+              <motion.div
+                initial={{ opacity: 0, x: -20 }}
+                whileInView={{ opacity: 1, x: 0 }}
+                viewport={{ once: true }}
+                className="flex items-center gap-3 mb-4"
+              >
+                <Badge
+                  text={law.region}
+                  className={
+                    law.region === "India"
+                      ? "bg-cyan-500/15 text-cyan-400 border border-cyan-400/30"
+                      : "bg-emerald-500/15 text-emerald-400 border border-emerald-400/30"
+                  }
+                />
+                <div className="h-px flex-1 bg-gradient-to-r from-white/10 to-transparent" />
+              </motion.div>
+
+              <h2 className="text-4xl font-bold mb-4">
+                <span className="text-white">{law.title.split(" ")[0]} </span>
+                <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-blue-400">
+                  {law.title.split(" ").slice(1).join(" ")}
+                </span>
               </h2>
-              <div className="h-[2px] w-full bg-gradient-to-r from-cyan-400/50 via-cyan-400/20 to-transparent rounded-full" />
+              <div className="h-px w-full bg-gradient-to-r from-cyan-400/40 via-cyan-400/10 to-transparent rounded-full" />
             </div>
 
             <motion.p
@@ -259,7 +312,7 @@ export default function CyberLaws() {
               whileInView={{ opacity: 1 }}
               viewport={{ once: true }}
               transition={{ delay: 0.2 }}
-              className="text-gray-300 text-lg mb-12 max-w-4xl leading-relaxed"
+              className="text-gray-400 text-lg mb-12 max-w-4xl leading-relaxed"
             >
               {law.description}
             </motion.p>
@@ -272,24 +325,41 @@ export default function CyberLaws() {
                 initial={{ opacity: 0, y: 20 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
-                className="mb-16 p-8 rounded-xl bg-gradient-to-br from-cyan-500/5 to-blue-500/5 border border-cyan-400/20"
+                className="mb-16 p-7 rounded-2xl relative overflow-hidden
+                  bg-gradient-to-br from-cyan-500/[0.07] via-transparent to-blue-500/[0.07]
+                  border border-cyan-400/20 backdrop-blur-lg"
               >
-                <h3 className="text-2xl font-semibold text-cyan-400 mb-6 flex items-center gap-3">
-                  <span className="text-3xl">📘</span>
-                  Exam-Oriented Summary
-                </h3>
+                <div className="absolute top-0 left-8 right-8 h-px bg-gradient-to-r from-transparent via-cyan-400/40 to-transparent" />
+                <div className="absolute -top-6 -right-6 w-32 h-32 bg-cyan-500/10 rounded-full blur-2xl pointer-events-none" />
 
-                <ul className="space-y-3">
+                <div className="flex items-center gap-3 mb-6 relative z-10">
+                  <div className="w-9 h-9 rounded-xl bg-cyan-500/20 border border-cyan-500/30 flex items-center justify-center text-lg">
+                    📘
+                  </div>
+                  <h3 className="text-xl font-semibold text-cyan-300 tracking-wide">
+                    Exam-Oriented Summary
+                  </h3>
+                </div>
+
+                <ul className="space-y-2.5 relative z-10">
                   {examSummary.map((point, i) => (
                     <motion.li
                       key={i}
                       initial={{ opacity: 0, x: -10 }}
                       whileInView={{ opacity: 1, x: 0 }}
                       viewport={{ once: true }}
-                      transition={{ delay: i * 0.05 }}
-                      className="flex items-start gap-3 text-gray-300"
+                      transition={{ delay: i * 0.04 }}
+                      className="flex items-start gap-3 text-gray-400 text-sm leading-relaxed"
                     >
-                      <span className="text-cyan-400 mt-1 text-lg">•</span>
+                      <svg
+                        className="w-4 h-4 text-cyan-500/80 flex-shrink-0 mt-0.5"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                        strokeWidth={2.5}
+                      >
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4" />
+                      </svg>
                       <span>{point}</span>
                     </motion.li>
                   ))}
@@ -298,130 +368,133 @@ export default function CyberLaws() {
             )}
 
             {/* ===============================
-                CASE STUDIES - Premium Cards
+                CASE STUDIES
             =============================== */}
             {caseStudies.length > 0 && (
               <section className="mb-20">
-                <h3 className="text-3xl font-bold text-cyan-400 mb-10 flex items-center gap-3">
-                  <span className="text-4xl">⚖️</span>
-                  Case Studies
-                </h3>
+                <div className="flex items-center gap-3 mb-10">
+                  <div className="w-9 h-9 rounded-xl bg-cyan-500/20 border border-cyan-500/30 flex items-center justify-center text-lg">
+                    ⚖️
+                  </div>
+                  <h3 className="text-2xl font-bold text-white">
+                    Case{" "}
+                    <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-blue-400">
+                      Studies
+                    </span>
+                  </h3>
+                  <div className="h-px flex-1 bg-gradient-to-r from-white/10 to-transparent" />
+                </div>
 
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                   {caseStudies.map((cs, i) => (
                     <motion.div
                       key={i}
-                      initial={{ opacity: 0, y: 40, scale: 0.95 }}
+                      initial={{ opacity: 0, y: 40, scale: 0.97 }}
                       whileInView={{ opacity: 1, y: 0, scale: 1 }}
                       viewport={{ once: true, margin: "-50px" }}
-                      transition={{ delay: i * 0.1, type: "spring", stiffness: 300 }}
-                      whileHover={{ y: -8, scale: 1.02 }}
+                      transition={{ delay: i * 0.08, type: "spring", stiffness: 280 }}
+                      whileHover={{ y: -6, transition: { duration: 0.2 } }}
                       className="
-                        group relative p-8 rounded-2xl overflow-hidden
-                        bg-gradient-to-br from-white/10 to-white/[0.02]
-                        backdrop-blur-xl
-                        border border-cyan-400/30
-                        hover:border-cyan-400
-                        shadow-[0_0_30px_rgba(34,211,238,0.15)]
-                        hover:shadow-[0_0_50px_rgba(34,211,238,0.35)]
+                        group relative p-7 rounded-2xl overflow-hidden
+                        bg-white/[0.03] backdrop-blur-xl
+                        border border-white/[0.07]
+                        hover:border-cyan-400/40
                         transition-all duration-300
+                        hover:shadow-[0_0_40px_rgba(34,211,238,0.15)]
                       "
                     >
-                      {/* Animated gradient overlay */}
-                      <div className="absolute inset-0 bg-gradient-to-br from-cyan-400/0 via-blue-500/0 to-cyan-400/0 group-hover:from-cyan-400/10 group-hover:via-blue-500/10 group-hover:to-cyan-400/10 transition-all duration-500" />
-                      
-                      {/* Top corner glow */}
-                      <div className="absolute -top-10 -right-10 w-40 h-40 bg-cyan-400/20 rounded-full blur-3xl opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+                      {/* Corner glow */}
+                      <div className="absolute -top-8 -right-8 w-40 h-40 bg-cyan-400/10 rounded-full blur-3xl opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+                      <div className="absolute top-0 left-0 w-full h-px bg-gradient-to-r from-transparent via-cyan-400/30 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
 
                       <div className="relative">
                         {/* Icon & Title */}
-                        <div className="flex items-start gap-4 mb-4">
-                          <div className="flex items-center justify-center w-14 h-14 rounded-xl bg-cyan-400/10 border border-cyan-400/30 group-hover:bg-cyan-400/20 transition-all duration-300 flex-shrink-0">
-                            <span className="text-3xl">{cs.icon}</span>
+                        <div className="flex items-start gap-4 mb-5">
+                          <div className="flex items-center justify-center w-13 h-13 w-12 h-12 rounded-xl bg-cyan-400/10 border border-cyan-400/20 group-hover:bg-cyan-400/15 transition-all duration-300 flex-shrink-0 text-2xl">
+                            {cs.icon}
                           </div>
                           <div className="flex-1">
-                            <h4 className="text-xl font-bold text-cyan-300 group-hover:text-cyan-400 transition-colors mb-2">
+                            <h4 className="text-lg font-bold text-white group-hover:text-cyan-200 transition-colors mb-1">
                               {cs.title}
                             </h4>
-                            <p className="text-sm text-cyan-400/70 italic">
+                            <p className="text-xs text-cyan-400/60 italic">
                               {cs.shortDescription}
                             </p>
                           </div>
                         </div>
 
                         {/* Description */}
-                        <p className="text-gray-300 mb-6 leading-relaxed">
+                        <p className="text-gray-400 text-sm mb-5 leading-relaxed">
                           {cs.description}
                         </p>
 
-                        {/* Law Applied */}
-                        <div className="mb-4 p-4 rounded-lg bg-cyan-500/5 border border-cyan-400/20">
-                          <p className="text-sm text-cyan-400 font-medium mb-1">
-                            ⚖️ Law Applied
-                          </p>
-                          <p className="text-gray-300 text-sm">{cs.lawApplied}</p>
+                        {/* Info blocks */}
+                        <div className="space-y-3 mb-4">
+                          {/* Law Applied */}
+                          <div className="p-3.5 rounded-xl bg-cyan-500/5 border border-cyan-400/15">
+                            <p className="text-xs text-cyan-400 font-semibold mb-1 flex items-center gap-1.5">
+                              <span>⚖️</span> Law Applied
+                            </p>
+                            <p className="text-gray-400 text-sm">{cs.lawApplied}</p>
+                          </div>
+
+                          {cs.impact && (
+                            <div className="p-3.5 rounded-xl bg-orange-500/5 border border-orange-400/15">
+                              <p className="text-xs text-orange-400 font-semibold mb-1 flex items-center gap-1.5">
+                                <span>💥</span> Impact
+                              </p>
+                              <p className="text-gray-400 text-sm">{cs.impact}</p>
+                            </div>
+                          )}
+
+                          {cs.punishmentHint && (
+                            <div className="p-3.5 rounded-xl bg-red-500/5 border border-red-400/15">
+                              <p className="text-xs text-red-400 font-semibold mb-1 flex items-center gap-1.5">
+                                <span>⚠️</span> Punishment
+                              </p>
+                              <p className="text-gray-400 text-sm">{cs.punishmentHint}</p>
+                            </div>
+                          )}
                         </div>
 
-                        {/* Impact */}
-                        {cs.impact && (
-                          <div className="mb-4 p-4 rounded-lg bg-orange-500/5 border border-orange-400/20">
-                            <p className="text-sm text-orange-400 font-medium mb-1">
-                              💥 Impact
-                            </p>
-                            <p className="text-gray-300 text-sm">{cs.impact}</p>
-                          </div>
-                        )}
-
-                        {/* Punishment Hint */}
-                        {cs.punishmentHint && (
-                          <div className="mb-4 p-4 rounded-lg bg-red-500/5 border border-red-400/20">
-                            <p className="text-sm text-red-400 font-medium mb-1">
-                              ⚠️ Punishment
-                            </p>
-                            <p className="text-gray-300 text-sm">{cs.punishmentHint}</p>
-                          </div>
-                        )}
-
-                        {/* Tags */}
-                        {cs.tags && (
-                          <div className="flex flex-wrap gap-2 mb-4">
-                            {cs.tags.map((tag, t) => (
-                              <Badge
-                                key={t}
-                                text={tag}
-                                className="bg-cyan-500/10 text-cyan-300 border border-cyan-500/20 hover:bg-cyan-500/20 transition-colors"
-                              />
-                            ))}
-                          </div>
-                        )}
-
-                        {/* Severity Badge */}
-                        {cs.severity && (
-                          <Badge
-                            text={`Severity: ${cs.severity}`}
-                            className={
-                              cs.severity === "High"
-                                ? "bg-red-500/20 text-red-400 border border-red-400/30"
-                                : cs.severity === "Medium"
-                                ? "bg-yellow-500/20 text-yellow-400 border border-yellow-400/30"
-                                : "bg-green-500/20 text-green-400 border border-green-400/30"
-                            }
-                          />
-                        )}
+                        {/* Tags row */}
+                        <div className="flex flex-wrap items-center gap-2 mb-4">
+                          {cs.tags?.map((tag, t) => (
+                            <Badge
+                              key={t}
+                              text={tag}
+                              className="bg-cyan-500/10 text-cyan-300 border border-cyan-500/20 text-[11px]"
+                            />
+                          ))}
+                          {cs.severity && (
+                            <Badge
+                              text={`${cs.severity} Severity`}
+                              className={
+                                cs.severity === "High"
+                                  ? "bg-red-500/15 text-red-400 border border-red-400/25"
+                                  : cs.severity === "Medium"
+                                  ? "bg-yellow-500/15 text-yellow-400 border border-yellow-400/25"
+                                  : "bg-green-500/15 text-green-400 border border-green-400/25"
+                              }
+                            />
+                          )}
+                        </div>
 
                         {/* Exam Tip */}
                         {cs.examTip && (
-                          <div className="mt-6 p-4 rounded-lg bg-purple-500/5 border border-purple-400/20">
-                            <p className="text-sm text-purple-300 flex items-start gap-2">
-                              <span className="text-lg">💡</span>
-                              <span><strong>Exam Tip:</strong> {cs.examTip}</span>
+                          <div className="p-3.5 rounded-xl bg-purple-500/5 border border-purple-400/15">
+                            <p className="text-xs text-purple-300 flex items-start gap-2">
+                              <span className="text-base flex-shrink-0">💡</span>
+                              <span>
+                                <strong>Exam Tip:</strong> {cs.examTip}
+                              </span>
                             </p>
                           </div>
                         )}
                       </div>
 
-                      {/* Bottom accent line */}
-                      <div className="absolute bottom-0 left-0 w-full h-1 bg-gradient-to-r from-cyan-400 via-blue-500 to-transparent transform scale-x-0 group-hover:scale-x-100 transition-transform duration-500 origin-left" />
+                      {/* Bottom accent */}
+                      <div className="absolute bottom-0 left-0 w-full h-px bg-gradient-to-r from-cyan-400 via-blue-500 to-transparent transform scale-x-0 group-hover:scale-x-100 transition-transform duration-500 origin-left" />
                     </motion.div>
                   ))}
                 </div>
@@ -431,7 +504,7 @@ export default function CyberLaws() {
             {/* ===============================
                 LAW SECTIONS
             =============================== */}
-            <div className="grid gap-6">
+            <div className="grid md:grid-cols-2 gap-5">
               {law.sections.map((section, i) => (
                 <SectionCard
                   key={i}

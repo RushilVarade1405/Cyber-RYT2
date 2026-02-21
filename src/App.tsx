@@ -15,7 +15,7 @@ import Cryptography from "./pages/Cryptography";
 import CyberNews from "./pages/Cyber_News";
 import About from "./pages/About";
 import Admin from "./pages/admin";
-import PortfolioCVSection from "./pages/PortfolioCVSection"; // ✅ standalone portfolio page
+import PortfolioCVSection from "./pages/PortfolioCVSection";
 
 // ================= CYBER LAWS =================
 import LawsHome from "./pages/cyber-laws/LawsHome";
