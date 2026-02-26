@@ -1,6 +1,6 @@
 import { useEffect, useRef } from "react";
 
-export default function MatrixRain() {
+export default function MatrixRain({ opacity = 0.75 }: { opacity?: number }) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
   useEffect(() => {
@@ -17,34 +17,42 @@ export default function MatrixRain() {
     resize();
     window.addEventListener("resize", resize);
 
-    const chars = "アイウエオカキクケコサシスセソタチツテトナニヌネノハヒフヘホマミムメモヤユヨラリルレロワヲン01234567890ABCDEF<>/{}[]|\\!@#$%^&*";
-    const fontSize = 14;
+    const chars =
+      "アイウエオカキクケコサシスセソタチツテトナニヌネノハヒフヘホマミムメモヤユヨラリルレロワヲン01234567890ABCDEF<>/{}[]|\\!@#$%^&*";
+    const fontSize = 13;
 
     const getColumns = () => Math.floor(canvas.width / fontSize);
     let drops: number[] = Array(getColumns()).fill(1);
 
     const draw = () => {
       // Fade trail
-      ctx.fillStyle = "rgba(0, 0, 0, 0.06)";
+      ctx.fillStyle = "rgba(0,0,0,0.06)";
       ctx.fillRect(0, 0, canvas.width, canvas.height);
 
       const columns = getColumns();
-      if (drops.length !== columns) {
-        drops = Array(columns).fill(1);
-      }
+      while (drops.length < columns) drops.push(Math.random() * -100);
 
       for (let i = 0; i < columns; i++) {
         const char = chars[Math.floor(Math.random() * chars.length)];
 
-        // Leading character — bright white-blue glow
         if (drops[i] <= 2) {
-          ctx.fillStyle = "rgba(220, 240, 255, 0.95)";
-          ctx.shadowColor = "rgba(119, 158, 175, 0.9)";
+          // Leading character — bright white-gray glow
+          ctx.fillStyle = "rgba(220,230,235,0.95)";
+          ctx.shadowColor = "rgba(180,200,210,0.9)";
           ctx.shadowBlur = 8;
         } else {
-          // Trail — vivid blue, clearly visible
-          ctx.fillStyle = "hsla(220, 5%, 49%, 0.75)";
-          ctx.shadowColor = "rgba(54, 65, 70, 0.4)";
+          // Trail — graded gray tones
+          const brightness = Math.random();
+          if (brightness > 0.97) {
+            ctx.fillStyle = "rgba(200,210,215,0.9)";   // rare bright
+          } else if (brightness > 0.85) {
+            ctx.fillStyle = "rgba(130,150,160,0.65)";  // medium gray
+          } else if (brightness > 0.55) {
+            ctx.fillStyle = "rgba(80,95,105,0.45)";    // dim gray
+          } else {
+            ctx.fillStyle = "rgba(40,50,55,0.3)";      // near-invisible
+          }
+          ctx.shadowColor = "rgba(54,65,70,0.4)";
           ctx.shadowBlur = 3;
         }
 
@@ -59,7 +67,7 @@ export default function MatrixRain() {
       }
     };
 
-    const interval = setInterval(draw, 50);
+    const interval = setInterval(draw, 45);
 
     return () => {
       clearInterval(interval);
@@ -78,7 +86,7 @@ export default function MatrixRain() {
         height: "100vh",
         zIndex: 0,
         pointerEvents: "none",
-        opacity: 0.75,
+        opacity,
       }}
     />
   );

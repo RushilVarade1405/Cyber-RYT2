@@ -6,7 +6,8 @@ import { useNavigate } from "react-router-dom";
 import {
   Terminal, Shield, ExternalLink, AlertTriangle, X,
   Lock, Code, Layers, Cpu, Check as CheckIcon, ArrowRight, Wrench,
-  Zap, Globe, Database, Eye, Key, Binary,
+  Zap, Globe, Database, Eye, Key, Binary, Activity, Server,
+  ChevronRight, Fingerprint,
 } from "lucide-react";
 
 /* ── animations ── */
@@ -49,144 +50,194 @@ function getDifficultyColor(d: string) {
 }
 
 /* ══════════════════════════════════════════════
-   REDESIGNED TOOLKIT CARD
+   TOOLKIT CATEGORIES DATA
 ══════════════════════════════════════════════ */
 const toolkitCategories = [
-  { icon: Eye,      label: "OSINT",        count: 8,  color: "cyan"   },
-  { icon: Globe,    label: "Network",      count: 6,  color: "blue"   },
-  { icon: Shield,   label: "Web Security", count: 7,  color: "violet" },
-  { icon: Database, label: "Malware",      count: 4,  color: "rose"   },
-  { icon: Key,      label: "Cryptography", count: 3,  color: "amber"  },
-  { icon: Binary,   label: "Forensics",    count: 2,  color: "emerald"},
+  { icon: Lock,        label: "Pen Testing",  count: 8,  color: "#00ffff",  rgb: "0,255,255"     },
+  { icon: Key,         label: "Passwords",    count: 2,  color: "#ff6b6b",  rgb: "255,107,107"   },
+  { icon: Binary,      label: "Encoding",     count: 6,  color: "#a78bfa",  rgb: "167,139,250"   },
+  { icon: Fingerprint, label: "Forensics",    count: 6,  color: "#34d399",  rgb: "52,211,153"    },
+  { icon: Globe,       label: "Networking",   count: 11, color: "#fbbf24",  rgb: "251,191,36"    },
+  { icon: Database,    label: "Storage",      count: 7,  color: "#60a5fa",  rgb: "96,165,250"    },
+  { icon: Activity,    label: "Utilities",    count: 3,  color: "#f472b6",  rgb: "244,114,182"   },
 ];
 
-const colorMap: Record<string, { bg: string; border: string; text: string; glow: string }> = {
-  cyan:    { bg: "bg-cyan-500/10",    border: "border-cyan-500/20",    text: "text-cyan-400",    glow: "shadow-cyan-500/20"    },
-  blue:    { bg: "bg-blue-500/10",    border: "border-blue-500/20",    text: "text-blue-400",    glow: "shadow-blue-500/20"    },
-  violet:  { bg: "bg-violet-500/10",  border: "border-violet-500/20",  text: "text-violet-400",  glow: "shadow-violet-500/20"  },
-  rose:    { bg: "bg-rose-500/10",    border: "border-rose-500/20",    text: "text-rose-400",    glow: "shadow-rose-500/20"    },
-  amber:   { bg: "bg-amber-500/10",   border: "border-amber-500/20",   text: "text-amber-400",   glow: "shadow-amber-500/20"   },
-  emerald: { bg: "bg-emerald-500/10", border: "border-emerald-500/20", text: "text-emerald-400", glow: "shadow-emerald-500/20" },
-};
+const features = [
+  { icon: Server,      text: "No installation required" },
+  { icon: Eye,         text: "100% client-side"         },
+  { icon: Lock,        text: "Privacy-first"            },
+  { icon: Zap,         text: "Instant execution"        },
+];
 
+/* ══════════════════════════════════════════════
+   REDESIGNED TOOLKIT CARD
+══════════════════════════════════════════════ */
 function CyberToolkitCard() {
   const navigate = useNavigate();
+  const totalTools = toolkitCategories.reduce((s, c) => s + c.count, 0);
 
   return (
     <motion.div
-      initial={{ opacity: 0, y: 24 }}
+      initial={{ opacity: 0, y: 32 }}
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true }}
-      transition={{ duration: 0.5 }}
+      transition={{ duration: 0.55, ease: "easeOut" }}
+      className="mb-16"
     >
-      {/* Section label */}
-      <div className="mb-6 flex items-center gap-3">
-        <div className="h-px flex-1 bg-gradient-to-r from-transparent via-cyan-500/30 to-transparent" />
-        <span className="flex items-center gap-2 text-xs font-bold uppercase tracking-[0.2em] text-cyan-500">
-          <Wrench size={12} /> Interactive Toolkit
-        </span>
-        <div className="h-px flex-1 bg-gradient-to-r from-transparent via-cyan-500/30 to-transparent" />
+      {/* ── Section Label ── */}
+      <div className="flex items-center gap-4 mb-6">
+        <div className="h-px flex-1 bg-gradient-to-r from-transparent via-cyan-500/40 to-transparent" />
+        <div className="flex items-center gap-2 px-4 py-1.5 rounded-full border border-cyan-500/30 bg-cyan-500/5">
+          <Wrench size={11} className="text-cyan-400" />
+          <span className="text-xs font-bold uppercase tracking-[0.22em] text-cyan-400">
+            Interactive Toolkit
+          </span>
+        </div>
+        <div className="h-px flex-1 bg-gradient-to-r from-transparent via-cyan-500/40 to-transparent" />
       </div>
 
-      {/* Main card */}
+      {/* ── Main Card ── */}
       <div
         onClick={() => navigate("/tools/toolkit")}
-        className="group relative overflow-hidden rounded-2xl cursor-pointer
-                   border border-gray-800 hover:border-cyan-500/40 transition-all duration-500
-                   bg-gradient-to-br from-gray-950 via-gray-900 to-gray-950"
+        className="group relative cursor-pointer overflow-hidden rounded-2xl
+                   border border-gray-800/80 hover:border-cyan-500/50
+                   bg-gray-950 transition-all duration-500
+                   hover:shadow-[0_0_60px_rgba(6,182,212,0.12)]"
       >
-        {/* Animated background grid */}
+        {/* Animated grid bg */}
         <div
-          className="absolute inset-0 opacity-[0.03] group-hover:opacity-[0.06] transition-opacity duration-700"
+          className="absolute inset-0 opacity-[0.025] group-hover:opacity-[0.055] transition-opacity duration-700"
           style={{
-            backgroundImage: "linear-gradient(rgba(6,182,212,1) 1px, transparent 1px), linear-gradient(90deg, rgba(6,182,212,1) 1px, transparent 1px)",
-            backgroundSize: "40px 40px",
+            backgroundImage:
+              "linear-gradient(rgba(6,182,212,1) 1px, transparent 1px), linear-gradient(90deg, rgba(6,182,212,1) 1px, transparent 1px)",
+            backgroundSize: "36px 36px",
           }}
         />
 
-        {/* Top glow beam */}
-        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-2/3 h-px bg-gradient-to-r from-transparent via-cyan-400/60 to-transparent" />
-        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-1/3 h-8 bg-cyan-500/5 blur-xl" />
+        {/* Top glow line */}
+        <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-cyan-400/70 to-transparent" />
+        <div className="absolute top-0 left-1/4 right-1/4 h-10 bg-cyan-500/5 blur-2xl" />
 
-        {/* Corner accent */}
-        <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-bl from-cyan-500/8 to-transparent rounded-bl-full" />
+        {/* Corner accents */}
+        <div className="absolute top-0 left-0 w-16 h-16 border-t-2 border-l-2 border-cyan-500/40 rounded-tl-2xl pointer-events-none" />
+        <div className="absolute bottom-0 right-0 w-16 h-16 border-b-2 border-r-2 border-cyan-500/20 rounded-br-2xl pointer-events-none" />
 
-        <div className="relative p-7 md:p-9">
-          {/* Header row */}
-          <div className="flex flex-col sm:flex-row sm:items-start gap-5 mb-8">
-            {/* Icon block */}
-            <div className="shrink-0 relative">
-              <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-cyan-500/20 to-cyan-600/10
-                              border border-cyan-500/30 group-hover:border-cyan-400/50
-                              flex items-center justify-center transition-all duration-300
-                              shadow-lg shadow-cyan-500/10 group-hover:shadow-cyan-500/20">
-                <Wrench size={26} className="text-cyan-400" />
+        {/* Subtle right-side glow blob */}
+        <div className="absolute top-1/2 right-0 -translate-y-1/2 w-64 h-64 bg-cyan-500/5 blur-3xl rounded-full pointer-events-none" />
+
+        <div className="relative z-10 p-7 md:p-9">
+
+          {/* ── TOP ROW: Icon + Title + CTA ── */}
+          <div className="flex flex-col sm:flex-row sm:items-center gap-5 mb-8">
+
+            {/* Icon */}
+            <div className="relative shrink-0">
+              <div className="w-16 h-16 rounded-2xl flex items-center justify-center
+                              bg-gradient-to-br from-cyan-500/20 to-cyan-900/20
+                              border border-cyan-500/30 group-hover:border-cyan-400/60
+                              shadow-lg shadow-cyan-500/10 group-hover:shadow-cyan-500/25
+                              transition-all duration-400">
+                <Wrench size={28} className="text-cyan-400 group-hover:text-cyan-300 transition-colors" />
               </div>
-              {/* Pulse ring */}
-              <div className="absolute inset-0 rounded-2xl border border-cyan-400/20 animate-ping" style={{ animationDuration: "2.5s" }} />
+              {/* Animated ping ring */}
+              <span className="absolute inset-0 rounded-2xl border border-cyan-400/30 animate-ping" style={{ animationDuration: "3s" }} />
             </div>
 
-            {/* Title + description */}
+            {/* Title + desc */}
             <div className="flex-1 min-w-0">
-              <div className="flex flex-wrap items-center gap-3 mb-2">
-                <h3 className="text-2xl md:text-3xl font-black text-white tracking-tight group-hover:text-cyan-50 transition-colors">
+              <div className="flex flex-wrap items-center gap-3 mb-1.5">
+                <h3 className="text-2xl md:text-3xl font-black tracking-tight text-white
+                               group-hover:text-cyan-50 transition-colors">
                   Cyber Toolkit
                 </h3>
                 <div className="flex items-center gap-1.5 px-3 py-1 rounded-full
-                                bg-cyan-500/10 border border-cyan-400/30">
+                                bg-cyan-500/10 border border-cyan-400/25">
                   <Zap size={10} className="text-cyan-400 fill-cyan-400" />
-                  <span className="text-cyan-400 text-xs font-bold">30 Tools · Browser-Native</span>
+                  <span className="text-cyan-400 text-[11px] font-bold tracking-wide">
+                    {totalTools} Tools · Browser-Native
+                  </span>
                 </div>
               </div>
-              <p className="text-gray-400 text-sm md:text-base leading-relaxed max-w-xl">
-                A full security workbench running entirely client-side — zero installs, zero backend.
-                OSINT lookups, packet analysis, hash cracking, web audits, and more, right in your browser.
+              <p className="text-gray-400 text-sm leading-relaxed max-w-2xl">
+                A full-stack security workbench running <span className="text-gray-300 font-medium">entirely client-side</span> — zero
+                installs, zero backend. Hash cracking, packet analysis, OSINT, web audits, encryption
+                and more, right in your browser.
               </p>
             </div>
 
-            {/* CTA */}
+            {/* CTA Button */}
             <div className="shrink-0 self-start sm:self-center">
-              <div className="flex items-center gap-2 px-5 py-2.5 rounded-xl
+              <div className="relative flex items-center gap-2.5 px-5 py-3 rounded-xl
                               bg-cyan-500/10 border border-cyan-500/30
-                              group-hover:bg-cyan-500/20 group-hover:border-cyan-400/50
-                              transition-all duration-300">
-                <span className="text-cyan-400 font-semibold text-sm whitespace-nowrap">Open Toolkit</span>
-                <ArrowRight size={15} className="text-cyan-400 group-hover:translate-x-1 transition-transform duration-300" />
+                              group-hover:bg-cyan-500/20 group-hover:border-cyan-400/60
+                              transition-all duration-300 overflow-hidden">
+                {/* Hover fill */}
+                <div className="absolute inset-0 bg-gradient-to-r from-cyan-500/0 to-cyan-500/10
+                                translate-x-[-100%] group-hover:translate-x-0 transition-transform duration-500" />
+                <span className="relative text-cyan-400 font-bold text-sm whitespace-nowrap">
+                  Open Toolkit
+                </span>
+                <ArrowRight size={15} className="relative text-cyan-400 group-hover:translate-x-1.5 transition-transform duration-300" />
               </div>
             </div>
           </div>
 
-          {/* Tool category pills grid */}
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
-            {toolkitCategories.map(({ icon: Icon, label, count, color }) => {
-              const c = colorMap[color];
-              return (
+          {/* ── CATEGORY PILLS ── */}
+          <div className="grid grid-cols-4 sm:grid-cols-7 gap-2.5 mb-7">
+            {toolkitCategories.map(({ icon: Icon, label, count, color, rgb }, idx) => (
+              <motion.div
+                key={label}
+                initial={{ opacity: 0, scale: 0.85 }}
+                whileInView={{ opacity: 1, scale: 1 }}
+                viewport={{ once: true }}
+                transition={{ delay: idx * 0.05, duration: 0.3 }}
+                className="relative flex flex-col items-center gap-1.5 py-3 px-2 rounded-xl
+                           border transition-all duration-300
+                           group-hover:scale-[1.03] group-hover:border-opacity-50"
+                style={{
+                  background: `rgba(${rgb},0.06)`,
+                  borderColor: `rgba(${rgb},0.2)`,
+                  transitionDelay: `${idx * 25}ms`,
+                }}
+              >
+                <Icon size={15} style={{ color }} />
+                <span className="text-[10px] font-bold text-center leading-tight" style={{ color }}>
+                  {label}
+                </span>
+                <span className="text-[9px] font-mono" style={{ color: `rgba(${rgb},0.5)` }}>
+                  {count} tools
+                </span>
+                {/* Bottom glow line */}
                 <div
-                  key={label}
-                  className={`flex flex-col items-center gap-1.5 p-3 rounded-xl
-                              ${c.bg} border ${c.border}
-                              group-hover:scale-105 transition-transform duration-300`}
-                  style={{ transitionDelay: `${toolkitCategories.findIndex(t => t.label === label) * 30}ms` }}
-                >
-                  <Icon size={16} className={c.text} />
-                  <span className={`text-xs font-bold ${c.text}`}>{label}</span>
-                  <span className="text-[10px] text-gray-500">{count} tools</span>
-                </div>
-              );
-            })}
+                  className="absolute bottom-0 left-1/4 right-1/4 h-px opacity-60"
+                  style={{ background: `linear-gradient(90deg, transparent, rgba(${rgb},0.6), transparent)` }}
+                />
+              </motion.div>
+            ))}
           </div>
 
-          {/* Bottom bar */}
-          <div className="mt-6 pt-5 border-t border-gray-800/60 flex flex-wrap items-center justify-between gap-3">
-            <div className="flex flex-wrap gap-4 text-xs text-gray-500">
-              {["No installation required", "100% client-side", "Privacy-first"].map((f) => (
-                <span key={f} className="flex items-center gap-1.5">
-                  <CheckIcon size={11} className="text-emerald-400" />
-                  {f}
+          {/* ── BOTTOM BAR ── */}
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4
+                          pt-5 border-t border-gray-800/70">
+
+            {/* Feature badges */}
+            <div className="flex flex-wrap gap-3">
+              {features.map(({ icon: FIcon, text }) => (
+                <span key={text}
+                  className="flex items-center gap-1.5 text-xs text-gray-500
+                             group-hover:text-gray-400 transition-colors">
+                  <FIcon size={11} className="text-emerald-400 shrink-0" />
+                  {text}
                 </span>
               ))}
             </div>
-            <span className="text-xs text-gray-600 font-mono">/tools/toolkit →</span>
+
+            {/* Route hint */}
+            <div className="flex items-center gap-1.5 text-xs font-mono text-gray-700
+                            group-hover:text-cyan-900 transition-colors">
+              <span>/tools/toolkit</span>
+              <ChevronRight size={11} />
+            </div>
           </div>
         </div>
       </div>
@@ -255,10 +306,14 @@ export default function Tools() {
       </motion.div>
 
       {/* ══════════════════════════════════════
-          SECTION 1 — CYBERTOOLS + TOOLKIT CARD
+          SECTION 1 — TOOLKIT CARD + CYBERTOOLS
       ══════════════════════════════════════ */}
       <div ref={toolsRef} className="scroll-mt-20 mb-16">
-        {/* Types of CyberTools heading */}
+
+        {/* ── TOOLKIT CARD FIRST ── */}
+        <CyberToolkitCard />
+
+        {/* ── Types of CyberTools heading ── */}
         <motion.div initial={{ opacity: 0, x: -20 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true }} className="mb-8">
           <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-white mb-2">
             Types of <span className="text-cyan-400">CyberTools</span>
@@ -267,7 +322,7 @@ export default function Tools() {
 
         {/* CyberTools grid */}
         <motion.div initial="hidden" whileInView="visible" viewport={{ once: true }} variants={stagger}
-          className="grid gap-4 sm:gap-5 md:gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 mb-12">
+          className="grid gap-4 sm:gap-5 md:gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
           {Object.entries(groupedTools).map(([category, tools]) => {
             const Icon   = categoryIcons[category] || Code;
             const first  = tools[0];
@@ -302,9 +357,6 @@ export default function Tools() {
             );
           })}
         </motion.div>
-
-        {/* Toolkit card — sub-section directly below the grid */}
-        <CyberToolkitCard />
       </div>
 
       {/* ══════════════════════════════════════
