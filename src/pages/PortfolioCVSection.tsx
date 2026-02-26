@@ -689,7 +689,7 @@ const ContactSection = memo(() => (
     </div>
 
     <p className="mt-20 font-mono text-[10px] select-none" style={{ color: "rgba(6,182,212,0.15)" }}>
-      // rushil.varade · cybersecurity · 2025 · all rights reserved
+      {/* rushil.varade · cybersecurity · 2025 · all rights reserved */}
     </p>
   </m.section>
 ));
