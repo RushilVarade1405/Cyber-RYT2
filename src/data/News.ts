@@ -1,11 +1,14 @@
 // src/data/News.ts
 // ─────────────────────────────────────────────────────────────────────────────
-// Static cybersecurity news data.
-// Articles are rotated daily by Cyber_News.tsx using a deterministic
-// day-of-year seed — no backend required.
-//
-// TO ADD NEW ARTICLES: paste a new object into the array below.
-// The page will automatically surface different articles each day.
+// Cybersecurity News — RSS Data Layer
+// Speed optimizations:
+//   1. Proxies raced IN PARALLEL (Promise.any) — no more sequential waiting
+//   2. Staggered proxy starts (0 / 250ms / 500ms …) to reduce server hammering
+//   3. All source alt-URLs tried in parallel per-source
+//   4. Proxy speed rankings cached in localStorage — fastest proxy goes first
+//   5. Hard 12s wall-clock budget per source (not per-proxy-attempt)
+//   6. Per-proxy timeout: 5s (was 10s)
+//   7. Failed-proxy memory: skip proxies that failed in the last 5 min
 // ─────────────────────────────────────────────────────────────────────────────
 
 export type NewsCategory =
@@ -23,391 +26,639 @@ export interface CyberNewsArticle {
   summary: string;
   url: string;
   source: string;
-  publishedAt: string; // ISO date string
+  publishedAt: string;
   category: NewsCategory;
   tags: string[];
   severity: NewsSeverity;
+  isLive?: boolean;
 }
 
-export const newsArticles: CyberNewsArticle[] = [
-  // ── VULNERABILITIES ───────────────────────────────────────────────────────
+// ─────────────────────────────────────────────────────────────────────────────
+// RSS FEED REGISTRY
+// ─────────────────────────────────────────────────────────────────────────────
+export interface RSSSource {
+  name: string;
+  url: string;
+  altUrls?: string[];
+  color: string;
+  dot: string;
+  region: "global" | "india";
+  enabled: boolean;
+  defaultCategory?: NewsCategory;
+}
+
+export const RSS_SOURCES: RSSSource[] = [
   {
-    id: "v-001",
-    title: "Critical Zero-Day in Apache HTTP Server Allows Remote Code Execution",
-    summary:
-      "Security researchers uncovered a critical RCE vulnerability in Apache HTTP Server affecting versions 2.4.x. Unauthenticated attackers can execute arbitrary code on vulnerable systems. Patch immediately.",
-    url: "https://thehackernews.com",
-    source: "The Hacker News",
-    publishedAt: "2025-01-15T08:30:00Z",
-    category: "Vulnerability",
-    tags: ["Apache", "RCE", "Zero-Day", "CVE-2025"],
-    severity: "Critical",
-  },
-  {
-    id: "v-002",
-    title: "Patch Tuesday: Microsoft Fixes 94 CVEs Including 4 Actively Exploited Zero-Days",
-    summary:
-      "Microsoft's monthly security update addresses 94 CVEs this cycle. Four zero-days in Windows Print Spooler, CLFS Driver, and Hyper-V are actively exploited in the wild and should be prioritized.",
-    url: "https://www.bleepingcomputer.com",
-    source: "BleepingComputer",
-    publishedAt: "2025-01-14T17:00:00Z",
-    category: "Vulnerability",
-    tags: ["Microsoft", "Patch Tuesday", "Windows", "Zero-Day", "Hyper-V"],
-    severity: "Critical",
-  },
-  {
-    id: "v-003",
-    title: "Google Chrome V8 Type Confusion Bug Enables Remote Code Execution via Web Pages",
-    summary:
-      "Project Zero disclosed a type confusion flaw in Chrome's V8 JavaScript engine. Visiting a specially crafted page can trigger RCE. Chrome 121 stable contains the fix; update immediately.",
+    name: "The Hacker News",
     url: "https://feeds.feedburner.com/TheHackersNews",
-    source: "The Hacker News",
-    publishedAt: "2025-01-10T12:00:00Z",
-    category: "Vulnerability",
-    tags: ["Chrome", "V8", "Google", "Browser Security", "RCE"],
-    severity: "High",
+    color: "text-red-400", dot: "bg-red-400", region: "global", enabled: true,
   },
   {
-    id: "v-004",
-    title: "FortiGate SSL-VPN Authentication Bypass — Mass Exploitation Observed in the Wild",
-    summary:
-      "Fortinet confirmed active exploitation of CVE-2024-21762, an authentication bypass in FortiOS SSL-VPN. Thousands of enterprise appliances remain unpatched. CISA added this to KEV catalog.",
-    url: "https://www.bleepingcomputer.com",
-    source: "BleepingComputer",
-    publishedAt: "2025-01-08T09:15:00Z",
-    category: "Vulnerability",
-    tags: ["FortiGate", "Fortinet", "VPN", "Authentication Bypass", "CVE"],
-    severity: "Critical",
+    name: "SecurityWeek",
+    url: "https://feeds.feedburner.com/Securityweek",
+    color: "text-orange-400", dot: "bg-orange-400", region: "global", enabled: true,
   },
   {
-    id: "v-005",
-    title: "Ivanti Connect Secure Zero-Days Chained to Compromise Government Networks Globally",
-    summary:
-      "Two zero-day vulnerabilities in Ivanti Connect Secure and Policy Secure were chained by nation-state actors to compromise government and defence networks. Ivanti released patches after weeks of active exploitation.",
-    url: "https://www.darkreading.com",
-    source: "Dark Reading",
-    publishedAt: "2025-01-05T14:00:00Z",
-    category: "Vulnerability",
-    tags: ["Ivanti", "VPN", "Nation-State", "Zero-Day", "Government"],
-    severity: "Critical",
+    name: "Help Net Security",
+    url: "https://feeds2.feedburner.com/HelpNetSecurity",
+    color: "text-yellow-400", dot: "bg-yellow-400", region: "global", enabled: true,
   },
   {
-    id: "v-006",
-    title: "OpenSSH regreSSHion: 18-Year-Old Race Condition Bug Returns in glibc Systems",
-    summary:
-      "CVE-2024-6387, nicknamed regreSSHion, reintroduces a critical race condition in OpenSSH's signal handler. Unauthenticated remote root code execution is possible on glibc-based Linux systems. Patch to 9.8p1.",
-    url: "https://www.bleepingcomputer.com",
-    source: "BleepingComputer",
-    publishedAt: "2024-12-28T10:00:00Z",
-    category: "Vulnerability",
-    tags: ["OpenSSH", "Linux", "RCE", "Race Condition", "glibc"],
-    severity: "Critical",
+    name: "Krebs on Security",
+    url: "https://krebsonsecurity.com/feed/",
+    color: "text-purple-400", dot: "bg-purple-400", region: "global", enabled: true,
   },
   {
-    id: "v-007",
-    title: "PAN-OS GlobalProtect Gateway Zero-Day Exploited Before Patch Release",
-    summary:
-      "Palo Alto Networks disclosed CVE-2024-3400, a command injection flaw in PAN-OS GlobalProtect. Threat actors exploited it to deploy Upstyle backdoor before the patch was available. CVSS 10.0.",
-    url: "https://threatpost.com",
-    source: "Threatpost",
-    publishedAt: "2024-12-20T08:00:00Z",
-    category: "Vulnerability",
-    tags: ["Palo Alto", "PAN-OS", "Command Injection", "CVSS 10", "Backdoor"],
-    severity: "Critical",
-  },
-
-  // ── MALWARE ───────────────────────────────────────────────────────────────
-  {
-    id: "m-001",
-    title: "LockBit 4.0 Ransomware Emerges Targeting Healthcare and Critical Infrastructure",
-    summary:
-      "LockBit's latest variant features faster encryption, improved anti-analysis techniques, and expanded affiliate recruitment. Healthcare organizations across North America and Europe are primary targets in Q1 2025.",
-    url: "https://www.bleepingcomputer.com",
-    source: "BleepingComputer",
-    publishedAt: "2025-01-18T11:00:00Z",
-    category: "Malware",
-    tags: ["LockBit", "Ransomware", "Healthcare", "RaaS", "Encryption"],
-    severity: "Critical",
+    name: "Rapid7 Blog",
+    url: "https://blog.rapid7.com/rss/",
+    altUrls: ["https://www.rapid7.com/blog/rss/"],
+    color: "text-blue-400", dot: "bg-blue-400", region: "global", enabled: true,
+    defaultCategory: "Vulnerability",
   },
   {
-    id: "m-002",
-    title: "Cl0p Exploits MOVEit Successor — GoAnywhere MFT Compromised at 130+ Enterprises",
-    summary:
-      "The Cl0p ransomware group exploited a critical SQL injection in GoAnywhere MFT, stealing data from over 130 organizations globally before patches were applied. Extortion demands range from $1M to $15M.",
-    url: "https://krebsonsecurity.com",
-    source: "Krebs on Security",
-    publishedAt: "2025-01-12T16:00:00Z",
-    category: "Malware",
-    tags: ["Cl0p", "GoAnywhere", "SQL Injection", "Data Theft", "Extortion"],
-    severity: "Critical",
+    name: "CVEFeed",
+    url: "https://cvefeed.io/rssfeed/severity/high.xml",
+    altUrls: [
+      "https://cvefeed.io/rssfeed/",
+      "https://cvefeed.io/rssfeed/latest.xml",
+    ],
+    color: "text-red-300", dot: "bg-red-300", region: "global", enabled: true,
+    defaultCategory: "Vulnerability",
   },
   {
-    id: "m-003",
-    title: "FakeUpdates (SocGholish) Campaign Delivers DarkGate Loader via Compromised WordPress Sites",
-    summary:
-      "A large-scale drive-by download campaign uses fake browser update prompts on compromised WordPress sites to deliver DarkGate malware. Over 2,000 sites were identified in the distribution network.",
-    url: "https://www.darkreading.com",
-    source: "Dark Reading",
-    publishedAt: "2025-01-09T13:30:00Z",
-    category: "Malware",
-    tags: ["SocGholish", "DarkGate", "WordPress", "Drive-by", "Loader"],
-    severity: "High",
+    name: "Packet Storm",
+    // Feedburner mirror is more proxy-friendly than the direct feed
+    url: "https://feeds.feedburner.com/packetstormsecurity/IIOJ",
+    altUrls: [
+      "https://packetstormsecurity.com/feeds/news.xml",
+      "https://rss.packetstormsecurity.com/news/",
+    ],
+    color: "text-rose-400", dot: "bg-rose-400", region: "global", enabled: true,
+    defaultCategory: "Vulnerability",
   },
   {
-    id: "m-004",
-    title: "Androxgh0st Botnet Now Integrates Mozi IoT Capabilities After Takedown Absorption",
-    summary:
-      "The Androxgh0st botnet absorbed infrastructure from the dismantled Mozi IoT botnet, combining web application exploits with IoT device compromise to build a 40,000-strong hybrid botnet.",
-    url: "https://feeds.feedburner.com/TheHackersNews",
-    source: "The Hacker News",
-    publishedAt: "2025-01-06T10:00:00Z",
-    category: "Malware",
-    tags: ["Androxgh0st", "Mozi", "Botnet", "IoT", "Web Exploitation"],
-    severity: "High",
+    name: "CERT-In",
+    url: "https://www.cert-in.org.in/RSS.jsp",
+    altUrls: [
+      "https://www.cert-in.org.in/rss.jsp",
+      "https://cert-in.org.in/RSS.jsp",
+      "https://www.cert-in.org.in/XML-Feed.jsp",
+    ],
+    color: "text-green-400", dot: "bg-green-400", region: "india", enabled: true,
+    defaultCategory: "Advisory",
   },
   {
-    id: "m-005",
-    title: "BlackCat/ALPHV Ransomware Shuts Down After $22M UnitedHealth Ransom Payment",
-    summary:
-      "The ALPHV/BlackCat ransomware group performed an exit scam after reportedly receiving a $22M ransom from UnitedHealth Group. The affiliate behind the Change Healthcare attack threatened further leaks.",
-    url: "https://krebsonsecurity.com",
-    source: "Krebs on Security",
-    publishedAt: "2024-12-22T09:00:00Z",
-    category: "Malware",
-    tags: ["BlackCat", "ALPHV", "UnitedHealth", "Healthcare", "Exit Scam"],
-    severity: "Critical",
+    name: "CyberPeace",
+    url: "https://www.cyberpeace.org/feed/",
+    altUrls: [
+      "https://cyberpeace.org/feed/",
+      "https://cyberpeace.org/?feed=rss2",
+      "https://www.cyberpeace.org/?feed=rss2",
+    ],
+    color: "text-teal-400", dot: "bg-teal-400", region: "india", enabled: true,
   },
   {
-    id: "m-006",
-    title: "Perfctl Malware Silently Mines Monero on Linux Servers for Years Undetected",
-    summary:
-      "A stealthy cryptomining malware called perfctl infected thousands of Linux servers by exploiting misconfigurations and known vulnerabilities. It hid in process names and paused when admins logged in.",
-    url: "https://www.bleepingcomputer.com",
-    source: "BleepingComputer",
-    publishedAt: "2024-12-18T14:30:00Z",
-    category: "Malware",
-    tags: ["Cryptomining", "Linux", "Monero", "Stealth", "Server"],
-    severity: "Medium",
-  },
-
-  // ── BREACHES ──────────────────────────────────────────────────────────────
-  {
-    id: "b-001",
-    title: "National Public Data Breach Exposes 2.9 Billion Records Including SSNs",
-    summary:
-      "A massive data broker breach at National Public Data exposed nearly 3 billion records including Social Security Numbers, addresses, and phone numbers. The data was sold on dark web forums for $3.5M.",
-    url: "https://krebsonsecurity.com",
-    source: "Krebs on Security",
-    publishedAt: "2025-01-16T08:00:00Z",
-    category: "Breach",
-    tags: ["Data Broker", "SSN", "PII", "Dark Web", "Identity Theft"],
-    severity: "Critical",
+    name: "DSCI",
+    url: "https://www.dsci.in/feed/",
+    altUrls: [
+      "https://dsci.in/feed/",
+      "https://www.dsci.in/?feed=rss2",
+      "https://dsci.in/?feed=rss2",
+    ],
+    color: "text-cyan-400", dot: "bg-cyan-400", region: "india", enabled: true,
   },
   {
-    id: "b-002",
-    title: "Snowflake Customer Data Theft: AT&T, Ticketmaster, and 160+ Companies Compromised",
-    summary:
-      "Credential-based attacks on Snowflake cloud environments exposed data from 160+ companies. AT&T's call records for 100M+ customers and Ticketmaster's 560M records were among the most significant thefts.",
-    url: "https://www.darkreading.com",
-    source: "Dark Reading",
-    publishedAt: "2025-01-11T12:00:00Z",
-    category: "Breach",
-    tags: ["Snowflake", "Cloud", "AT&T", "Ticketmaster", "Credential Theft"],
-    severity: "Critical",
-  },
-  {
-    id: "b-003",
-    title: "Salt Typhoon Chinese APT Breaches US Telecoms — Wiretap Systems Compromised",
-    summary:
-      "The Salt Typhoon APT group, linked to China's Ministry of State Security, breached major US telecom providers including AT&T, Verizon, and Lumen, accessing lawful intercept systems used for government surveillance.",
-    url: "https://www.darkreading.com",
-    source: "Dark Reading",
-    publishedAt: "2025-01-08T10:00:00Z",
-    category: "Breach",
-    tags: ["Salt Typhoon", "China", "APT", "Telecom", "Wiretap", "MSS"],
-    severity: "Critical",
-  },
-  {
-    id: "b-004",
-    title: "Internet Archive (Wayback Machine) Breached — 31 Million User Records Stolen",
-    summary:
-      "The Internet Archive suffered a data breach exposing 31 million user accounts including email addresses and bcrypt-hashed passwords. A simultaneous DDoS attack disrupted archive.org for days.",
-    url: "https://www.bleepingcomputer.com",
-    source: "BleepingComputer",
-    publishedAt: "2024-12-30T15:00:00Z",
-    category: "Breach",
-    tags: ["Internet Archive", "DDoS", "User Data", "Passwords", "bcrypt"],
-    severity: "High",
-  },
-  {
-    id: "b-005",
-    title: "XZ Utils SSH Backdoor: Multi-Year Supply Chain Attack Caught at Last Moment",
-    summary:
-      "A carefully engineered multi-year supply chain attack introduced a backdoor into XZ Utils 5.6.0/5.6.1 targeting OpenSSH on systemd Linux systems. A Microsoft engineer discovered it just before widespread Linux distribution.",
-    url: "https://www.schneier.com",
-    source: "Schneier on Security",
-    publishedAt: "2024-12-25T09:00:00Z",
-    category: "Breach",
-    tags: ["XZ Utils", "Supply Chain", "SSH", "Backdoor", "Linux", "Open Source"],
-    severity: "Critical",
-  },
-  {
-    id: "b-006",
-    title: "Hot Topic Retail Chain Breach Exposes 57 Million Customer Records via Credential Stuffing",
-    summary:
-      "Hot Topic suffered a massive data breach exposing 57 million customer records including partial payment card data, email addresses, and physical addresses. The attack used credentials harvested from prior breaches.",
-    url: "https://krebsonsecurity.com",
-    source: "Krebs on Security",
-    publishedAt: "2024-12-20T11:00:00Z",
-    category: "Breach",
-    tags: ["Retail", "Credential Stuffing", "Payment Cards", "PII", "Hot Topic"],
-    severity: "High",
-  },
-
-  // ── ADVISORIES ────────────────────────────────────────────────────────────
-  {
-    id: "a-001",
-    title: "CISA Emergency Directive: Federal Agencies Must Patch Ivanti Flaws Within 48 Hours",
-    summary:
-      "CISA issued Emergency Directive 24-02 requiring all federal civilian agencies to disconnect vulnerable Ivanti Connect Secure and Policy Secure appliances and apply vendor patches within 48 hours.",
-    url: "https://www.cisa.gov",
-    source: "CISA Alerts",
-    publishedAt: "2025-01-17T14:00:00Z",
-    category: "Advisory",
-    tags: ["CISA", "Ivanti", "Federal", "Emergency Directive", "VPN"],
-    severity: "Critical",
-  },
-  {
-    id: "a-002",
-    title: "NSA and CISA Release Joint Advisory on Top Routinely Exploited Vulnerabilities of 2024",
-    summary:
-      "NSA, CISA, and Five Eyes partners published a joint advisory identifying the top 15 most routinely exploited vulnerabilities of 2024. Log4Shell, ProxyLogon, and Citrix Bleed top the list again.",
-    url: "https://www.cisa.gov",
-    source: "CISA Alerts",
-    publishedAt: "2025-01-14T10:00:00Z",
-    category: "Advisory",
-    tags: ["NSA", "CISA", "Five Eyes", "Log4Shell", "CVE", "Top Vulnerabilities"],
-    severity: "High",
-  },
-  {
-    id: "a-003",
-    title: "CISA Warns of Nation-State DNS Poisoning Targeting Critical Infrastructure Operators",
-    summary:
-      "A well-resourced APT group linked to a foreign government conducted large-scale DNS cache poisoning attacks against power grid operators and water treatment facilities across North America.",
-    url: "https://www.cisa.gov",
-    source: "CISA Alerts",
-    publishedAt: "2025-01-07T09:00:00Z",
-    category: "Advisory",
-    tags: ["APT", "DNS", "Critical Infrastructure", "Power Grid", "Water"],
-    severity: "Critical",
-  },
-  {
-    id: "a-004",
-    title: "NIST Cybersecurity Framework 2.0 Released — Governance Now a Core Function",
-    summary:
-      "NIST published CSF 2.0, the first major revision of the Cybersecurity Framework since 2018. The update adds Governance as a sixth core function and expands guidance for supply chain risk management.",
-    url: "https://nvd.nist.gov",
-    source: "NIST / NVD",
-    publishedAt: "2024-12-28T12:00:00Z",
-    category: "Advisory",
-    tags: ["NIST", "CSF 2.0", "Governance", "Supply Chain", "Framework"],
-    severity: "Medium",
-  },
-  {
-    id: "a-005",
-    title: "FBI and CISA Warn of Ghost/Cring Ransomware Targeting Unpatched Public-Facing Apps",
-    summary:
-      "A joint advisory from FBI and CISA warns that Ghost ransomware actors are actively exploiting known CVEs in Fortinet, Adobe ColdFusion, and Microsoft Exchange to gain initial access to victim networks.",
-    url: "https://www.cisa.gov",
-    source: "CISA Alerts",
-    publishedAt: "2024-12-15T11:30:00Z",
-    category: "Advisory",
-    tags: ["Ghost", "Ransomware", "FBI", "CISA", "Fortinet", "Exchange"],
-    severity: "High",
-  },
-
-  // ── RESEARCH ──────────────────────────────────────────────────────────────
-  {
-    id: "r-001",
-    title: "NIST Finalizes Post-Quantum Cryptography Standards: ML-KEM, ML-DSA, SLH-DSA",
-    summary:
-      "NIST published FIPS 203, 204, and 205 — the world's first post-quantum cryptographic algorithm standards. Organizations are advised to begin migration planning away from RSA and ECC immediately.",
-    url: "https://nvd.nist.gov",
-    source: "NIST / NVD",
-    publishedAt: "2025-01-13T10:00:00Z",
-    category: "Research",
-    tags: ["Post-Quantum", "PQC", "NIST", "ML-KEM", "Cryptography", "FIPS"],
-    severity: "Medium",
-  },
-  {
-    id: "r-002",
-    title: "AI-Powered Phishing Achieves 60% Click Rate — Outperforming Human-Written Lures",
-    summary:
-      "IBM X-Force research shows AI-generated spear-phishing emails achieve 60% click-through rates, versus 20% for human-crafted messages. LLMs are lowering the barrier for sophisticated social engineering at scale.",
-    url: "https://www.darkreading.com",
-    source: "Dark Reading",
-    publishedAt: "2025-01-10T14:00:00Z",
-    category: "Research",
-    tags: ["AI", "Phishing", "LLM", "Social Engineering", "IBM X-Force"],
-    severity: "High",
-  },
-  {
-    id: "r-003",
-    title: "Linux Kernel Rust Rewrite Initiative: Memory Safety for Core Subsystems",
-    summary:
-      "The Linux Foundation announced an initiative to rewrite critical kernel subsystems in Rust, targeting memory safety vulnerabilities that account for 70% of kernel CVEs. First modules ship in kernel 6.10.",
-    url: "https://www.schneier.com",
-    source: "Schneier on Security",
-    publishedAt: "2025-01-03T11:00:00Z",
-    category: "Research",
-    tags: ["Linux", "Rust", "Memory Safety", "Kernel", "CVE Prevention"],
-    severity: "Low",
-  },
-  {
-    id: "r-004",
-    title: "PixieFail: Nine Vulnerabilities Found in UEFI IPv6 Network Stack Affect Billions of Devices",
-    summary:
-      "Quarkslab researchers disclosed nine vulnerabilities in the open-source TianoCore EDK II UEFI firmware's IPv6 network stack. Successful exploitation can occur before the OS loads, enabling persistent compromise.",
-    url: "https://feeds.feedburner.com/TheHackersNews",
-    source: "The Hacker News",
-    publishedAt: "2024-12-22T13:00:00Z",
-    category: "Research",
-    tags: ["UEFI", "IPv6", "PixieFail", "Firmware", "Pre-OS", "Supply Chain"],
-    severity: "High",
-  },
-  {
-    id: "r-005",
-    title: "PassiveOS: Fingerprinting Operating Systems Passively via TCP/IP Stack Quirks",
-    summary:
-      "Researchers demonstrated a technique to passively fingerprint operating systems and versions with 94% accuracy using only TCP/IP stack behavioral differences — no active probing required.",
-    url: "https://www.schneier.com",
-    source: "Schneier on Security",
-    publishedAt: "2024-12-10T10:30:00Z",
-    category: "Research",
-    tags: ["Fingerprinting", "TCP/IP", "Passive Recon", "OS Detection", "Privacy"],
-    severity: "Medium",
-  },
-  {
-    id: "r-006",
-    title: "Quantum Computers Can Now Factor 2,048-bit RSA Keys — Timeline Accelerates",
-    summary:
-      "Chinese researchers published a paper claiming a 372-qubit quantum computer can theoretically factor 2048-bit RSA keys. While disputed, cryptographers warn organizations to accelerate PQC migration timelines.",
-    url: "https://www.schneier.com",
-    source: "Schneier on Security",
-    publishedAt: "2024-12-05T08:00:00Z",
-    category: "Research",
-    tags: ["Quantum Computing", "RSA", "PQC", "Cryptography", "Timeline"],
-    severity: "High",
+    name: "Crus.live",
+    url: "https://crus.live/rss.xml",
+    altUrls: [
+      "https://crus.live/feed/",
+      "https://crus.live/feed.xml",
+      "https://crus.live/?feed=rss2",
+      "https://www.crus.live/rss.xml",
+    ],
+    color: "text-indigo-400", dot: "bg-indigo-400", region: "india", enabled: true,
   },
 ];
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Helper: get the "day of year" index (0–364) for a given date
-// Used by Cyber_News.tsx to rotate which articles are "today's news"
+// PROXY DEFINITIONS
+// ─────────────────────────────────────────────────────────────────────────────
+interface ProxyDef {
+  id: string;
+  build: (u: string) => string;
+}
+
+const ALL_PROXIES: ProxyDef[] = [
+  { id: "corsproxy",  build: (u) => `https://corsproxy.io/?${encodeURIComponent(u)}` },
+  { id: "allorigins", build: (u) => `https://api.allorigins.win/raw?url=${encodeURIComponent(u)}` },
+  { id: "codetabs",   build: (u) => `https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(u)}` },
+  { id: "thingproxy", build: (u) => `https://thingproxy.freeboard.io/fetch/${u}` },
+  { id: "8x8",        build: (u) => `https://proxy.cors.sh/${u}` },
+];
+
+// ─────────────────────────────────────────────────────────────────────────────
+// PROXY PERFORMANCE MEMORY  (localStorage)
+// Tracks average response time per proxy and mutes recently-failed ones.
+// ─────────────────────────────────────────────────────────────────────────────
+const PROXY_PERF_KEY  = "rss_proxy_perf_v2";
+const PROXY_FAIL_TTL  = 5 * 60 * 1000; // suppress a failing proxy for 5 min
+
+interface ProxyPerf {
+  avgMs:     number;   // exponential moving average of response time
+  failUntil: number;   // epoch ms — skip this proxy until then
+  wins:      number;   // count of races won
+}
+
+function loadProxyPerf(): Record<string, ProxyPerf> {
+  try { return JSON.parse(localStorage.getItem(PROXY_PERF_KEY) ?? "{}"); }
+  catch { return {}; }
+}
+
+function saveProxyPerf(p: Record<string, ProxyPerf>) {
+  try { localStorage.setItem(PROXY_PERF_KEY, JSON.stringify(p)); } catch { /* ignore */ }
+}
+
+function recordProxyWin(id: string, ms: number) {
+  const all = loadProxyPerf();
+  const p   = all[id] ?? { avgMs: ms, failUntil: 0, wins: 0 };
+  p.avgMs    = Math.round(p.avgMs * 0.6 + ms * 0.4); // EMA
+  p.wins    += 1;
+  p.failUntil = 0;
+  all[id]    = p;
+  saveProxyPerf(all);
+}
+
+function recordProxyFail(id: string) {
+  const all   = loadProxyPerf();
+  const p     = all[id] ?? { avgMs: 9999, failUntil: 0, wins: 0 };
+  p.failUntil = Date.now() + PROXY_FAIL_TTL;
+  all[id]     = p;
+  saveProxyPerf(all);
+}
+
+/** Return proxies sorted fastest-first; recently failed ones go to the back. */
+function getSortedProxies(): ProxyDef[] {
+  const perf = loadProxyPerf();
+  const now  = Date.now();
+  return [...ALL_PROXIES].sort((a, b) => {
+    const pa = perf[a.id], pb = perf[b.id];
+    const aFailed = pa?.failUntil > now;
+    const bFailed = pb?.failUntil > now;
+    if (aFailed && !bFailed) return  1;
+    if (!aFailed && bFailed) return -1;
+    return (pa?.avgMs ?? 5000) - (pb?.avgMs ?? 5000);
+  });
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// CORE: RACE ALL PROXIES IN PARALLEL WITH STAGGERED STARTS
+//
+// Instead of: proxy1 → wait 10s → proxy2 → wait 10s → proxy3 …
+// We do:      proxy1 starts at t=0
+//             proxy2 starts at t=250ms
+//             proxy3 starts at t=500ms  ← all racing simultaneously
+//             First valid RSS response wins; the rest are cancelled.
+//
+// Worst case is now max(proxy_timeout) = 5s, not 5s × N.
+// ─────────────────────────────────────────────────────────────────────────────
+const PER_PROXY_TIMEOUT_MS = 5000;
+const STAGGER_MS           = 250; // ms between proxy launch slots
+
+function isValidRSS(text: string): boolean {
+  return text.length > 100 && (
+    text.includes("<rss")   ||
+    text.includes("<feed")  ||
+    text.includes("<item")  ||
+    text.includes("<entry") ||
+    text.includes("<?xml")
+  );
+}
+
+async function proxyFetchRace(targetUrl: string): Promise<string> {
+  const proxies     = getSortedProxies();
+  const masterCtrl  = new AbortController(); // abort all when first wins
+  const controllers: AbortController[] = [];
+
+  const racePromises = proxies.map((proxy, idx) =>
+    new Promise<string>((resolve, reject) => {
+      const staggerTimer = setTimeout(async () => {
+        if (masterCtrl.signal.aborted) { reject(new DOMException("aborted", "AbortError")); return; }
+
+        const ctrl = new AbortController();
+        controllers.push(ctrl);
+        masterCtrl.signal.addEventListener("abort", () => ctrl.abort(), { once: true });
+
+        const hardTimeout = setTimeout(() => {
+          ctrl.abort();
+          recordProxyFail(proxy.id);
+          reject(new Error(`timeout:${proxy.id}`));
+        }, PER_PROXY_TIMEOUT_MS);
+
+        const t0 = Date.now();
+        try {
+          const res = await fetch(proxy.build(targetUrl), {
+            signal: ctrl.signal,
+            headers: { Accept: "application/rss+xml, application/xml, text/xml, */*" },
+          });
+          clearTimeout(hardTimeout);
+
+          if (!res.ok) {
+            recordProxyFail(proxy.id);
+            reject(new Error(`HTTP ${res.status} from ${proxy.id}`));
+            return;
+          }
+
+          const text = await res.text();
+          if (isValidRSS(text)) {
+            recordProxyWin(proxy.id, Date.now() - t0);
+            masterCtrl.abort(); // cancel all losers
+            resolve(text);
+          } else {
+            recordProxyFail(proxy.id);
+            reject(new Error(`invalid RSS: ${proxy.id}`));
+          }
+        } catch (e: any) {
+          clearTimeout(hardTimeout);
+          if (e?.name !== "AbortError") recordProxyFail(proxy.id);
+          reject(e);
+        }
+      }, idx * STAGGER_MS);
+
+      masterCtrl.signal.addEventListener("abort", () => clearTimeout(staggerTimer), { once: true });
+    })
+  );
+
+  try {
+    return await Promise.any(racePromises);
+  } catch {
+    throw new Error(`All proxies failed for: ${targetUrl}`);
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// FETCH WITH URL FALLBACKS
+// All alt-URLs for a source also race in parallel — first valid one wins.
+// Hard 12s wall-clock budget per source prevents any single source
+// from blocking the whole page load.
+// ─────────────────────────────────────────────────────────────────────────────
+const SOURCE_BUDGET_MS = 12000;
+
+async function proxyFetchWithFallback(source: RSSSource): Promise<string> {
+  const urls = [source.url, ...(source.altUrls ?? [])];
+
+  // Each URL races its own proxy pool; first URL+proxy combo that succeeds wins
+  const urlRaces    = urls.map((url) => proxyFetchRace(url));
+  const budgetGuard = new Promise<never>((_, reject) =>
+    setTimeout(() => reject(new Error(`Budget exceeded: ${source.name}`)), SOURCE_BUDGET_MS)
+  );
+
+  return Promise.race([Promise.any(urlRaces), budgetGuard]);
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// RSS / ATOM XML PARSER
+// ─────────────────────────────────────────────────────────────────────────────
+interface RawItem {
+  title: string;
+  link: string;
+  description: string;
+  pubDate: string;
+  guid: string;
+}
+
+function xmlText(el: Element, ...tags: string[]): string {
+  for (const tag of tags) {
+    const found = el.querySelector(tag) ?? el.getElementsByTagName(tag)[0];
+    if (found) return (found.textContent ?? "").trim();
+  }
+  return "";
+}
+
+function stripHtml(html: string): string {
+  return html
+    .replace(/<!\[CDATA\[([\s\S]*?)\]\]>/g, "$1")
+    .replace(/<[^>]+>/g, " ")
+    .replace(/&amp;/g, "&").replace(/&lt;/g, "<").replace(/&gt;/g, ">")
+    .replace(/&quot;/g, '"').replace(/&#039;/g, "'").replace(/&apos;/g, "'")
+    .replace(/&nbsp;/g, " ").replace(/&#\d+;/g, " ").replace(/&[a-z]+;/g, " ")
+    .replace(/\s{2,}/g, " ").trim();
+}
+
+export function parseRSSXML(xml: string): RawItem[] {
+  const cleaned = xml
+    .replace(/^\uFEFF/, "")
+    .replace(/<\?xml[^?]*\?>/i, '<?xml version="1.0" encoding="UTF-8"?>');
+
+  const parser = new DOMParser();
+  let doc = parser.parseFromString(cleaned, "application/xml");
+  if (doc.querySelector("parsererror")) {
+    doc = parser.parseFromString(cleaned, "text/html");
+  }
+
+  const rssItems  = Array.from(doc.querySelectorAll("item"));
+  const atomItems = Array.from(doc.querySelectorAll("entry"));
+  const isAtom    = rssItems.length === 0 && atomItems.length > 0;
+  const nodes     = isAtom ? atomItems : rssItems;
+
+  if (nodes.length === 0) return parseRSSFallback(xml);
+
+  return nodes.map((node): RawItem | null => {
+    let title = "", link = "", description = "", pubDate = "", guid = "";
+
+    if (isAtom) {
+      title        = stripHtml(xmlText(node, "title"));
+      const linkEl = node.querySelector("link[rel='alternate']") ?? node.querySelector("link");
+      link         = linkEl?.getAttribute("href") ?? xmlText(node, "id");
+      description  = stripHtml(xmlText(node, "summary", "content"));
+      pubDate      = xmlText(node, "published", "updated");
+      guid         = xmlText(node, "id") || link;
+    } else {
+      title = stripHtml(xmlText(node, "title"));
+      const linkEl = node.querySelector("link") ?? node.getElementsByTagName("link")[0];
+      if (linkEl) {
+        link = linkEl.textContent?.trim() ||
+               linkEl.nextSibling?.textContent?.trim() ||
+               linkEl.getAttribute("href") || "";
+      }
+      if (!link) link = xmlText(node, "guid");
+      description = stripHtml(xmlText(node, "description", "content:encoded", "summary", "content"));
+      pubDate     = xmlText(node, "pubDate", "dc:date", "published", "updated", "date");
+      guid        = xmlText(node, "guid") || link;
+    }
+
+    if (!title || !link || !link.startsWith("http")) return null;
+    return { title, link, description, pubDate, guid };
+  }).filter((x): x is RawItem => x !== null);
+}
+
+function parseRSSFallback(xml: string): RawItem[] {
+  const items: RawItem[] = [];
+  const itemRx = /<item[^>]*>([\s\S]*?)<\/item>/gi;
+  let m: RegExpExecArray | null;
+  while ((m = itemRx.exec(xml)) !== null) {
+    const b     = m[1];
+    const title = extractTag(b, "title");
+    const link  = extractTag(b, "link") || extractTag(b, "guid");
+    const desc  = extractTag(b, "description") || extractTag(b, "summary");
+    const date  = extractTag(b, "pubDate") || extractTag(b, "dc:date") || extractTag(b, "published");
+    const guid  = extractTag(b, "guid") || link;
+    if (title && link && link.startsWith("http")) {
+      items.push({ title: stripHtml(title), link, description: stripHtml(desc), pubDate: date, guid });
+    }
+  }
+  return items;
+}
+
+function extractTag(xml: string, tag: string): string {
+  const cdataRx = new RegExp(`<${tag}[^>]*><!\\[CDATA\\[([\\s\\S]*?)\\]\\]><\\/${tag}>`, "i");
+  const cdataM  = cdataRx.exec(xml);
+  if (cdataM) return cdataM[1].trim();
+  const rx = new RegExp(`<${tag}[^>]*>([\\s\\S]*?)<\\/${tag}>`, "i");
+  const mm = rx.exec(xml);
+  return mm ? mm[1].trim() : "";
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// DATE NORMALIZER
+// ─────────────────────────────────────────────────────────────────────────────
+export function normalizeDate(raw: string): string {
+  if (!raw) return new Date().toISOString();
+  try {
+    const d = new Date(raw.trim());
+    if (!isNaN(d.getTime())) return d.toISOString();
+    const d2 = new Date(raw.replace(/\([^)]*\)/g, "").trim());
+    if (!isNaN(d2.getTime())) return d2.toISOString();
+    const im = raw.match(/(\d{1,2})[/-](\d{1,2})[/-](\d{4})/);
+    if (im) {
+      const d3 = new Date(`${im[3]}-${im[2].padStart(2,"0")}-${im[1].padStart(2,"0")}`);
+      if (!isNaN(d3.getTime())) return d3.toISOString();
+    }
+  } catch { /* fall through */ }
+  return new Date().toISOString();
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// CLASSIFIER
+// ─────────────────────────────────────────────────────────────────────────────
+const CAT_KW: Record<NewsCategory, string[]> = {
+  Breach:        ["breach","leak","exposed","stolen","compromised","hacked","data theft","exfiltrat","dump","unauthorized access","databreach","data leak"],
+  Vulnerability: ["cve-","vulnerability","zero-day","zero day","exploit","patch","remote code execution","rce","authentication bypass","sql injection","buffer overflow","privilege escalation","cvss","flaw","security flaw","unpatched"],
+  Malware:       ["ransomware","malware","trojan","botnet","backdoor","spyware","rootkit","worm","virus","infostealer","cryptominer","lockbit","alphv","cl0p","stealer","rat ","loader","dropper","keylogger"],
+  Advisory:      ["advisory","cisa","cert-in","cert ","nsa","fbi","warning","alert","directive","patch tuesday","guidance","mitigation","security notice","bulletin","ncsc","nciipc","notice","cyber alert"],
+  Research:      ["research","discovered","analysis","report","study","technique","post-quantum","cryptograph","fingerprint","academic","whitepaper","threat intelligence","threat intel","findings","investigation"],
+};
+
+const SEV_KW: Record<NewsSeverity, string[]> = {
+  Critical: ["critical","zero-day","actively exploit","cvss 9","cvss 10","emergency","nation-state","apt","supply chain attack","mass exploit","wormable","critical severity","actively being exploited"],
+  High:     ["high severity","high-severity","remote code execution","authentication bypass","data breach","millions of","widespread","unauthenticated","pre-auth","high risk"],
+  Medium:   ["medium severity","moderate","phishing","credential stuffing","botnet","cryptominer","social engineering","medium risk"],
+  Low:      ["low severity","informational","theoretical","proof of concept","poc","low risk"],
+};
+
+const TAG_RX = [
+  /\bcve-\d{4}-\d+\b/gi,
+  /\b(apache|microsoft|google|fortinet|ivanti|palo alto|cisco|vmware|juniper|citrix|adobe|oracle|f5|jenkins|kubernetes|docker|openssl|openssh|linux|windows|chrome|firefox|safari|exchange|sharepoint|wordpress|nginx|atlassian|gitlab|github|android|ios|apple|samsung|qualcomm)\b/gi,
+  /\b(ransomware|malware|apt|zero-day|rce|sql injection|xss|ssrf|log4j|log4shell|phishing|backdoor|trojan|botnet)\b/gi,
+  /\b(lockbit|cl0p|alphv|blackcat|scattered spider|volt typhoon|salt typhoon|lazarus|fancy bear|cozy bear|revil|darkside)\b/gi,
+  /\b(cert-in|nciipc|meity|ncsc|cisa|nsa|fbi|interpol)\b/gi,
+];
+
+export function classifyArticle(
+  title: string, description: string, defaultCategory?: NewsCategory
+): { category: NewsCategory; severity: NewsSeverity; tags: string[] } {
+  const text = `${title} ${description}`.toLowerCase();
+  let category: NewsCategory = defaultCategory ?? "Research";
+  if (!defaultCategory) {
+    let maxM = 0;
+    for (const [cat, kws] of Object.entries(CAT_KW) as [NewsCategory, string[]][]) {
+      const m = kws.filter((k) => text.includes(k)).length;
+      if (m > maxM) { maxM = m; category = cat; }
+    }
+  }
+  let severity: NewsSeverity = "Medium";
+  for (const [sev, kws] of Object.entries(SEV_KW) as [NewsSeverity, string[]][]) {
+    if (kws.some((k) => text.includes(k))) { severity = sev; break; }
+  }
+  const tags: string[] = [];
+  for (const rx of TAG_RX) {
+    const found = text.match(rx);
+    if (found) tags.push(...found.map((t) => t.charAt(0).toUpperCase() + t.slice(1)));
+  }
+  return { category, severity, tags: Array.from(new Set(tags)).slice(0, 6) };
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// SINGLE FEED FETCHER
+// ─────────────────────────────────────────────────────────────────────────────
+async function fetchOneFeed(source: RSSSource): Promise<CyberNewsArticle[]> {
+  const xml  = await proxyFetchWithFallback(source);
+  const raw  = parseRSSXML(xml);
+  const slug = source.name.toLowerCase().replace(/\s+/g, "-");
+  return raw.map((item, i): CyberNewsArticle => {
+    const { category, severity, tags } = classifyArticle(item.title, item.description, source.defaultCategory);
+    return {
+      id:          `${slug}-${i}-${Date.now()}`,
+      title:       item.title.slice(0, 180),
+      summary:     item.description.slice(0, 350),
+      url:         item.link,
+      source:      source.name,
+      publishedAt: normalizeDate(item.pubDate),
+      category, severity, tags,
+      isLive: true,
+    };
+  });
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// DEDUPLICATION + RECENCY
+// ─────────────────────────────────────────────────────────────────────────────
+const MAX_AGE_DAYS = 30;
+
+function isRecent(iso: string): boolean {
+  return Date.now() - new Date(iso).getTime() < MAX_AGE_DAYS * 86400000;
+}
+
+export function deduplicateArticles(articles: CyberNewsArticle[]): CyberNewsArticle[] {
+  const seen = new Set<string>();
+  return articles.filter((a) => {
+    const key = a.title.toLowerCase().replace(/[^a-z0-9 ]/g, "").replace(/\s+/g, " ").trim().slice(0, 55);
+    if (seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// CACHE
+// ─────────────────────────────────────────────────────────────────────────────
+const CACHE_KEY = "cyber_news_rss_v6";
+const CACHE_TTL = 15 * 60 * 1000;
+
+interface CacheEntry {
+  articles: CyberNewsArticle[];
+  ts: number;
+  succeededFeeds: string[];
+  failedFeeds: string[];
+}
+
+export function saveCache(articles: CyberNewsArticle[], succeededFeeds: string[], failedFeeds: string[]): void {
+  try { sessionStorage.setItem(CACHE_KEY, JSON.stringify({ articles, ts: Date.now(), succeededFeeds, failedFeeds })); }
+  catch { /* quota */ }
+}
+
+export function loadCache(): CacheEntry | null {
+  try {
+    const raw = sessionStorage.getItem(CACHE_KEY);
+    if (!raw) return null;
+    const e: CacheEntry = JSON.parse(raw);
+    if (Date.now() - e.ts > CACHE_TTL) return null;
+    return e;
+  } catch { return null; }
+}
+
+export function clearCache(): void {
+  try { sessionStorage.removeItem(CACHE_KEY); } catch { /* ignore */ }
+}
+
+export function getCacheStatus(): { cached: boolean; age: number; succeededFeeds: string[] } {
+  try {
+    const raw = sessionStorage.getItem(CACHE_KEY);
+    if (!raw) return { cached: false, age: 0, succeededFeeds: [] };
+    const e: CacheEntry = JSON.parse(raw);
+    const age = Date.now() - e.ts;
+    return { cached: age < CACHE_TTL, age, succeededFeeds: e.succeededFeeds ?? [] };
+  } catch { return { cached: false, age: 0, succeededFeeds: [] }; }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// MASTER FETCH
+// ─────────────────────────────────────────────────────────────────────────────
+export interface FetchResult {
+  articles: CyberNewsArticle[];
+  succeededFeeds: string[];
+  failedFeeds: string[];
+  fromCache: boolean;
+  isLive: boolean;
+}
+
+export async function fetchAllRSSArticles(forceRefresh = false): Promise<FetchResult> {
+  if (!forceRefresh) {
+    const cached = loadCache();
+    if (cached && cached.articles.length > 0) {
+      return { articles: cached.articles, succeededFeeds: cached.succeededFeeds, failedFeeds: cached.failedFeeds, fromCache: true, isLive: true };
+    }
+  }
+
+  const enabled = RSS_SOURCES.filter((s) => s.enabled);
+  const succeeded: string[] = [];
+  const failed: string[]    = [];
+  const all: CyberNewsArticle[] = [];
+
+  // All feeds run concurrently; each one internally races its proxy pool
+  await Promise.allSettled(
+    enabled.map(async (source) => {
+      try {
+        const articles = await fetchOneFeed(source);
+        if (articles.length > 0) { all.push(...articles); succeeded.push(source.name); }
+        else { console.warn(`[RSS] ${source.name}: 0 articles`); failed.push(source.name); }
+      } catch (err) {
+        console.warn(`[RSS] ${source.name}:`, err);
+        failed.push(source.name);
+      }
+    })
+  );
+
+  const deduped = deduplicateArticles(
+    all.filter((a) => isRecent(a.publishedAt))
+       .sort((a, b) => new Date(b.publishedAt).getTime() - new Date(a.publishedAt).getTime())
+  );
+
+  if (deduped.length > 0) {
+    saveCache(deduped, succeeded, failed);
+    return { articles: deduped, succeededFeeds: succeeded, failedFeeds: failed, fromCache: false, isLive: true };
+  }
+
+  return { articles: newsArticles, succeededFeeds: [], failedFeeds: failed, fromCache: false, isLive: false };
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// DAILY ROTATION  (static fallback only)
 // ─────────────────────────────────────────────────────────────────────────────
 export function getDayOfYear(date: Date = new Date()): number {
   const start = new Date(date.getFullYear(), 0, 0);
-  const diff = date.getTime() - start.getTime();
-  const oneDay = 1000 * 60 * 60 * 24;
-  return Math.floor(diff / oneDay);
+  return Math.floor((date.getTime() - start.getTime()) / 86400000);
 }
+
+export function getDailyArticles(all: CyberNewsArticle[], count = 9): CyberNewsArticle[] {
+  if (!all.length) return [];
+  const seed = getDayOfYear();
+  const shuffled = [...all].sort((a, b) => {
+    const ha = (a.id.charCodeAt(0) * 31 + seed * 7) % all.length;
+    const hb = (b.id.charCodeAt(0) * 31 + seed * 7) % all.length;
+    return ha - hb;
+  });
+  const crits = shuffled.filter((a) => a.severity === "Critical");
+  const rest  = shuffled.filter((a) => a.severity !== "Critical");
+  return [...crits, ...rest].slice(0, count);
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// STATIC FALLBACK  (shown only when ALL feeds fail)
+// ─────────────────────────────────────────────────────────────────────────────
+const d = (n: number) => new Date(Date.now() - n * 86400000).toISOString();
+
+export const newsArticles: CyberNewsArticle[] = [
+  { id:"fb-v-001", title:"Critical Zero-Day in Apache HTTP Server Allows Remote Code Execution", summary:"Unauthenticated attackers can execute arbitrary code on vulnerable Apache HTTP Server 2.4.x systems. Patch immediately — active exploitation confirmed.", url:"https://thehackernews.com", source:"The Hacker News", publishedAt:d(1), category:"Vulnerability", tags:["Apache","RCE","Zero-Day"], severity:"Critical" },
+  { id:"fb-v-002", title:"Patch Tuesday: Microsoft Fixes 94 CVEs Including 4 Actively Exploited Zero-Days", summary:"Four zero-days in Windows Print Spooler, CLFS Driver, and Hyper-V are actively exploited in the wild.", url:"https://www.bleepingcomputer.com", source:"BleepingComputer", publishedAt:d(2), category:"Vulnerability", tags:["Microsoft","Patch Tuesday","Windows","Zero-Day"], severity:"Critical" },
+  { id:"fb-m-001", title:"LockBit 4.0 Ransomware Targets Healthcare and Critical Infrastructure", summary:"LockBit's latest variant features faster encryption and improved anti-analysis techniques.", url:"https://www.bleepingcomputer.com", source:"BleepingComputer", publishedAt:d(1), category:"Malware", tags:["LockBit","Ransomware","Healthcare"], severity:"Critical" },
+  { id:"fb-b-001", title:"National Public Data Breach Exposes 2.9 Billion Records Including SSNs", summary:"A massive data broker breach exposed nearly 3 billion records including SSNs, addresses, and phone numbers.", url:"https://krebsonsecurity.com", source:"Krebs on Security", publishedAt:d(3), category:"Breach", tags:["Data Broker","SSN","PII","Dark Web"], severity:"Critical" },
+  { id:"fb-b-003", title:"Salt Typhoon APT Breaches US Telecoms — Wiretap Systems Compromised", summary:"The Salt Typhoon APT group breached AT&T, Verizon, and Lumen, accessing lawful intercept systems.", url:"https://www.darkreading.com", source:"Dark Reading", publishedAt:d(4), category:"Breach", tags:["Salt Typhoon","China","APT","Telecom"], severity:"Critical" },
+  { id:"fb-a-001", title:"CISA Emergency Directive: Patch Ivanti Flaws Within 48 Hours", summary:"CISA's Emergency Directive 24-02 requires all federal civilian agencies to disconnect vulnerable Ivanti appliances.", url:"https://www.cisa.gov", source:"CISA Alerts", publishedAt:d(5), category:"Advisory", tags:["CISA","Ivanti","Federal","Emergency Directive"], severity:"Critical" },
+  { id:"fb-a-cert", title:"CERT-In Advisory: Multiple Vulnerabilities in Indian Banking Infrastructure", summary:"CERT-In has issued advisories covering critical vulnerabilities affecting BFSI sector infrastructure.", url:"https://www.cert-in.org.in", source:"CERT-In", publishedAt:d(2), category:"Advisory", tags:["CERT-In","BFSI","India","Advisory"], severity:"High" },
+  { id:"fb-v-006", title:"OpenSSH regreSSHion: Race Condition Enables Remote Root Code Execution", summary:"CVE-2024-6387 reintroduces a critical race condition in OpenSSH. Unauthenticated remote root RCE possible on glibc Linux.", url:"https://www.bleepingcomputer.com", source:"BleepingComputer", publishedAt:d(6), category:"Vulnerability", tags:["OpenSSH","Linux","RCE","Race Condition"], severity:"Critical" },
+  { id:"fb-b-005", title:"XZ Utils SSH Backdoor: Multi-Year Supply Chain Attack Discovered", summary:"A multi-year supply chain attack introduced a backdoor into XZ Utils 5.6.0/5.6.1 targeting OpenSSH on systemd Linux.", url:"https://www.schneier.com", source:"Schneier on Security", publishedAt:d(7), category:"Breach", tags:["XZ Utils","Supply Chain","SSH","Backdoor","Linux"], severity:"Critical" },
+  { id:"fb-r-001", title:"NIST Finalizes Post-Quantum Cryptography Standards: ML-KEM, ML-DSA, SLH-DSA", summary:"NIST published FIPS 203, 204, and 205 — the world's first post-quantum cryptographic standards.", url:"https://nvd.nist.gov", source:"NIST / NVD", publishedAt:d(8), category:"Research", tags:["Post-Quantum","PQC","NIST","ML-KEM","Cryptography"], severity:"Medium" },
+  { id:"fb-r-002", title:"AI-Powered Phishing Achieves 60% Click Rate vs 20% for Human-Written Lures", summary:"IBM X-Force research shows AI-generated spear-phishing emails dramatically outperform human-crafted messages.", url:"https://www.darkreading.com", source:"Dark Reading", publishedAt:d(9), category:"Research", tags:["AI","Phishing","LLM","Social Engineering"], severity:"High" },
+  { id:"fb-m-002", title:"Cl0p Exploits MFT Platform — 130+ Enterprises Compromised via SQL Injection", summary:"Cl0p ransomware exploited a critical SQL injection in a managed file transfer platform.", url:"https://krebsonsecurity.com", source:"Krebs on Security", publishedAt:d(10), category:"Malware", tags:["Cl0p","SQL Injection","Data Theft"], severity:"Critical" },
+  { id:"fb-a-002", title:"NSA and CISA Release Joint Advisory on Top 15 Exploited Vulnerabilities", summary:"NSA, CISA, and Five Eyes partners identified the top 15 most routinely exploited vulnerabilities.", url:"https://www.cisa.gov", source:"CISA Alerts", publishedAt:d(11), category:"Advisory", tags:["NSA","CISA","Five Eyes","Log4Shell","CVE"], severity:"High" },
+];
