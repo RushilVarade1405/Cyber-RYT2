@@ -1,650 +1,678 @@
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 
 /* ─────────────────────────────────────────
-   TYPES
+   GLOBAL STYLES
 ───────────────────────────────────────── */
-type ChallengeType = "password" | "pattern" | "sequence" | "konami";
+const GlobalStyles = () => (
+  <style>{`
+    @import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Orbitron:wght@400;700;900&display=swap');
 
-interface LevelConfig {
-  id: number;
-  label: string;
-  color: string;
-  glow: string;
-  challenge: ChallengeType;
-  password?: string;
-  hint?: string;
-  pattern?: number[];
-  sequence?: string[];
-  icon: string;
-  unlockMsg: string;
-}
+    :root {
+      --c:   #00ffe7;
+      --c2:  #00bfff;
+      --g:   #39ff14;
+      --y:   #ffd700;
+      --r:   #ff3b5c;
+      --p:   #bf5fff;
+      --o:   #ff8c42;
+      --bg:  #03080f;
+      --s1:  rgba(0,255,231,0.06);
+      --s2:  rgba(0,191,255,0.06);
+    }
 
-interface ChallengeProps {
-  level: LevelConfig;
-  onSuccess: () => void;
-  onFail: () => void;
-}
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body { background: var(--bg); }
 
-/* ─────────────────────────────────────────
-   LEVEL CONFIGURATION
-───────────────────────────────────────── */
-const LEVELS: LevelConfig[] = [
-  {
-    id: 0,
-    label: "INITIATE",
-    color: "#00d9ff",
-    glow: "rgba(0,217,255,0.4)",
-    challenge: "password",
-    password: "RYTNIX",
-    hint: "The brand behind this build",
-    icon: "🔑",
-    unlockMsg: "Clearance Level 1 granted. Welcome, recruit.",
-  },
-  {
-    id: 1,
-    label: "OPERATIVE",
-    color: "#a855f7",
-    glow: "rgba(168,85,247,0.4)",
-    challenge: "pattern",
-    pattern: [0, 3, 6, 7, 8],
-    hint: "Draw an L-shape (left column + bottom row)",
-    icon: "🧩",
-    unlockMsg: "Pattern recognised. Elevated access secured.",
-  },
-  {
-    id: 2,
-    label: "DIRECTOR",
-    color: "#f59e0b",
-    glow: "rgba(245,158,11,0.4)",
-    challenge: "sequence",
-    sequence: ["SYS", "INIT", "AUTH", "EXEC"],
-    hint: "Execute system commands in boot order",
-    icon: "⚡",
-    unlockMsg: "Command sequence validated. Director clearance active.",
-  },
-  {
-    id: 3,
-    label: "ARCHITECT",
-    color: "#ef4444",
-    glow: "rgba(239,68,68,0.4)",
-    challenge: "konami",
-    icon: "💀",
-    unlockMsg: "You found the ghost protocol. God-mode engaged.",
-  },
-];
+    .orb  { font-family: 'Orbitron', monospace; }
+    .mono { font-family: 'Share Tech Mono', monospace; }
+
+    /* scanlines overlay */
+    .scanlines::after {
+      content: '';
+      position: absolute; inset: 0;
+      background: repeating-linear-gradient(
+        0deg,
+        transparent,
+        transparent 3px,
+        rgba(0,255,231,0.012) 3px,
+        rgba(0,255,231,0.012) 4px
+      );
+      pointer-events: none;
+      z-index: 10;
+    }
+
+    /* hex grid bg */
+    .hexgrid {
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='56' height='100'%3E%3Cpath d='M28 66L0 50V18L28 2l28 16v32L28 66zm0-8l20-12V30L28 18 8 30v16l20 12z' fill='none' stroke='rgba(0,255,231,0.04)' stroke-width='1'/%3E%3C/svg%3E");
+    }
+
+    .glow-c  { text-shadow: 0 0 20px var(--c), 0 0 50px rgba(0,255,231,0.3); }
+    .glow-g  { text-shadow: 0 0 20px var(--g), 0 0 50px rgba(57,255,20,0.3); }
+    .glow-r  { text-shadow: 0 0 20px var(--r); }
+    .glow-y  { text-shadow: 0 0 20px var(--y); }
+
+    .card {
+      border-radius: 12px;
+      border: 1px solid rgba(0,255,231,0.12);
+      background: rgba(0,10,18,0.9);
+      backdrop-filter: blur(16px);
+      position: relative;
+      overflow: hidden;
+    }
+    .card::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 1px;
+      background: linear-gradient(90deg, transparent, var(--c), transparent);
+      opacity: 0.4;
+    }
+    .card:hover { border-color: rgba(0,255,231,0.3); }
+
+    .stat-card {
+      border-radius: 10px;
+      border: 1px solid;
+      background: rgba(0,5,12,0.95);
+      position: relative;
+      overflow: hidden;
+      transition: transform 0.25s, box-shadow 0.25s;
+    }
+    .stat-card:hover { transform: translateY(-3px); }
+
+    .pill {
+      font-size: 9px;
+      letter-spacing: 0.15em;
+      padding: 2px 8px;
+      border-radius: 3px;
+      border: 1px solid;
+    }
+
+    @keyframes flicker {
+      0%,100%{opacity:1}93%{opacity:1}94%{opacity:.5}95%{opacity:1}98%{opacity:.8}99%{opacity:1}
+    }
+    .flicker { animation: flicker 9s ease-in-out infinite; }
+
+    @keyframes blink { 0%,49%{opacity:1}50%,100%{opacity:0} }
+    .blink { animation: blink 1s step-end infinite; }
+
+    @keyframes scanmove {
+      0%  { transform: translateY(-100%); }
+      100%{ transform: translateY(100vh); }
+    }
+    .scan-beam {
+      position: fixed; left: 0; right: 0; height: 2px;
+      background: linear-gradient(90deg, transparent, rgba(0,255,231,0.35), transparent);
+      animation: scanmove 6s linear infinite;
+      pointer-events: none; z-index: 50;
+    }
+
+    @keyframes pulse-ring {
+      0%  { transform: scale(0.9); opacity: 0.7; }
+      100%{ transform: scale(1.6); opacity: 0; }
+    }
+    .pulse-ring::after {
+      content: '';
+      position: absolute; inset: -4px;
+      border-radius: 50%;
+      border: 2px solid var(--g);
+      animation: pulse-ring 1.4s ease-out infinite;
+    }
+
+    @keyframes matrix-scroll { from{background-position:0 0} to{background-position:0 100%} }
+
+    @keyframes dash {
+      to { stroke-dashoffset: -100; }
+    }
+    .dash-animate { animation: dash 3s linear infinite; }
+
+    @keyframes count-up {
+      from { opacity: 0; transform: translateY(6px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    .count-up { animation: count-up 0.4s ease-out forwards; }
+
+    /* threat level bar fill */
+    @keyframes bar-fill { from{width:0} }
+    .bar-fill { animation: bar-fill 1.2s cubic-bezier(0.34,1.56,0.64,1) forwards; }
+
+    /* glitch */
+    @keyframes glitch {
+      0%,100%{clip-path:inset(0 0 100% 0)}
+      20%{clip-path:inset(20% 0 40% 0);transform:translate(-3px)}
+      40%{clip-path:inset(60% 0 20% 0);transform:translate(3px)}
+      60%{clip-path:inset(10% 0 70% 0);transform:translate(-2px)}
+      80%{clip-path:inset(80% 0 5% 0);transform:translate(2px)}
+    }
+    .glitch-layer {
+      position: absolute; inset: 0;
+      color: var(--r);
+      animation: glitch 6s step-end infinite;
+      opacity: 0.6;
+    }
+
+    /* scrollbar */
+    ::-webkit-scrollbar { width: 4px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: rgba(0,255,231,0.2); border-radius: 2px; }
+  `}</style>
+);
 
 /* ─────────────────────────────────────────
    MATRIX RAIN CANVAS
 ───────────────────────────────────────── */
-function MatrixRain({ opacity = 0.12 }: { opacity?: number }) {
+function MatrixRain({ opacity = 0.08 }: { opacity?: number }) {
   const ref = useRef<HTMLCanvasElement>(null);
   useEffect(() => {
-    const c = ref.current;
-    if (!c) return;
-    const ctx = c.getContext("2d");
-    if (!ctx) return;
-    const FONT = 12;
+    const c = ref.current; if (!c) return;
+    const ctx = c.getContext("2d"); if (!ctx) return;
+    const F = 11;
     const resize = () => { c.width = c.offsetWidth; c.height = c.offsetHeight; };
     resize();
-    const ro = new ResizeObserver(resize);
-    ro.observe(c);
+    const ro = new ResizeObserver(resize); ro.observe(c);
     let drops: number[] = [];
-    const reset = () => { drops = Array(Math.floor(c.width / FONT)).fill(1) as number[]; };
+    const reset = () => { drops = Array(Math.floor(c.width / F)).fill(1) as number[]; };
     reset();
+    const CHARS = "01アイウエオカキクケコサシスセソタチツテトナニヌネノ";
     const id = setInterval(() => {
-      if (drops.length !== Math.floor(c.width / FONT)) reset();
-      ctx.fillStyle = "rgba(0,0,0,0.06)";
+      if (drops.length !== Math.floor(c.width / F)) reset();
+      ctx.fillStyle = "rgba(3,8,15,0.07)";
       ctx.fillRect(0, 0, c.width, c.height);
-      ctx.font = `${FONT}px monospace`;
-      drops.forEach((y: number, i: number) => {
-        ctx.fillStyle = Math.random() > 0.93 ? "#fff" : i % 3 === 0 ? "#00d9ff" : "#0077aa";
-        ctx.fillText(Math.random() > 0.5 ? "1" : "0", i * FONT, y * FONT);
-        if (y * FONT > c.height && Math.random() > 0.975) drops[i] = 0;
+      ctx.font = `${F}px monospace`;
+      drops.forEach((y, i) => {
+        const bright = Math.random() > 0.96;
+        ctx.fillStyle = bright ? "#fff" : i % 4 === 0 ? "#00ffe7" : i % 4 === 1 ? "#00bfff" : "#005f6b";
+        ctx.fillText(CHARS[Math.floor(Math.random() * CHARS.length)], i * F, y * F);
+        if (y * F > c.height && Math.random() > 0.975) drops[i] = 0;
         drops[i]++;
       });
-    }, 50);
+    }, 45);
     return () => { clearInterval(id); ro.disconnect(); };
   }, []);
-  return (
-    <canvas
-      ref={ref}
-      style={{ position: "absolute", inset: 0, width: "100%", height: "100%", opacity, pointerEvents: "none" }}
-    />
-  );
+  return <canvas ref={ref} style={{ position:"absolute", inset:0, width:"100%", height:"100%", opacity, pointerEvents:"none" }} />;
 }
 
 /* ─────────────────────────────────────────
-   CHALLENGE: PASSWORD
+   LIVE TERMINAL LOG
 ───────────────────────────────────────── */
-function PasswordChallenge({ level, onSuccess, onFail }: ChallengeProps) {
-  const [val, setVal] = useState("");
-  const [shake, setShake] = useState(false);
-  const submit = () => {
-    if (val.trim().toUpperCase() === level.password) {
-      onSuccess();
-    } else {
-      setShake(true);
-      setVal("");
-      setTimeout(() => setShake(false), 600);
-      onFail();
-    }
-  };
-  return (
-    <div className="space-y-4">
-      <p style={{ color: level.color }} className="font-mono text-xs tracking-widest">ENTER ACCESS CODE</p>
-      <motion.div animate={shake ? { x: [-8, 8, -6, 6, -4, 0] } : { x: 0 }} transition={{ duration: 0.4 }}>
-        <input
-          type="password"
-          value={val}
-          onChange={e => setVal(e.target.value)}
-          onKeyDown={e => e.key === "Enter" && submit()}
-          placeholder="_ _ _ _ _ _"
-          autoFocus
-          style={{ borderColor: level.color + "60", caretColor: level.color, color: level.color }}
-          className="w-full bg-black/60 font-mono text-lg tracking-[0.5em] text-center rounded-lg border px-4 py-3 outline-none transition-all placeholder-gray-700"
-        />
-      </motion.div>
-      <p className="font-mono text-[10px] text-gray-600 text-center">Hint: {level.hint}</p>
-      <button
-        onClick={submit}
-        style={{ background: level.color + "18", borderColor: level.color + "50", color: level.color }}
-        className="w-full font-mono font-bold text-sm py-3 rounded-lg border hover:opacity-90 transition-all"
-      >
-        SUBMIT
-      </button>
-    </div>
-  );
-}
+const LOG_LINES = [
+  { t: "SYS",  c: "var(--c)", msg: "kernel.boot() → SECURE MODE ACTIVE" },
+  { t: "NET",  c: "var(--c2)", msg: "firewall.init() → 4096-bit RSA loaded" },
+  { t: "AUTH", c: "var(--g)", msg: "biometric.scan() → IDENTITY CONFIRMED" },
+  { t: "SCAN", c: "var(--y)", msg: "network.sweep() → 0 threats detected" },
+  { t: "VAULT",c: "var(--p)", msg: "vault.open() → AES-256 keys rotated" },
+  { t: "NODE", c: "var(--o)", msg: "cluster.sync() → 7 nodes responsive" },
+  { t: "SYS",  c: "var(--c)", msg: "runtime.status() → uptime 99.97%" },
+  { t: "SEC",  c: "var(--g)", msg: "honeypot.check() → 1204 packets blocked" },
+  { t: "DB",   c: "var(--c2)", msg: "db.replicate() → mirror sync complete" },
+  { t: "CRON", c: "var(--y)", msg: "backup.run() → 8841 files archived" },
+];
 
-/* ─────────────────────────────────────────
-   CHALLENGE: PATTERN LOCK
-───────────────────────────────────────── */
-function PatternChallenge({ level, onSuccess, onFail }: ChallengeProps) {
-  const [drawn, setDrawn] = useState<number[]>([]);
-  const [drawing, setDrawing] = useState(false);
-  const [failed, setFailed] = useState(false);
+function Terminal() {
+  const [lines, setLines] = useState<typeof LOG_LINES>([]);
+  const [idx, setIdx] = useState(0);
 
-  const enter = (idx: number) => {
-    if (!drawing) return;
-    if (!drawn.includes(idx)) setDrawn(p => [...p, idx]);
-  };
-
-  const start = (idx: number) => { setDrawing(true); setDrawn([idx]); setFailed(false); };
-
-  const end = () => {
-    if (!drawing) return;
-    setDrawing(false);
-    if (drawn.length < 2) { setDrawn([]); return; }
-    const pat = level.pattern ?? [];
-    const correct = pat.every((v, i) => drawn[i] === v) && drawn.length === pat.length;
-    if (correct) setTimeout(onSuccess, 300);
-    else { setFailed(true); setTimeout(() => { setDrawn([]); setFailed(false); onFail(); }, 600); }
-  };
-
-  return (
-    <div className="space-y-4 flex flex-col items-center">
-      <p style={{ color: level.color }} className="font-mono text-xs tracking-widest">DRAW UNLOCK PATTERN</p>
-      <div
-        className="grid gap-3 select-none"
-        style={{ gridTemplateColumns: "repeat(3, 56px)" }}
-        onMouseLeave={end}
-        onMouseUp={end}
-        onTouchEnd={end}
-      >
-        {Array.from({ length: 9 }, (_, i) => {
-          const active = drawn.includes(i);
-          const col = failed ? "#ef4444" : active ? level.color : "#334155";
-          return (
-            <motion.div
-              key={i}
-              animate={{ scale: active ? 1.15 : 1 }}
-              onMouseDown={() => start(i)}
-              onMouseEnter={() => enter(i)}
-              onTouchStart={() => start(i)}
-              onTouchMove={e => {
-                const t = e.touches[0];
-                const el = document.elementFromPoint(t.clientX, t.clientY) as HTMLElement | null;
-                if (el?.dataset?.idx) enter(Number(el.dataset.idx));
-              }}
-              data-idx={i}
-              style={{ borderColor: col, background: active ? col + "22" : "transparent", boxShadow: active ? `0 0 12px ${col}` : "none" }}
-              className="w-14 h-14 rounded-full border-2 cursor-pointer flex items-center justify-center transition-all"
-            >
-              {active && <div className="w-3 h-3 rounded-full" style={{ background: col }} />}
-            </motion.div>
-          );
-        })}
-      </div>
-      <p className="font-mono text-[10px] text-gray-600 text-center">{level.hint}</p>
-    </div>
-  );
-}
-
-/* ─────────────────────────────────────────
-   CHALLENGE: SEQUENCE BUTTONS
-───────────────────────────────────────── */
-function SequenceChallenge({ level, onSuccess, onFail }: ChallengeProps) {
-  const [pressed, setPressed] = useState<string[]>([]);
-  const [failed, setFailed] = useState(false);
-
-  const press = (cmd: string) => {
-    const next = [...pressed, cmd];
-    setPressed(next);
-    const seq = level.sequence ?? [];
-    if (next.length === seq.length) {
-      const correct = next.every((v, i) => v === seq[i]);
-      if (correct) setTimeout(onSuccess, 300);
-      else { setFailed(true); setTimeout(() => { setPressed([]); setFailed(false); onFail(); }, 700); }
-    }
-  };
-
-  const CMDS = ["EXEC", "AUTH", "SYS", "INIT", "KILL", "BOOT"];
-  return (
-    <div className="space-y-4">
-      <p style={{ color: level.color }} className="font-mono text-xs tracking-widest">ENTER COMMAND SEQUENCE</p>
-      <div className="font-mono text-xs text-gray-500 text-center min-h-[20px]">
-        {pressed.length > 0
-          ? pressed.map((c, i) => <span key={i} style={{ color: failed ? "#ef4444" : level.color }} className="mr-2">{c}</span>)
-          : <span className="text-gray-700">awaiting input…</span>}
-      </div>
-      <div className="grid grid-cols-3 gap-2">
-        {CMDS.map(cmd => (
-          <button
-            key={cmd}
-            onClick={() => press(cmd)}
-            style={{ borderColor: level.color + "40", color: level.color }}
-            className="font-mono text-xs font-bold py-2.5 rounded-lg border bg-black/40 hover:bg-white/5 transition-all"
-          >
-            {cmd}
-          </button>
-        ))}
-      </div>
-      <p className="font-mono text-[10px] text-gray-600 text-center">{level.hint}</p>
-    </div>
-  );
-}
-
-/* ─────────────────────────────────────────
-   CHALLENGE: KONAMI (keyboard + touch D-pad)
-───────────────────────────────────────── */
-const KONAMI_SEQ = ["ArrowUp","ArrowUp","ArrowDown","ArrowDown","ArrowLeft","ArrowRight","ArrowLeft","ArrowRight","b","a"] as const;
-const ICONS: Record<string, string> = { ArrowUp: "↑", ArrowDown: "↓", ArrowLeft: "←", ArrowRight: "→", b: "B", a: "A" };
-
-function KonamiChallenge({ level, onSuccess }: ChallengeProps) {
-  const [progress, setProgress] = useState(0);
-  const [lastKey, setLastKey] = useState<string | null>(null);
-  const progressRef = useRef(0);
-
-  const feed = useCallback((key: string) => {
-    const expected = KONAMI_SEQ[progressRef.current];
-    if (key === expected) {
-      const next = progressRef.current + 1;
-      progressRef.current = next;
-      setProgress(next);
-      if (next === KONAMI_SEQ.length) setTimeout(onSuccess, 400);
-    } else {
-      progressRef.current = 0;
-      setProgress(0);
-    }
-  }, [onSuccess]);
 
   useEffect(() => {
-    const h = (e: KeyboardEvent) => feed(e.key);
-    window.addEventListener("keydown", h);
-    return () => window.removeEventListener("keydown", h);
-  }, [feed]);
-
-  const press = (key: string) => {
-    setLastKey(key);
-    setTimeout(() => setLastKey(null), 180);
-    feed(key);
-  };
-
-  const btnStyle = (key: string) => ({
-    borderColor: lastKey === key ? level.color : "#334155",
-    background:  lastKey === key ? level.color + "25" : "#0f172a",
-    color:       lastKey === key ? level.color : "#64748b",
-    boxShadow:   lastKey === key ? `0 0 14px ${level.glow}` : "none",
-  });
-
-  const dpad: [string, string, string][] = [
-    ["↑", "ArrowUp",    "1 / 2 / 2 / 3"],
-    ["←", "ArrowLeft",  "2 / 1 / 3 / 2"],
-    ["↓", "ArrowDown",  "2 / 2 / 3 / 3"],
-    ["→", "ArrowRight", "2 / 3 / 3 / 4"],
-  ];
-
-  return (
-    <div className="space-y-5 text-center select-none">
-      <p style={{ color: level.color }} className="font-mono text-xs tracking-widest">ENTER THE GHOST PROTOCOL</p>
-
-      {/* Progress tiles */}
-      <div className="flex flex-wrap justify-center gap-1.5">
-        {KONAMI_SEQ.map((k, i) => {
-          const done = i < progress;
-          const cur  = i === progress;
-          return (
-            <motion.span
-              key={i}
-              animate={{ scale: done ? [1.25, 1] : 1 }}
-              style={{
-                borderColor: done ? level.color : cur ? level.color + "60" : "#1e293b",
-                color:       done ? level.color : "#4b5563",
-                background:  done ? level.color + "20" : "transparent",
-                boxShadow:   done ? `0 0 8px ${level.glow}` : "none",
-              }}
-              className="font-mono text-xs font-bold w-8 h-8 flex items-center justify-center rounded border transition-all"
-            >
-              {ICONS[k]}
-            </motion.span>
-          );
-        })}
-      </div>
-
-      {/* Progress bar */}
-      <div className="w-full bg-gray-900 rounded-full h-1.5 overflow-hidden">
-        <motion.div
-          animate={{ width: `${(progress / KONAMI_SEQ.length) * 100}%` }}
-          transition={{ type: "spring", stiffness: 180, damping: 20 }}
-          style={{ background: level.color, boxShadow: `0 0 8px ${level.glow}` }}
-          className="h-full rounded-full"
-        />
-      </div>
-
-      {/* On-screen controller */}
-      <div className="flex items-center justify-center gap-8 pt-1">
-        {/* D-pad */}
-        <div
-          className="grid gap-1"
-          style={{ gridTemplateColumns: "repeat(3, 48px)", gridTemplateRows: "repeat(2, 48px)" }}
-        >
-          {dpad.map(([label, key, area]) => (
-            <motion.button
-              key={key}
-              whileTap={{ scale: 0.85 }}
-              onPointerDown={e => { e.preventDefault(); press(key); }}
-              style={{ ...btnStyle(key), gridArea: area }}
-              className="rounded-lg border font-mono font-black text-lg flex items-center justify-center cursor-pointer transition-colors"
-            >
-              {label}
-            </motion.button>
-          ))}
-        </div>
-
-        {/* B + A buttons */}
-        <div className="flex gap-3 items-end pb-1">
-          {(["b","a"] as const).map(k => (
-            <motion.button
-              key={k}
-              whileTap={{ scale: 0.82 }}
-              onPointerDown={e => { e.preventDefault(); press(k); }}
-              style={btnStyle(k)}
-              className="w-12 h-12 rounded-full border-2 font-mono font-black text-sm flex items-center justify-center cursor-pointer transition-colors"
-            >
-              {k.toUpperCase()}
-            </motion.button>
-          ))}
-        </div>
-      </div>
-
-      <p className="font-mono text-[10px] text-gray-600">tap the controller — or use keyboard ↑↑↓↓←→←→BA</p>
-    </div>
-  );
-}
-
-/* ─────────────────────────────────────────
-   LEVEL GATE MODAL
-───────────────────────────────────────── */
-const CHALLENGE_MAP: Record<ChallengeType, React.ComponentType<ChallengeProps>> = {
-  password: PasswordChallenge,
-  pattern: PatternChallenge,
-  sequence: SequenceChallenge,
-  konami: KonamiChallenge,
-};
-
-function LevelGate({ level, onSuccess }: { level: LevelConfig; onSuccess: () => void }) {
-  const [fails, setFails] = useState(0);
-  const Challenge = CHALLENGE_MAP[level.challenge];
-  return (
-    <div
-      className="relative overflow-hidden rounded-2xl border"
-      style={{ borderColor: level.color + "40", background: "rgba(0,0,0,0.95)", boxShadow: `0 0 60px ${level.glow}` }}
-    >
-      <MatrixRain opacity={0.06} />
-      <div className="relative z-10 p-6 sm:p-8 space-y-6">
-        <div className="flex items-center gap-3">
-          <div className="text-3xl">{level.icon}</div>
-          <div>
-            <p style={{ color: level.color }} className="font-mono text-[10px] tracking-[0.3em]">CLEARANCE REQUIRED</p>
-            <h2 className="font-mono font-black text-white text-xl tracking-tight">LEVEL {level.id + 1} — {level.label}</h2>
-          </div>
-          {fails > 0 && (
-            <motion.div initial={{ opacity: 0, x: 10 }} animate={{ opacity: 1, x: 0 }} className="ml-auto font-mono text-xs text-red-500">
-              {fails} FAIL{fails > 1 ? "S" : ""}
-            </motion.div>
-          )}
-        </div>
-        <div className="h-px" style={{ background: `linear-gradient(90deg, transparent, ${level.color}40, transparent)` }} />
-        <Challenge level={level} onSuccess={onSuccess} onFail={() => setFails(f => f + 1)} />
-      </div>
-    </div>
-  );
-}
-
-/* ─────────────────────────────────────────
-   ADMIN DASHBOARD (UNLOCKED)
-───────────────────────────────────────── */
-function AdminDashboard({ clearedLevels }: { clearedLevels: number }) {
-  const panels = [
-    { title: "SYSTEM STATUS", icon: "🖥", color: "#00d9ff", data: [{ k: "Uptime", v: "99.97%" }, { k: "CPU", v: "14%" }, { k: "Memory", v: "2.1 / 8 GB" }, { k: "Build", v: "v4.2.0" }] },
-    { title: "USER REGISTRY", icon: "👥", color: "#a855f7", data: [{ k: "Active", v: "1,337" }, { k: "Banned", v: "42" }, { k: "Admins", v: "3" }, { k: "Guests", v: "289" }] },
-    { title: "SECURITY LOG",  icon: "🛡", color: "#f59e0b", data: [{ k: "Threats", v: "0 active" }, { k: "Blocked", v: "1,204" }, { k: "HSTS", v: "✓ Active" }, { k: "2FA", v: "✓ Enforced" }] },
-    { title: "PAYLOAD VAULT", icon: "💾", color: "#ef4444", data: [{ k: "Files", v: "8,841" }, { k: "Encrypted", v: "100%" }, { k: "Backups", v: "14 daily" }, { k: "Last sync", v: "2m ago" }] },
-  ];
-
-  return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between flex-wrap gap-4">
-        <div>
-          <h1 className="font-mono font-black text-white text-2xl sm:text-3xl tracking-tight">ADMIN COMMAND CENTER</h1>
-          <p className="font-mono text-[10px] text-gray-500 tracking-widest mt-1">ALL {clearedLevels} CLEARANCE LEVELS BYPASSED</p>
-        </div>
-        <div className="flex gap-2 flex-wrap">
-          {LEVELS.map(l => (
-            <span key={l.id} style={{ borderColor: l.color + "60", color: l.color, background: l.color + "10" }}
-              className="font-mono text-[10px] font-bold px-2 py-1 rounded border tracking-widest">
-              L{l.id + 1} ✓
-            </span>
-          ))}
-        </div>
-      </div>
-
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        {panels.slice(0, Math.min(clearedLevels, 4)).map((p, i) => (
-          <motion.div key={p.title} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.1 }}
-            style={{ borderColor: p.color + "30", boxShadow: `0 0 30px ${p.color}10` }}
-            className="relative overflow-hidden rounded-xl border bg-black/80 p-5">
-            <div className="absolute inset-0 opacity-5 pointer-events-none"
-              style={{ background: `radial-gradient(circle at top right, ${p.color}, transparent 70%)` }} />
-            <div className="relative z-10">
-              <div className="flex items-center gap-2 mb-4">
-                <span className="text-lg">{p.icon}</span>
-                <span style={{ color: p.color }} className="font-mono text-[10px] font-bold tracking-[0.25em]">{p.title}</span>
-              </div>
-              <div className="space-y-2">
-                {p.data.map(({ k, v }) => (
-                  <div key={k} className="flex justify-between">
-                    <span className="font-mono text-xs text-gray-500">{k}</span>
-                    <span style={{ color: p.color }} className="font-mono text-xs font-bold">{v}</span>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </motion.div>
-        ))}
-      </div>
-
-      <div className="rounded-xl border border-green-500/20 bg-black p-5" style={{ boxShadow: "0 0 30px rgba(0,255,100,0.05)" }}>
-        <div className="flex items-center gap-2 mb-3">
-          <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
-          <span className="font-mono text-[10px] text-green-500 tracking-widest">LIVE TERMINAL</span>
-        </div>
-        {([
-          "$ system.auth.verify() → ALL LEVELS CLEARED ✓",
-          "$ admin.dashboard.init() → READY",
-          "$ security.scan() → NO THREATS DETECTED",
-          "$ vault.decrypt() → ACCESS GRANTED",
-        ] as string[]).slice(0, clearedLevels).map((line, i) => (
-          <motion.p key={i} initial={{ opacity: 0, x: -5 }} animate={{ opacity: 1, x: 0 }}
-            transition={{ delay: i * 0.15 }} className="font-mono text-xs text-green-400 leading-6">
-            {line}
-          </motion.p>
-        ))}
-        <p className="font-mono text-xs text-green-700 mt-2">$ █</p>
-      </div>
-    </div>
-  );
-}
-
-/* ─────────────────────────────────────────
-   LEVEL PROGRESS SIDEBAR
-───────────────────────────────────────── */
-function LevelSidebar({ currentLevel, unlockedUpTo }: { currentLevel: number; unlockedUpTo: number }) {
-  return (
-    <div className="flex sm:flex-col gap-2 sm:gap-3 flex-wrap">
-      {LEVELS.map(l => {
-        const state = l.id < unlockedUpTo ? "done" : l.id === currentLevel ? "active" : "locked";
-        return (
-          <motion.div key={l.id} animate={{ opacity: state === "locked" ? 0.35 : 1 }}
-            style={{ borderColor: state === "done" ? l.color + "60" : state === "active" ? l.color : "#1e293b" }}
-            className="relative flex items-center gap-2.5 px-3 py-2 rounded-lg border bg-black/60 min-w-[120px] sm:min-w-0">
-            {state === "active" && (
-              <motion.div animate={{ opacity: [0.3, 0.7, 0.3] }} transition={{ duration: 1.5, repeat: Infinity }}
-                className="absolute inset-0 rounded-lg" style={{ background: l.color + "0a" }} />
-            )}
-            <span className="text-base relative z-10">{state === "done" ? "✓" : state === "active" ? l.icon : "🔒"}</span>
-            <div className="relative z-10">
-              <p style={{ color: state === "locked" ? "#4b5563" : l.color }} className="font-mono text-[10px] font-bold tracking-widest">
-                L{l.id + 1}
-              </p>
-              <p className="font-mono text-[9px] text-gray-600">{l.label}</p>
-            </div>
-          </motion.div>
-        );
-      })}
-    </div>
-  );
-}
-
-/* ─────────────────────────────────────────
-   SUCCESS OVERLAY
-───────────────────────────────────────── */
-function SuccessFlash({ level, onDone }: { level: LevelConfig; onDone: () => void }) {
-  useEffect(() => {
-    const t = setTimeout(onDone, 1800);
+    if (idx >= LOG_LINES.length) return;
+    const t = setTimeout(() => {
+      setLines(l => [...l, LOG_LINES[idx]]);
+      setIdx(i => i + 1);
+    }, 600 + Math.random() * 700);
     return () => clearTimeout(t);
-  }, [onDone]);
+  }, [idx]);
+
+
+
   return (
-    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-      className="fixed inset-0 z-50 flex items-center justify-center"
-      style={{ background: "rgba(0,0,0,0.85)" }}>
-      <motion.div initial={{ scale: 0.5, y: 20 }} animate={{ scale: 1, y: 0 }}
-        transition={{ type: "spring", stiffness: 200 }}
-        className="text-center space-y-3 px-8 py-8 rounded-2xl border"
-        style={{ borderColor: level.color, boxShadow: `0 0 80px ${level.glow}`, background: "rgba(0,0,0,0.95)" }}>
-        <motion.div animate={{ rotate: [0, 10, -10, 0], scale: [1, 1.2, 1] }} transition={{ duration: 0.6 }} className="text-5xl">
-          {level.icon}
-        </motion.div>
-        <p style={{ color: level.color }} className="font-mono font-black text-xl tracking-tight">LEVEL {level.id + 1} CLEARED</p>
-        <p className="font-mono text-xs text-gray-400 max-w-xs">{level.unlockMsg}</p>
-      </motion.div>
-    </motion.div>
+    <div className="card p-4" style={{ minHeight: 220 }}>
+      <div className="flex items-center gap-2 mb-3">
+        <div className="w-2 h-2 rounded-full relative pulse-ring" style={{ background: "var(--g)" }} />
+        <span className="mono text-xs tracking-widest" style={{ color: "var(--g)" }}>LIVE SYSTEM TERMINAL</span>
+        <span className="mono text-xs ml-auto" style={{ color: "rgba(0,255,231,0.3)" }}>SESSION:root@RYTNIX</span>
+      </div>
+      <div className="space-y-1" style={{ maxHeight: 200, overflowY: "auto" }}>
+        {lines.map((l, i) => (
+          <motion.div key={i} initial={{ opacity: 0, x: -8 }} animate={{ opacity: 1, x: 0 }}
+            className="mono text-xs flex gap-3 items-start">
+            <span className="pill shrink-0" style={{ color: l.c, borderColor: l.c + "50", background: l.c + "12" }}>{l.t}</span>
+            <span style={{ color: "rgba(255,255,255,0.55)" }}>$ {l.msg}</span>
+          </motion.div>
+        ))}
+        {idx < LOG_LINES.length && (
+          <div className="mono text-xs" style={{ color: "var(--c)" }}>$ <span className="blink">█</span></div>
+        )}
+      </div>
+    </div>
   );
 }
+
+/* ─────────────────────────────────────────
+   THREAT RADAR (animated SVG)
+───────────────────────────────────────── */
+function ThreatRadar() {
+  const [angle, setAngle] = useState(0);
+  const [blips, setBlips] = useState<{x:number;y:number;age:number;col:string}[]>([]);
+  const COLS = ["#00ffe7","#00bfff","#39ff14","#ffd700"];
+
+  useEffect(() => {
+    const id = setInterval(() => setAngle(a => (a + 2) % 360), 30);
+    return () => clearInterval(id);
+  }, []);
+
+  useEffect(() => {
+    if (angle % 40 === 0) {
+      setBlips(b => {
+        const nb = b
+          .map(p => ({ ...p, age: p.age + 1 }))
+          .filter(p => p.age < 8);
+        const r = 25 + Math.random() * 50;
+        const a2 = (angle * Math.PI) / 180;
+        nb.push({ x: 80 + r * Math.cos(a2), y: 80 + r * Math.sin(a2), age: 0, col: COLS[Math.floor(Math.random()*COLS.length)] });
+        return nb;
+      });
+    }
+  }, [angle]);
+
+  const rad = (angle * Math.PI) / 180;
+
+  return (
+    <div className="card p-4 flex flex-col items-center gap-3">
+      <div className="mono text-xs tracking-widest w-full" style={{ color: "var(--c)" }}>THREAT RADAR</div>
+      <svg width="160" height="160" viewBox="0 0 160 160">
+        <defs>
+          <radialGradient id="rg">
+            <stop offset="0%" stopColor="#00ffe7" stopOpacity="0.05" />
+            <stop offset="100%" stopColor="#00ffe7" stopOpacity="0" />
+          </radialGradient>
+          <filter id="blur2">
+            <feGaussianBlur stdDeviation="2" />
+          </filter>
+        </defs>
+        {/* rings */}
+        {[20,40,60,80].map(r => (
+          <circle key={r} cx="80" cy="80" r={r} fill="none" stroke="rgba(0,255,231,0.12)" strokeWidth="1" />
+        ))}
+        {/* crosshairs */}
+        <line x1="80" y1="0" x2="80" y2="160" stroke="rgba(0,255,231,0.08)" strokeWidth="1"/>
+        <line x1="0" y1="80" x2="160" y2="80" stroke="rgba(0,255,231,0.08)" strokeWidth="1"/>
+        {/* sweep */}
+        <path
+          d={`M80 80 L${80+80*Math.cos(rad)} ${80+80*Math.sin(rad)} A80 80 0 0 0 ${80+80*Math.cos(rad-0.7)} ${80+80*Math.sin(rad-0.7)} Z`}
+          fill="rgba(0,255,231,0.15)"
+        />
+        <line x1="80" y1="80" x2={80+80*Math.cos(rad)} y2={80+80*Math.sin(rad)}
+          stroke="var(--c)" strokeWidth="1.5" opacity="0.9" />
+        {/* blips */}
+        {blips.map((b, i) => (
+          <g key={i}>
+            <circle cx={b.x} cy={b.y} r={3} fill={b.col} opacity={1 - b.age / 8} filter="url(#blur2)" />
+            <circle cx={b.x} cy={b.y} r={2} fill={b.col} opacity={1 - b.age / 8} />
+          </g>
+        ))}
+        <circle cx="80" cy="80" r="3" fill="var(--c)" />
+      </svg>
+      <div className="mono text-xs w-full text-center" style={{ color: "rgba(0,255,231,0.4)" }}>0 ACTIVE THREATS</div>
+    </div>
+  );
+}
+
+/* ─────────────────────────────────────────
+   NETWORK TRAFFIC SPARKLINE
+───────────────────────────────────────── */
+function useSparkline(len = 40) {
+  const [data, setData] = useState<number[]>(() => Array.from({length:len}, () => Math.random() * 60 + 10));
+  useEffect(() => {
+    const id = setInterval(() => {
+      setData(d => [...d.slice(1), Math.random() * 80 + 10]);
+    }, 500);
+    return () => clearInterval(id);
+  }, []);
+  return data;
+}
+
+function Sparkline({ color, label, unit }: { color: string; label: string; unit: string }) {
+  const data = useSparkline();
+  const W = 200, H = 50;
+  const max = Math.max(...data);
+  const pts = data.map((v, i) => `${(i / (data.length - 1)) * W},${H - (v / max) * H}`).join(" ");
+  const fill = data.map((v, i) => `${(i / (data.length - 1)) * W},${H - (v / max) * H}`).join(" ") + ` ${W},${H} 0,${H}`;
+  const last = data[data.length - 1];
+
+  return (
+    <div className="card p-4 flex flex-col gap-2">
+      <div className="flex justify-between items-center">
+        <span className="mono text-xs tracking-widest" style={{ color }}>{label}</span>
+        <span className="mono text-sm font-bold" style={{ color }}>{last.toFixed(1)}{unit}</span>
+      </div>
+      <svg viewBox={`0 0 ${W} ${H}`} width="100%" height="50" preserveAspectRatio="none">
+        <defs>
+          <linearGradient id={`sg-${label}`} x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stopColor={color} stopOpacity="0.3" />
+            <stop offset="100%" stopColor={color} stopOpacity="0" />
+          </linearGradient>
+        </defs>
+        <polygon points={fill} fill={`url(#sg-${label})`} />
+        <polyline points={pts} fill="none" stroke={color} strokeWidth="1.5" />
+      </svg>
+    </div>
+  );
+}
+
+/* ─────────────────────────────────────────
+   STAT CARDS
+───────────────────────────────────────── */
+interface Stat { label: string; value: string; sub: string; color: string; icon: string; trend?: string }
+
+const STATS: Stat[] = [
+  { label: "ACTIVE NODES",    value: "1,337", sub: "+12 this hour",    color: "#00ffe7", icon: "◈", trend: "▲" },
+  { label: "DATA ENCRYPTED",  value: "100%",  sub: "AES-256 + TLS 1.3",color: "#39ff14", icon: "⬡", trend: "—" },
+  { label: "THREATS BLOCKED", value: "1,204", sub: "Last 24h",          color: "#ff3b5c", icon: "◉", trend: "▼" },
+  { label: "UPTIME",          value: "99.97%",sub: "31d 4h 12m",        color: "#ffd700", icon: "◎", trend: "▲" },
+  { label: "PAYLOAD FILES",   value: "8,841", sub: "14 backups active",  color: "#bf5fff", icon: "▣", trend: "▲" },
+  { label: "BANDWIDTH",       value: "4.2 GB",sub: "↑1.2  ↓3.0 GB/s",  color: "#ff8c42", icon: "◆", trend: "▲" },
+];
+
+function StatGrid() {
+  return (
+    <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+      {STATS.map((s, i) => (
+        <motion.div key={s.label}
+          initial={{ opacity: 0, y: 16 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: i * 0.08 }}
+          className="stat-card p-4"
+          style={{ borderColor: s.color + "30", boxShadow: `0 0 24px ${s.color}10` }}
+        >
+          <div className="absolute inset-0 rounded-[10px] pointer-events-none"
+            style={{ background: `radial-gradient(circle at top right, ${s.color}0a, transparent 70%)` }} />
+          <div className="relative z-10">
+            <div className="flex justify-between items-start mb-2">
+              <span className="text-xl" style={{ color: s.color, filter: `drop-shadow(0 0 6px ${s.color})` }}>{s.icon}</span>
+              {s.trend && (
+                <span className="mono text-xs" style={{ color: s.trend==="▲" ? "#39ff14" : s.trend==="▼" ? "#ff3b5c" : "#888" }}>
+                  {s.trend}
+                </span>
+              )}
+            </div>
+            <div className="mono font-bold text-xl mb-0.5 count-up" style={{ color: s.color }}>{s.value}</div>
+            <div className="mono text-[9px] tracking-widest mb-1" style={{ color: s.color + "90" }}>{s.label}</div>
+            <div className="mono text-[9px]" style={{ color: "rgba(255,255,255,0.3)" }}>{s.sub}</div>
+          </div>
+        </motion.div>
+      ))}
+    </div>
+  );
+}
+
+/* ─────────────────────────────────────────
+   THREAT BAR CHART
+───────────────────────────────────────── */
+const THREAT_DATA = [
+  { label: "SQL INJECT",  val: 87, color: "#ff3b5c" },
+  { label: "BRUTE FORCE", val: 64, color: "#ff8c42" },
+  { label: "DDOS",        val: 43, color: "#ffd700" },
+  { label: "XSS",         val: 31, color: "#bf5fff" },
+  { label: "PHISHING",    val: 22, color: "#00bfff" },
+  { label: "PORT SCAN",   val: 15, color: "#00ffe7" },
+];
+
+function ThreatChart() {
+  return (
+    <div className="card p-4">
+      <div className="mono text-xs tracking-widest mb-4" style={{ color: "var(--c)" }}>ATTACK VECTOR ANALYSIS</div>
+      <div className="space-y-2.5">
+        {THREAT_DATA.map((t, i) => (
+          <div key={t.label} className="space-y-1">
+            <div className="flex justify-between mono text-[10px]">
+              <span style={{ color: "rgba(255,255,255,0.5)" }}>{t.label}</span>
+              <span style={{ color: t.color }}>{t.val} events</span>
+            </div>
+            <div className="h-1.5 rounded-full overflow-hidden" style={{ background: "rgba(255,255,255,0.05)" }}>
+              <motion.div
+                initial={{ width: 0 }}
+                animate={{ width: `${t.val}%` }}
+                transition={{ delay: i * 0.1, duration: 0.8, ease: [0.34,1.56,0.64,1] }}
+                style={{ height: "100%", background: t.color, boxShadow: `0 0 8px ${t.color}`, borderRadius: 999 }}
+              />
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+/* ─────────────────────────────────────────
+   USER REGISTRY TABLE
+───────────────────────────────────────── */
+const USERS = [
+  { id:"UID-001", name:"root",    role:"SUPERADMIN", status:"ACTIVE",  ip:"192.168.0.1",  col:"#00ffe7" },
+  { id:"UID-002", name:"cipher",  role:"ANALYST",    status:"ACTIVE",  ip:"10.0.0.44",    col:"#39ff14" },
+  { id:"UID-003", name:"nx0vel",  role:"OPERATIVE",  status:"ACTIVE",  ip:"10.0.0.77",    col:"#00bfff" },
+  { id:"UID-004", name:"phantom", role:"INFILTRATOR", status:"IDLE",   ip:"172.16.0.12",  col:"#bf5fff" },
+  { id:"UID-005", name:"h4wk",    role:"SCOUT",       status:"BANNED", ip:"45.33.32.156", col:"#ff3b5c" },
+];
+
+function UserTable() {
+  return (
+    <div className="card p-4 overflow-x-auto">
+      <div className="mono text-xs tracking-widest mb-4" style={{ color: "var(--c)" }}>USER REGISTRY</div>
+      <table style={{ width: "100%", borderCollapse: "collapse" }}>
+        <thead>
+          <tr>
+            {["ID","HANDLE","CLEARANCE","STATUS","ORIGIN"].map(h => (
+              <th key={h} className="mono text-left pb-2" style={{ fontSize: 9, letterSpacing: "0.15em", color: "rgba(0,255,231,0.4)", borderBottom: "1px solid rgba(0,255,231,0.1)", paddingRight: 16 }}>
+                {h}
+              </th>
+            ))}
+          </tr>
+        </thead>
+        <tbody>
+          {USERS.map((u, i) => (
+            <motion.tr key={u.id}
+              initial={{ opacity: 0, x: -8 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ delay: 0.3 + i * 0.07 }}
+              style={{ borderBottom: "1px solid rgba(255,255,255,0.04)" }}
+            >
+              <td className="mono py-2 pr-4" style={{ fontSize: 10, color: "rgba(255,255,255,0.3)" }}>{u.id}</td>
+              <td className="mono py-2 pr-4 font-bold" style={{ fontSize: 11, color: u.col }}>{u.name}</td>
+              <td className="mono py-2 pr-4" style={{ fontSize: 10, color: "rgba(255,255,255,0.5)" }}>{u.role}</td>
+              <td className="mono py-2 pr-4">
+                <span className="pill" style={{
+                  color: u.status === "ACTIVE" ? "#39ff14" : u.status === "BANNED" ? "#ff3b5c" : "#ffd700",
+                  borderColor: (u.status === "ACTIVE" ? "#39ff14" : u.status === "BANNED" ? "#ff3b5c" : "#ffd700") + "40",
+                  background: (u.status === "ACTIVE" ? "#39ff14" : u.status === "BANNED" ? "#ff3b5c" : "#ffd700") + "12",
+                }}>
+                  {u.status}
+                </span>
+              </td>
+              <td className="mono py-2" style={{ fontSize: 10, color: "rgba(255,255,255,0.3)" }}>{u.ip}</td>
+            </motion.tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
+}
+
+/* ─────────────────────────────────────────
+   VAULT STATUS RING
+───────────────────────────────────────── */
+function VaultRing({ pct, color, label }: { pct: number; color: string; label: string }) {
+  const R = 36, C = 2 * Math.PI * R;
+  return (
+    <div className="flex flex-col items-center gap-1">
+      <svg width="84" height="84" viewBox="0 0 84 84">
+        <circle cx="42" cy="42" r={R} fill="none" stroke="rgba(255,255,255,0.05)" strokeWidth="7" />
+        <motion.circle
+          cx="42" cy="42" r={R}
+          fill="none"
+          stroke={color}
+          strokeWidth="7"
+          strokeDasharray={C}
+          initial={{ strokeDashoffset: C }}
+          animate={{ strokeDashoffset: C - (pct / 100) * C }}
+          transition={{ duration: 1.2, ease: "easeOut" }}
+          strokeLinecap="round"
+          style={{ filter: `drop-shadow(0 0 6px ${color})`, transformOrigin:"center", transform:"rotate(-90deg)" }}
+        />
+        <text x="42" y="47" textAnchor="middle" fill={color} fontSize="13" fontFamily="'Share Tech Mono'" fontWeight="bold">
+          {pct}%
+        </text>
+      </svg>
+      <span className="mono text-[9px] tracking-widest text-center" style={{ color: "rgba(255,255,255,0.4)" }}>{label}</span>
+    </div>
+  );
+}
+
+function VaultPanel() {
+  return (
+    <div className="card p-4">
+      <div className="mono text-xs tracking-widest mb-4" style={{ color: "var(--c)" }}>PAYLOAD VAULT</div>
+      <div className="flex justify-around">
+        <VaultRing pct={100} color="#39ff14" label="ENCRYPTED" />
+        <VaultRing pct={87}  color="#00ffe7" label="INDEXED" />
+        <VaultRing pct={64}  color="#bf5fff" label="REPLICATED" />
+        <VaultRing pct={42}  color="#ffd700" label="ARCHIVED" />
+      </div>
+    </div>
+  );
+}
+
+/* ─────────────────────────────────────────
+   HEADER
+───────────────────────────────────────── */
+function Header() {
+  const [time, setTime] = useState(new Date());
+  useEffect(() => { const id = setInterval(() => setTime(new Date()), 1000); return () => clearInterval(id); }, []);
+  const fmt = (n: number) => n.toString().padStart(2, "0");
+
+  return (
+    <div className="flex items-center justify-between px-5 py-3 border-b" style={{ borderColor: "rgba(0,255,231,0.1)" }}>
+      <div className="flex items-center gap-3">
+        <div className="w-2 h-2 rounded-full relative pulse-ring" style={{ background: "var(--g)" }} />
+        <span className="orb text-sm font-900 tracking-widest glow-c flicker" style={{ color: "var(--c)" }}>RYTNIX</span>
+        <span className="mono text-[10px] text-gray-600 tracking-widest hidden sm:block">COMMAND CENTER v4.2.0</span>
+      </div>
+      <div className="flex items-center gap-4">
+        {["ENCRYPT","COMMS","AUTH"].map((s, i) => (
+          <div key={s} className="hidden sm:flex items-center gap-1.5">
+            <div className="w-1.5 h-1.5 rounded-full" style={{ background: ["#39ff14","#00ffe7","#ffd700"][i], boxShadow: `0 0 5px ${["#39ff14","#00ffe7","#ffd700"][i]}` }} />
+            <span className="mono text-[9px] tracking-widest" style={{ color: "rgba(255,255,255,0.35)" }}>{s}</span>
+          </div>
+        ))}
+        <span className="mono text-xs tabular-nums" style={{ color: "var(--c)", letterSpacing: "0.1em" }}>
+          {fmt(time.getHours())}:{fmt(time.getMinutes())}:{fmt(time.getSeconds())}
+        </span>
+      </div>
+    </div>
+  );
+}
+
+/* ─────────────────────────────────────────
+   GLITCH TITLE
+───────────────────────────────────────── */
+function GlitchTitle() {
+  const text = "ADMIN COMMAND CENTER";
+  return (
+    <div className="relative inline-block">
+      <span className="orb font-900 text-2xl sm:text-3xl tracking-tight glow-c" style={{ color: "var(--c)" }}>{text}</span>
+      <span className="glitch-layer orb font-900 text-2xl sm:text-3xl tracking-tight" aria-hidden="true">{text}</span>
+    </div>
+  );
+}
+
+/* ─────────────────────────────────────────
+   CLEARANCE BADGES
+───────────────────────────────────────── */
+const LEVELS_META = [
+  { label: "INITIATE",   color: "#00ffe7" },
+  { label: "OPERATIVE",  color: "#bf5fff" },
+  { label: "DIRECTOR",   color: "#ffd700" },
+  { label: "ARCHITECT",  color: "#ff3b5c" },
+];
 
 /* ─────────────────────────────────────────
    ROOT APP
 ───────────────────────────────────────── */
 export default function App() {
-  const [unlockedUpTo, setUnlockedUpTo] = useState(0);
-  const [currentLevel, setCurrentLevel] = useState(0);
-  const [flash, setFlash] = useState<LevelConfig | null>(null);
-
-  const allDone = unlockedUpTo >= LEVELS.length;
-
-  const handleSuccess = useCallback(() => {
-    setFlash(LEVELS[currentLevel]);
-  }, [currentLevel]);
-
-  const afterFlash = useCallback(() => {
-    const next = currentLevel + 1;
-    setUnlockedUpTo(next);
-    setCurrentLevel(next);
-    setFlash(null);
-  }, [currentLevel]);
-
-  const activeGlow = (flash ?? LEVELS[Math.min(currentLevel, LEVELS.length - 1)]).glow.replace("0.4", "0.07");
-
   return (
-    <div className="relative min-h-screen bg-[#050810] text-white overflow-x-hidden">
-      <MatrixRain opacity={0.10} />
+    <>
+      <GlobalStyles />
+      <div className="relative min-h-screen scanlines hexgrid overflow-x-hidden" style={{ background: "var(--bg)", fontFamily: "'Share Tech Mono', monospace" }}>
+        <MatrixRain opacity={0.07} />
+        <div className="scan-beam" />
 
-      {/* Scanlines */}
-      <div className="fixed inset-0 z-[1] pointer-events-none"
-        style={{ background: "repeating-linear-gradient(0deg,rgba(0,217,255,0.015) 0px,rgba(0,217,255,0.015) 1px,transparent 1px,transparent 4px)" }} />
-
-      {/* Ambient glow */}
-      <div className="fixed inset-0 z-0 pointer-events-none overflow-hidden">
-        <div className="absolute -top-32 left-1/2 -translate-x-1/2 w-[500px] h-[500px] rounded-full blur-[120px] animate-pulse"
-          style={{ background: activeGlow }} />
-      </div>
-
-      <div className="scan-line" />
-
-      <AnimatePresence>
-        {flash && <SuccessFlash level={flash} onDone={afterFlash} />}
-      </AnimatePresence>
-
-      {/* Top Bar */}
-      <div className="relative z-10 flex items-center justify-between px-4 sm:px-8 py-3 border-b border-white/5">
-        <div className="flex items-center gap-2">
-          <span className="w-2 h-2 rounded-full bg-cyan-400 animate-pulse" />
-          <span className="font-mono text-[10px] text-cyan-400/60 tracking-widest">SYSTEM://SECURE/ADMIN</span>
+        {/* Ambient glow orbs */}
+        <div className="fixed inset-0 pointer-events-none z-0 overflow-hidden" aria-hidden="true">
+          <div className="absolute -top-40 left-1/4 w-[600px] h-[600px] rounded-full"
+            style={{ background: "radial-gradient(circle, rgba(0,255,231,0.06) 0%, transparent 70%)", filter: "blur(60px)" }} />
+          <div className="absolute top-1/2 -right-20 w-[400px] h-[400px] rounded-full"
+            style={{ background: "radial-gradient(circle, rgba(191,95,255,0.04) 0%, transparent 70%)", filter: "blur(60px)" }} />
+          <div className="absolute -bottom-20 left-10 w-[500px] h-[500px] rounded-full"
+            style={{ background: "radial-gradient(circle, rgba(0,191,255,0.04) 0%, transparent 70%)", filter: "blur(60px)" }} />
         </div>
-        <span className="font-mono text-[10px] text-gray-700 tracking-widest">© 2026 RYTNIX</span>
-      </div>
 
-      {/* Main Layout */}
-      <div className="relative z-10 max-w-4xl mx-auto px-4 sm:px-6 py-8 sm:py-12">
-        <div className="flex flex-col sm:flex-row gap-6">
-          <div className="sm:w-36 shrink-0">
-            <LevelSidebar currentLevel={currentLevel} unlockedUpTo={unlockedUpTo} />
+        <div className="relative z-10">
+          <Header />
+
+          <div className="max-w-6xl mx-auto px-4 sm:px-6 py-8 space-y-6">
+
+            {/* Page title + clearance row */}
+            <motion.div initial={{ opacity: 0, y: -12 }} animate={{ opacity: 1, y: 0 }}
+              className="flex items-start justify-between flex-wrap gap-4">
+              <div>
+                <GlitchTitle />
+                <p className="mono text-xs mt-1" style={{ color: "rgba(255,255,255,0.3)", letterSpacing: "0.2em" }}>
+                  ALL CLEARANCE LEVELS ACTIVE — FULL ACCESS GRANTED
+                </p>
+              </div>
+              <div className="flex gap-2 flex-wrap">
+                {LEVELS_META.map((l, i) => (
+                  <span key={l.label} className="pill" style={{ color: l.color, borderColor: l.color + "50", background: l.color + "10" }}>
+                    L{i+1} ✓ {l.label}
+                  </span>
+                ))}
+              </div>
+            </motion.div>
+
+            {/* Row 1: stats */}
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.1 }}>
+              <StatGrid />
+            </motion.div>
+
+            {/* Row 2: sparklines + radar */}
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.2 }}
+              className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+              <Sparkline color="#00ffe7" label="CPU LOAD"    unit="%" />
+              <Sparkline color="#39ff14" label="BANDWIDTH"   unit=" Mb/s" />
+              <ThreatRadar />
+            </motion.div>
+
+            {/* Row 3: terminal + threat chart */}
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.3 }}
+              className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <Terminal />
+              <ThreatChart />
+            </motion.div>
+
+            {/* Row 4: vault + users */}
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.4 }}
+              className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <VaultPanel />
+              <UserTable />
+            </motion.div>
+
           </div>
-          <div className="flex-1 min-w-0">
-            <AnimatePresence mode="wait">
-              {allDone ? (
-                <motion.div key="dashboard" initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}>
-                  <AdminDashboard clearedLevels={unlockedUpTo} />
-                </motion.div>
-              ) : (
-                <motion.div key={`level-${currentLevel}`} initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}>
-                  <LevelGate level={LEVELS[currentLevel]} onSuccess={handleSuccess} />
-                </motion.div>
-              )}
-            </AnimatePresence>
+
+          {/* Footer */}
+          <div className="mono text-center text-[9px] tracking-widest pb-8 pt-4" style={{ color: "rgba(0,255,231,0.2)" }}>
+            RYTNIX SECURE SYSTEMS © 2026 — CLASSIFIED ACCESS ONLY
           </div>
         </div>
       </div>
-
-      <style>{`
-        @keyframes scanmove { 0% { transform: translateY(-100%); } 100% { transform: translateY(100vh); } }
-        .scan-line { position:fixed; left:0; right:0; height:2px; background:linear-gradient(90deg,transparent,rgba(0,217,255,0.18),transparent); animation:scanmove 7s linear infinite; pointer-events:none; z-index:2; }
-        * { box-sizing: border-box; }
-        body { margin: 0; }
-        input { background: rgba(0,0,0,0.6); }
-        input::placeholder { opacity: 0.4; }
-      `}</style>
-    </div>
+    </>
   );
 }

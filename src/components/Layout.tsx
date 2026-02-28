@@ -22,7 +22,7 @@ export default function Layout() {
       {/* ===============================
           MAIN CONTENT — z-10 above matrix
       =============================== */}
-      <main className="relative z-10 pt-20">
+      <main className="relative z-10">
         <PageTransition>
           <div className="page-container">
             <Outlet />

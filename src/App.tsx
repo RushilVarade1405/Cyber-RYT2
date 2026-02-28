@@ -1,6 +1,7 @@
 import { Routes, Route, useLocation } from "react-router-dom";
 import { AnimatePresence } from "framer-motion";
 import { useEffect } from "react";
+import { Analytics } from "@vercel/analytics/react"
 
 import Layout from "./components/Layout";
 import Start from "./pages/Start";
@@ -131,6 +132,7 @@ function AnimatedRoutes() {
           </Route>
         </Routes>
       </AnimatePresence>
+      <Analytics/>
     </>
   );
 }

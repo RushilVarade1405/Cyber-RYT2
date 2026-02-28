@@ -129,11 +129,8 @@ export const RSS_SOURCES: RSSSource[] = [
   },
   {
     name: "Crus.live",
-    url: "https://crus.live/rss.xml",
+    url: "https://www.crus.live/rss.xml",
     altUrls: [
-      "https://crus.live/feed/",
-      "https://crus.live/feed.xml",
-      "https://crus.live/?feed=rss2",
       "https://www.crus.live/rss.xml",
     ],
     color: "text-indigo-400", dot: "bg-indigo-400", region: "india", enabled: true,
