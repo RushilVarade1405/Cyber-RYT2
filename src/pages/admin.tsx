@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 
 /* ─────────────────────────────────────────
    GLOBAL STYLES
@@ -212,7 +212,6 @@ function Terminal() {
   const [lines, setLines] = useState<typeof LOG_LINES>([]);
   const [idx, setIdx] = useState(0);
 
-
   useEffect(() => {
     if (idx >= LOG_LINES.length) return;
     const t = setTimeout(() => {
@@ -221,8 +220,6 @@ function Terminal() {
     }, 600 + Math.random() * 700);
     return () => clearTimeout(t);
   }, [idx]);
-
-
 
   return (
     <div className="card p-4" style={{ minHeight: 220 }}>
@@ -250,10 +247,11 @@ function Terminal() {
 /* ─────────────────────────────────────────
    THREAT RADAR (animated SVG)
 ───────────────────────────────────────── */
+const RADAR_COLS = ["#00ffe7","#00bfff","#39ff14","#ffd700"];
+
 function ThreatRadar() {
   const [angle, setAngle] = useState(0);
   const [blips, setBlips] = useState<{x:number;y:number;age:number;col:string}[]>([]);
-  const COLS = ["#00ffe7","#00bfff","#39ff14","#ffd700"];
 
   useEffect(() => {
     const id = setInterval(() => setAngle(a => (a + 2) % 360), 30);
@@ -268,7 +266,7 @@ function ThreatRadar() {
           .filter(p => p.age < 8);
         const r = 25 + Math.random() * 50;
         const a2 = (angle * Math.PI) / 180;
-        nb.push({ x: 80 + r * Math.cos(a2), y: 80 + r * Math.sin(a2), age: 0, col: COLS[Math.floor(Math.random()*COLS.length)] });
+        nb.push({ x: 80 + r * Math.cos(a2), y: 80 + r * Math.sin(a2), age: 0, col: RADAR_COLS[Math.floor(Math.random()*RADAR_COLS.length)] });
         return nb;
       });
     }
