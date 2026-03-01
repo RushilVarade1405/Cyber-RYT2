@@ -1,7 +1,11 @@
 import { Routes, Route, useLocation } from "react-router-dom";
 import { AnimatePresence } from "framer-motion";
 import { useEffect } from "react";
-import { Analytics } from "@vercel/analytics/react"
+import { Analytics } from "@vercel/analytics/react";
+
+// ================= VISITOR TRACKING =================
+import { VisitorProvider, useVisitorIP, useVisitHistory } from "./context/VisitorContext";
+import { logPageVisit } from "./utils/trackVisitor";
 
 import Layout from "./components/Layout";
 import Start from "./pages/Start";
@@ -56,13 +60,20 @@ import Attacks from "./pages/cybersecurity/Attacks";
 import Vulnerabilities from "./pages/cybersecurity/Vulnerabilities";
 
 /* ===============================
-   SCROLL TO TOP
+   SCROLL TO TOP + PAGE TRACKER
+   Fires on every route change.
+   visitorData is available here
+   from the VisitorProvider above.
 ================================ */
 function ScrollToTop() {
   const { pathname } = useLocation();
+  const visitorData = useVisitorIP();
+  const { addVisit } = useVisitHistory();
+
   useEffect(() => {
-    window.scrollTo({ top: 0, left: 0, behavior: "auto" });
-  }, [pathname]);
+    logPageVisit(pathname, visitorData, addVisit);
+  },);
+
   return null;
 }
 
@@ -132,18 +143,23 @@ function AnimatedRoutes() {
           </Route>
         </Routes>
       </AnimatePresence>
-      <Analytics/>
+      <Analytics />
     </>
   );
 }
 
 /* ===============================
    APP ROOT
+   VisitorProvider wraps everything
+   → IP is accessible in every
+     component via useVisitorIP()
 ================================ */
 export default function App() {
   return (
-    <div className="min-h-screen bg-bg text-white font-sans">
-      <AnimatedRoutes />
-    </div>
+    <VisitorProvider>
+      <div className="min-h-screen bg-bg text-white font-sans">
+        <AnimatedRoutes />
+      </div>
+    </VisitorProvider>
   );
 }
