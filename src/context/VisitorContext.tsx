@@ -139,42 +139,59 @@ const VisitHistoryContext = createContext<VisitHistoryCtx>({
 });
 
 /* ─────────────────────────────────────────
-   FETCH VISITOR IP + GEO (forced IPv4)
+   FETCH VISITOR IP + GEO
+   Uses ip-api.com — works on Vercel
 ───────────────────────────────────────── */
 async function fetchVisitorData(): Promise<Partial<VisitorData>> {
-  const ipv4Res = await fetch("https://api4.ipify.org?format=json");
-  const ipv4Data = ipv4Res.ok ? await ipv4Res.json() : null;
-  const forcedIPv4: string | null = ipv4Data?.ip ?? null;
-
-  const geoUrl = forcedIPv4
-    ? `https://ipapi.co/${forcedIPv4}/json/`
-    : `https://ipapi.co/json/`;
-  const res = await fetch(geoUrl);
-  if (!res.ok) throw new Error(`geo fetch failed: ${res.status}`);
-  const d = await res.json();
-
   const ua = navigator.userAgent;
   const { browser, os, deviceType } = parseUserAgent(ua);
-  const countryCode: string = d.country_code ?? "";
 
-  return {
-    ip: forcedIPv4 ?? d.ip ?? null,
-    country: countryCode,
-    country_name: d.country_name ?? null,
-    country_flag: countryCodeToFlag(countryCode),
-    city: d.city ?? null,
-    region: d.region ?? null,
-    isp: d.org ?? null,
-    timezone: d.timezone ?? null,
-    lat: d.latitude ?? null,
-    lon: d.longitude ?? null,
-    currency: d.currency ?? null,
-    languages: d.languages ?? null,
-    userAgent: ua,
-    browser,
-    os,
-    deviceType,
-  };
+  try {
+    // ip-api.com works on Vercel and is free
+    const res = await fetch(
+      "https://ip-api.com/json/?fields=status,message,country,countryCode,regionName,city,lat,lon,timezone,isp,query"
+    );
+    if (!res.ok) throw new Error(`fetch failed: ${res.status}`);
+    const d = await res.json();
+
+    if (d.status !== "success") throw new Error(d.message || "ip-api failed");
+
+    const countryCode: string = d.countryCode ?? "";
+
+    return {
+      ip:           d.query ?? null,
+      country:      countryCode,
+      country_name: d.country ?? null,
+      country_flag: countryCodeToFlag(countryCode),
+      city:         d.city ?? null,
+      region:       d.regionName ?? null,
+      isp:          d.isp ?? null,
+      timezone:     d.timezone ?? null,
+      lat:          d.lat ?? null,
+      lon:          d.lon ?? null,
+      currency:     null,
+      languages:    null,
+      userAgent:    ua,
+      browser,
+      os,
+      deviceType,
+    };
+  } catch (err) {
+    // fallback — at least get the IP
+    try {
+      const ipRes = await fetch("https://api4.ipify.org?format=json");
+      const ipData = ipRes.ok ? await ipRes.json() : null;
+      return {
+        ip:        ipData?.ip ?? null,
+        userAgent: ua,
+        browser,
+        os,
+        deviceType,
+      };
+    } catch {
+      return { userAgent: ua, browser, os, deviceType };
+    }
+  }
 }
 
 /* ─────────────────────────────────────────
@@ -205,8 +222,8 @@ export function VisitorProvider({ children }: { children: ReactNode }) {
     refreshAllVisits();
   }, []);
 
-  // ← FIXED: removed refreshAllVisits() from here
-  // It was causing full app re-render on every navigation
+  // removed refreshAllVisits() from here
+  // it was causing full app re-render on every navigation
   const addVisit = async (visit: VisitorLog) => {
     setVisits(prev => [visit, ...prev].slice(0, 200));
     if (supabase) {
