@@ -11,7 +11,7 @@ import { motion, AnimatePresence } from "framer-motion";
 const links = [
   { name: "Home", path: "/" },
   { name: "Linux", path: "/linux" },
-  { name: "Tools", path: "/Tools" },
+  { name: "Tools", path: "/tools" },
   { name: "Cheatsheet", path: "/cheatsheet" },
   { name: "Cyber_Laws", path: "/cyber-laws" },
   { name: "Blockchain", path: "/blockchain" },

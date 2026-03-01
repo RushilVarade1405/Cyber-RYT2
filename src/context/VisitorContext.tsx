@@ -142,12 +142,10 @@ const VisitHistoryContext = createContext<VisitHistoryCtx>({
    FETCH VISITOR IP + GEO (forced IPv4)
 ───────────────────────────────────────── */
 async function fetchVisitorData(): Promise<Partial<VisitorData>> {
-  // Step 1: Force pure IPv4
   const ipv4Res = await fetch("https://api4.ipify.org?format=json");
   const ipv4Data = ipv4Res.ok ? await ipv4Res.json() : null;
   const forcedIPv4: string | null = ipv4Data?.ip ?? null;
 
-  // Step 2: Geo enrichment
   const geoUrl = forcedIPv4
     ? `https://ipapi.co/${forcedIPv4}/json/`
     : `https://ipapi.co/json/`;
@@ -188,9 +186,9 @@ export function VisitorProvider({ children }: { children: ReactNode }) {
   const [allVisits, setAllVisits]     = useState<VisitorLog[]>([]);
   const supabaseReady                 = supabase !== null;
 
-  // Fetch all past visits from Supabase on mount
+  // Fetch all past visits from Supabase on mount only
   const refreshAllVisits = async () => {
-    if (!supabase) return; // silently skip if not configured
+    if (!supabase) return;
     try {
       const { data, error } = await supabase
         .from("visitor_logs")
@@ -199,7 +197,7 @@ export function VisitorProvider({ children }: { children: ReactNode }) {
         .limit(500);
       if (!error && data) setAllVisits(data as VisitorLog[]);
     } catch (_) {
-      // fail silently — don't crash the app
+      // fail silently
     }
   };
 
@@ -207,13 +205,13 @@ export function VisitorProvider({ children }: { children: ReactNode }) {
     refreshAllVisits();
   }, []);
 
-  // Add visit: in-memory + persist to Supabase if configured
+  // ← FIXED: removed refreshAllVisits() from here
+  // It was causing full app re-render on every navigation
   const addVisit = async (visit: VisitorLog) => {
     setVisits(prev => [visit, ...prev].slice(0, 200));
     if (supabase) {
       try {
         await supabase.from("visitor_logs").insert([visit]);
-        refreshAllVisits(); // refresh global list
       } catch (_) {
         // fail silently
       }
