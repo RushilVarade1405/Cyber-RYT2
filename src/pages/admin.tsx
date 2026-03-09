@@ -21,13 +21,13 @@ interface Visitor {
   device: string; timestamp: string; lat: number; lon: number;
 }
 
-interface FeedItem   { id: number; type: FeedType; msg: string; detail: string; time: string; }
+interface FeedItemData { id: number; type: FeedType; msg: string; detail: string; time: string; }
 interface SparkProps  { data: number[]; color: string; height?: number; }
 interface BarDatum    { label: string; value: number; }
 interface BarProps    { data: BarDatum[]; color?: string; }
 interface DonutSeg    { label: string; value: number; color: string; }
 interface DonutProps  { segments: DonutSeg[]; size?: number; }
-interface FeedProps   { item: FeedItem; }
+interface FeedProps   { item: FeedItemData; }
 interface StatItem    { label: string; value: string | number; color: string; icon: string; sub: string; }
 interface Blip        { x: number; y: number; age: number; col: string; }
 
@@ -52,7 +52,6 @@ const CSS = `
   .scanlines::after{content:'';position:fixed;inset:0;pointer-events:none;z-index:9999;
     background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,255,231,0.007) 2px,rgba(0,255,231,0.007) 4px);}
 
-  /* ── Panels ── */
   .panel{background:var(--panel);border:1px solid rgba(0,255,231,0.1);border-radius:12px;
     position:relative;overflow:hidden;backdrop-filter:blur(20px);
     transition:border-color 0.3s,box-shadow 0.3s;}
@@ -68,7 +67,6 @@ const CSS = `
   .panel-r::before{background:linear-gradient(90deg,transparent,var(--r),transparent)!important;}
   .panel-r{border-color:rgba(255,59,92,0.15)!important;}
 
-  /* ── IP Hero ── */
   .ip-hero{
     width:100%;border-radius:18px;
     border:1px solid rgba(0,255,231,0.3);
@@ -91,18 +89,15 @@ const CSS = `
   .ip-addr-box::after{content:'';position:absolute;bottom:0;left:10%;right:10%;height:1px;
     background:linear-gradient(90deg,transparent,rgba(57,255,20,0.35),transparent);}
 
-  /* Corner brackets */
   .cb{position:absolute;width:clamp(22px,3vw,40px);height:clamp(22px,3vw,40px);}
   .cb-tl{top:-1px;left:-1px;border-top:2px solid rgba(0,255,231,0.6);border-left:2px solid rgba(0,255,231,0.6);border-radius:0 0 7px 0;}
   .cb-tr{top:-1px;right:-1px;border-top:2px solid rgba(0,255,231,0.6);border-right:2px solid rgba(0,255,231,0.6);border-radius:0 0 0 7px;}
   .cb-bl{bottom:-1px;left:-1px;border-bottom:2px solid rgba(0,255,231,0.6);border-left:2px solid rgba(0,255,231,0.6);border-radius:0 7px 0 0;}
   .cb-br{bottom:-1px;right:-1px;border-bottom:2px solid rgba(0,255,231,0.6);border-right:2px solid rgba(0,255,231,0.6);border-radius:7px 0 0 0;}
 
-  /* Glows */
   .glow-c{text-shadow:0 0 30px rgba(0,255,231,0.8),0 0 60px rgba(0,255,231,0.35),0 0 100px rgba(0,255,231,0.15);}
   .glow-g{text-shadow:0 0 16px rgba(57,255,20,0.6);}
 
-  /* Animations */
   @keyframes pulse-live{0%,100%{box-shadow:0 0 5px var(--g),0 0 10px var(--g);}
     50%{box-shadow:0 0 10px var(--g),0 0 22px var(--g),0 0 36px rgba(57,255,20,0.3);}}
   .dot-live{animation:pulse-live 2s ease-in-out infinite;}
@@ -139,13 +134,11 @@ const CSS = `
   @keyframes radar-sweep{from{transform:rotate(0deg);}to{transform:rotate(360deg);}}
   .rsweep{animation:radar-sweep 4s linear infinite;transform-origin:75px 75px;}
 
-  /* Geo tiles hover */
   .geo-tile{padding:clamp(13px,2.2vw,22px) clamp(15px,2.8vw,26px);border-radius:11px;
     background:rgba(255,255,255,0.028);border:1px solid rgba(255,255,255,0.07);
     transition:border-color 0.25s,background 0.25s;}
   .geo-tile:hover{background:rgba(0,255,231,0.04);border-color:rgba(0,255,231,0.18);}
 
-  /* Nav */
   .nav-tab{position:relative;padding:8px 18px;border-radius:8px;cursor:pointer;
     border:1px solid transparent;transition:all 0.2s;font-family:'Share Tech Mono',monospace;
     font-size:10px;letter-spacing:0.14em;white-space:nowrap;background:transparent;
@@ -156,17 +149,14 @@ const CSS = `
   .nav-tab.active::after{content:'';position:absolute;bottom:-1px;left:20%;right:20%;height:1px;
     background:var(--c);box-shadow:0 0 8px var(--c);}
 
-  /* Stat cards */
   .stat-card{border-radius:10px;border:1px solid;background:rgba(0,4,10,0.95);
     position:relative;overflow:hidden;transition:transform 0.2s,box-shadow 0.2s;cursor:default;}
   .stat-card:hover{transform:translateY(-3px);}
 
-  /* Pill */
   .pill{display:inline-flex;align-items:center;gap:4px;font-family:'Share Tech Mono',monospace;
     font-size:9px;letter-spacing:0.12em;padding:3px 9px;border-radius:4px;border:1px solid;
     white-space:nowrap;line-height:1.4;}
 
-  /* Table */
   .dtable{width:100%;border-collapse:collapse;}
   .dtable thead th{padding:10px 12px;text-align:left;font-family:'Share Tech Mono',monospace;
     font-size:9px;letter-spacing:0.16em;color:rgba(255,255,255,0.25);
@@ -178,7 +168,6 @@ const CSS = `
   .dtable tbody tr:hover{background:rgba(0,255,231,0.03);}
   .dtable tbody td{padding:9px 12px;white-space:nowrap;}
 
-  /* Input/Button */
   .sinput{background:rgba(0,255,231,0.04);border:1px solid rgba(0,255,231,0.15);
     color:var(--c);border-radius:8px;padding:8px 14px;font-family:'Share Tech Mono',monospace;
     font-size:11px;width:100%;outline:none;transition:border-color 0.2s,box-shadow 0.2s;}
@@ -188,7 +177,6 @@ const CSS = `
     font-family:'Share Tech Mono',monospace;font-size:9px;letter-spacing:0.1em;
     transition:all 0.2s;outline:none;-webkit-tap-highlight-color:transparent;background:transparent;}
 
-  /* Progress */
   .pbar{height:4px;border-radius:999px;overflow:hidden;background:rgba(255,255,255,0.06);}
   .pfill{height:100%;border-radius:999px;transition:width 1s cubic-bezier(0.34,1.56,0.64,1);}
 
@@ -332,7 +320,7 @@ const UptimeBar: FC = () => (
   </div>
 );
 
-const FeedItem: FC<FeedProps> = ({item}) => {
+const FeedRow: FC<FeedProps> = ({item}) => {
   const [vis,setVis]=useState(false);
   useEffect(()=>{const t=setTimeout(()=>setVis(true),50);return()=>clearTimeout(t);},[]);
   const tc:Record<FeedType,string>={visit:"#00ffe7",error:"#ff3b5c",warning:"#ffd700",info:"#bf5fff",api:"#39ff14"};
@@ -366,11 +354,12 @@ const VISITORS: Visitor[] = [
   {id:11,ip:"8.8.8.8",       country:"🇺🇸 United States", city:"Mountain View",isp:"Google",           page:"/",          browser:"Chrome",  os:"Windows",device:"Desktop", timestamp:"2025-03-05 07:31:55",lat:37.3861, lon:-122.0839},
   {id:12,ip:"161.27.0.1",    country:"🇯🇵 Japan",         city:"Tokyo",        isp:"NTT",              page:"/docs",      browser:"Safari",  os:"macOS",  device:"Desktop", timestamp:"2025-03-05 06:15:00",lat:35.6762, lon:139.6503},
 ];
+
 const BR_DIST: DonutSeg[] = [{label:"Chrome",value:48,color:"#00ffe7"},{label:"Safari",value:22,color:"#39ff14"},{label:"Firefox",value:17,color:"#bf5fff"},{label:"Others",value:13,color:"#ff8c42"}];
 const DV_DIST: DonutSeg[] = [{label:"Desktop",value:52,color:"#00ffe7"},{label:"Mobile",value:37,color:"#ffd700"},{label:"Tablet",value:8,color:"#bf5fff"},{label:"Bot",value:3,color:"#ff3b5c"}];
 const HOURLY: BarDatum[] = Array.from({length:24},(_,i)=>({label:i%4===0?`${i}h`:"",value:Math.floor(30+Math.sin((i/24)*Math.PI*2+1)*60+Math.random()*40)}));
 const WEEKLY: BarDatum[] = ["Mon","Tue","Wed","Thu","Fri","Sat","Sun"].map((l,i)=>({label:l,value:Math.floor(200+Math.random()*800+(i<5?300:0))}));
-const FEED_P: Omit<FeedItem,"id"|"time">[] = [
+const FEED_P: Omit<FeedItemData,"id"|"time">[] = [
   {type:"visit",   msg:"New visitor from 198.51.100.X",   detail:"🌍 Unknown · Chrome · Desktop"},
   {type:"api",     msg:"POST /v1/track — 201 Created",    detail:"Response: 98ms"},
   {type:"info",    msg:"Session expired — token GC run",  detail:"Freed 234 sessions"},
@@ -401,7 +390,7 @@ const AdminPanel: FC = () => {
     req: Array.from({length:40},()=>Math.random()*50+10),
     lat: Array.from({length:40},()=>Math.random()*30+5),
   });
-  const [feed, setFeed] = useState<FeedItem[]>([
+  const [feed, setFeed] = useState<FeedItemData[]>([
     {id:1,type:"visit",   msg:"New visitor from 203.45.12.88",  detail:"🇸🇬 Singapore · Chrome · Mobile", time:"00:02"},
     {id:2,type:"api",     msg:"API endpoint /v1/data — 200 OK", detail:"Response: 142ms",                 time:"00:45"},
     {id:3,type:"info",    msg:"Cache invalidated — /dashboard", detail:"TTL expired",                     time:"01:12"},
@@ -449,6 +438,7 @@ const AdminPanel: FC = () => {
     if(sortCol===col)setSortDir(d=>d==="asc"?"desc":"asc");
     else{setSortCol(col);setSortDir("desc");}
   };
+
   const filtered=VISITORS
     .filter(v=>!filter.trim()||Object.values(v).some(val=>String(val).toLowerCase().includes(filter.toLowerCase())))
     .sort((a,b)=>{
@@ -473,7 +463,7 @@ const AdminPanel: FC = () => {
   const ipFs=ipLen<=7?"clamp(46px,10vw,108px)":ipLen<=11?"clamp(38px,8vw,86px)":ipLen<=13?"clamp(30px,6.5vw,66px)":"clamp(22px,5vw,50px)";
 
   const GEO_TILES=[
-    {label:"COUNTRY",   value:ipInfo?.country_name,color:"#39ff14"},
+    {label:"COUNTRY",   value:ipInfo?.country_name, color:"#39ff14"},
     {label:"CITY",      value:ipInfo?.city,          color:"#00bfff"},
     {label:"ISP / ORG", value:ipInfo?.org,           color:"#bf5fff"},
     {label:"TIMEZONE",  value:ipInfo?.timezone,      color:"rgba(255,215,0,0.9)"},
@@ -529,7 +519,6 @@ const AdminPanel: FC = () => {
           {tab==="overview"&&(
             <div style={{display:"flex",flexDirection:"column",gap}} className="fade-up">
 
-              {/* Title */}
               <div style={{paddingTop:4}}>
                 <div style={{position:"relative",display:"inline-block"}}>
                   <span className="orb glow-c" style={{fontSize:"clamp(22px,4.5vw,38px)",fontWeight:900,color:"var(--c)",lineHeight:1.1}}>ADMIN COMMAND CENTER</span>
@@ -556,11 +545,9 @@ const AdminPanel: FC = () => {
                 ))}
               </div>
 
-              {/* ══ IP HERO CARD ══ */}
+              {/* IP Hero */}
               <div className="ip-hero fd2">
                 <div style={{padding:"clamp(26px,4.5vw,56px) clamp(24px,4vw,52px)",position:"relative",zIndex:1}}>
-
-                  {/* Status bar */}
                   <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:"clamp(20px,3.5vw,36px)",flexWrap:"wrap",gap:10}}>
                     <div style={{display:"flex",alignItems:"center",gap:12}}>
                       <div className="dot-live" style={{width:12,height:12,borderRadius:"50%",flexShrink:0,background:ipLoad?"#ffd700":"#39ff14"}}/>
@@ -579,15 +566,12 @@ const AdminPanel: FC = () => {
                     </div>
                   </div>
 
-                  {/* Address box */}
                   <div className="ip-addr-box" style={{padding:"clamp(22px,4.5vw,52px) clamp(20px,4vw,48px)",marginBottom:"clamp(16px,2.8vw,28px)"}}>
                     <div className="cb cb-tl"/><div className="cb cb-tr"/>
                     <div className="cb cb-bl"/><div className="cb cb-br"/>
-
                     <div className="mono" style={{fontSize:"clamp(8px,1.3vw,11px)",letterSpacing:"0.36em",marginBottom:"clamp(12px,2.2vw,24px)",color:"rgba(0,255,231,0.24)"}}>
                       ◈ &nbsp; ADDRESS &nbsp;/&nbsp; CONFIRMED PUBLIC IPv4
                     </div>
-
                     {ipLoad?(
                       <div className="orb" style={{fontSize:"clamp(40px,10vw,112px)",color:"rgba(0,255,231,0.16)",fontWeight:900,letterSpacing:"0.04em",lineHeight:1.05}}>
                         ···.···.···.···<span className="blink">_</span>
@@ -597,7 +581,6 @@ const AdminPanel: FC = () => {
                         {ipInfo?.ip??"UNAVAILABLE"}
                       </div>
                     )}
-
                     {!ipLoad&&ipInfo?.ip&&(
                       <div className="mono" style={{marginTop:"clamp(12px,2.2vw,22px)",fontSize:"clamp(9px,1.5vw,13px)",color:"rgba(255,255,255,0.24)",letterSpacing:"0.18em",display:"flex",flexWrap:"wrap",gap:"clamp(10px,2vw,24px)"}}>
                         {ipInfo.city&&ipInfo.city!=="—"&&<span>📍 {ipInfo.city}{ipInfo.country_name&&ipInfo.country_name!=="—"?`, ${ipInfo.country_name}`:""}</span>}
@@ -607,7 +590,6 @@ const AdminPanel: FC = () => {
                     )}
                   </div>
 
-                  {/* Geo tiles */}
                   <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(min(180px,calc(50% - 6px)),1fr))",gap:"clamp(8px,1.5vw,14px)"}}>
                     {GEO_TILES.map(r=>(
                       <div key={r.label} className="geo-tile">
@@ -618,7 +600,6 @@ const AdminPanel: FC = () => {
                       </div>
                     ))}
                   </div>
-
                 </div>
               </div>
 
@@ -653,7 +634,7 @@ const AdminPanel: FC = () => {
                       <span className="pill" style={{color:"#ff3b5c",borderColor:"#ff3b5c40",background:"#ff3b5c10"}}>REAL-TIME</span>
                     </div>
                     <div style={{maxHeight:210,overflowY:"auto"}}>
-                      {feed.map(item=><FeedItem key={item.id} item={item}/>)}
+                      {feed.map(item=><FeedRow key={item.id} item={item}/>)}
                     </div>
                   </div>
                 </div>
