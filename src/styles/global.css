@@ -35,6 +35,16 @@
 html {
   scroll-behavior: smooth;
   -webkit-text-size-adjust: 100%;
+
+  /* ✅ FIX: Hide native browser scrollbar on ALL screens
+     (the cyan widget showing on the navbar was this scrollbar)
+     Scroll still works — only the visible bar is hidden        */
+  scrollbar-width: none;        /* Firefox */
+  -ms-overflow-style: none;     /* IE / Edge legacy */
+}
+
+html::-webkit-scrollbar {
+  display: none;                /* Chrome, Safari, all WebKit */
 }
 
 body {
@@ -199,26 +209,33 @@ button {
 }
 
 /* ===============================
-   SCROLLBAR (DESKTOP ONLY)
+   CUSTOM SCROLLBAR
+   Only applied to elements using the
+   .custom-scrollbar class (e.g. search modal,
+   mobile menu). Never on html/body so the
+   native page scrollbar never appears.
 ================================ */
-@media (min-width: 768px) {
-  ::-webkit-scrollbar {
-    width: 8px;
-  }
+.custom-scrollbar {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(34, 211, 238, 0.2) rgba(2, 6, 23, 0.5);
+}
 
-  ::-webkit-scrollbar-track {
-    background: rgba(2, 6, 23, 0.5);
-  }
+.custom-scrollbar::-webkit-scrollbar {
+  width: 6px;
+}
 
-  ::-webkit-scrollbar-thumb {
-    background: rgba(34, 211, 238, 0.2);
-    border-radius: 6px;
-    transition: background 0.3s ease;
-  }
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: rgba(2, 6, 23, 0.5);
+}
 
-  ::-webkit-scrollbar-thumb:hover {
-    background: rgba(34, 211, 238, 0.4);
-  }
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: rgba(34, 211, 238, 0.2);
+  border-radius: 6px;
+  transition: background 0.3s ease;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: rgba(34, 211, 238, 0.4);
 }
 
 /* ===============================
@@ -614,7 +631,9 @@ code::-webkit-scrollbar {
   }
 }
 
-/* 3. Add to your global CSS (for pulse animations) */
+/* ===============================
+   PULSE ANIMATIONS
+================================ */
 @keyframes ping-slow { 0%,100%{opacity:.4;transform:scale(1)} 50%{opacity:0;transform:scale(1.5)} }
 @keyframes pulse-slow { 0%,100%{opacity:1} 50%{opacity:.75} }
 .animate-ping-slow  { animation: ping-slow  2.5s ease-in-out infinite; }

@@ -1,4 +1,5 @@
 import { motion } from "framer-motion";
+import React from "react";
 
 const container = {
   hidden: { opacity: 0 },
@@ -13,11 +14,7 @@ const item = {
   visible: { opacity: 1, y: 0 },
 };
 
-export function PageMotion({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+export function PageMotion({ children }: { children: React.ReactNode }) {
   return (
     <motion.div
       initial="hidden"

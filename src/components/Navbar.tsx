@@ -9,15 +9,16 @@ import { motion, AnimatePresence } from "framer-motion";
    NAV LINKS CONFIG
 ============================================================ */
 const links = [
-  { name: "Home", path: "/" },
-  { name: "Linux", path: "/linux" },
-  { name: "Tools", path: "/tools" },
-  { name: "Cheatsheet", path: "/cheatsheet" },
-  { name: "Cyber_Laws", path: "/cyber-laws" },
-  { name: "Blockchain", path: "/blockchain" },
-  { name: "Cryptography", path: "/cryptography" },
-  { name: "Cyber_News", path: "/cyber-news" },
-  { name: "About", path: "/about" },
+  { name: "Home",        path: "/" },
+  { name: "Linux",       path: "/linux" },
+  { name: "Tools",       path: "/tools" },
+  { name: "Cheatsheet",  path: "/cheatsheet" },
+  { name: "Cyber_Laws",  path: "/cyber-laws" },
+  { name: "Blockchain",  path: "/blockchain" },
+  { name: "Cryptography",path: "/cryptography" },
+  { name: "Cyber_News",  path: "/cyber-news" },
+  { name: "Reports",     path: "/reports" },
+  { name: "About",       path: "/about" },
 ];
 
 /* ============================================================
@@ -113,7 +114,7 @@ function SearchModal({
 
   return (
     <motion.div
-      className="fixed inset-0 z-[999] bg-black/80 backdrop-blur-sm flex justify-center pt-28"
+      className="fixed inset-0 z-[999] bg-black/80 backdrop-blur-sm flex justify-center pt-28 px-4"
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
@@ -137,7 +138,7 @@ function SearchModal({
               animate={{ rotate: [0, 360] }}
               transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
             >
-              <SearchIcon className="w-5 h-5 text-cyan-400" />
+              <SearchIcon className="w-5 h-5 text-cyan-400 flex-shrink-0" />
             </motion.div>
             <input
               autoFocus
@@ -150,7 +151,7 @@ function SearchModal({
               whileHover={{ scale: 1.1, rotate: 90 }}
               whileTap={{ scale: 0.9 }}
               onClick={onClose}
-              className="text-gray-400 hover:text-cyan-400 transition-colors"
+              className="text-gray-400 hover:text-cyan-400 transition-colors flex-shrink-0"
             >
               <CloseIcon className="w-5 h-5" />
             </motion.button>
@@ -260,11 +261,11 @@ export default function Navbar() {
         {/* Static cyan glow line */}
         <div className="absolute top-0 left-0 w-full h-[1px] bg-cyan-400/30" />
 
-        <div className="max-w-7xl mx-auto px-6 h-16 flex items-center">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 h-16 flex items-center">
           {/* LOGO */}
           <NavLink
             to="/"
-            className="relative font-extrabold tracking-widest text-lg group"
+            className="relative font-extrabold tracking-widest text-base sm:text-lg group flex-shrink-0"
           >
             <motion.span
               className="relative inline-block text-cyan-400 drop-shadow-[0_0_8px_rgba(34,211,238,0.6)]"
@@ -286,8 +287,8 @@ export default function Navbar() {
             </motion.span>
           </NavLink>
 
-          {/* DESKTOP LINKS */}
-          <div className="hidden md:flex flex-1 justify-center gap-1">
+          {/* DESKTOP LINKS — hidden below md, shown md+ */}
+          <div className="hidden md:flex flex-1 justify-center gap-0.5 lg:gap-1 overflow-hidden min-w-0">
             {links.map((link, index) => (
               <NavLink key={link.path} to={link.path}>
                 {({ isActive }) => (
@@ -295,11 +296,11 @@ export default function Navbar() {
                     initial={{ opacity: 0, y: -20 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: index * 0.05 }}
-                    className="relative px-3 py-2 group"
+                    className="relative px-2 lg:px-3 py-2 group flex-shrink-0"
                   >
                     <span
                       className={`
-                        relative text-sm font-medium transition-all duration-300
+                        relative text-xs lg:text-sm font-medium transition-all duration-300 whitespace-nowrap
                         ${isActive
                           ? "text-cyan-400"
                           : "text-gray-300 group-hover:text-cyan-300"
@@ -340,13 +341,14 @@ export default function Navbar() {
           </div>
 
           {/* ACTIONS */}
-          <div className="ml-auto flex items-center gap-4">
+          <div className="ml-auto flex items-center gap-2 sm:gap-4 flex-shrink-0">
             {/* Search button */}
             <motion.button
               whileHover={{ scale: 1.1, rotate: 5 }}
               whileTap={{ scale: 0.95 }}
               onClick={() => setSearchOpen(true)}
               className="relative p-2 text-cyan-400 hover:text-cyan-300 transition-colors group"
+              aria-label="Search"
             >
               <SearchIcon className="w-5 h-5 relative z-10" />
               <motion.div
@@ -356,12 +358,13 @@ export default function Navbar() {
               />
             </motion.button>
 
-            {/* Mobile menu toggle */}
+            {/* Mobile menu toggle — hidden md+ */}
             <motion.button
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
               onClick={() => setMenuOpen(!menuOpen)}
               className="md:hidden p-2 text-cyan-400 relative group"
+              aria-label="Toggle menu"
             >
               <AnimatePresence mode="wait">
                 {menuOpen ? (
@@ -421,7 +424,7 @@ export default function Navbar() {
               exit={{ opacity: 0, y: -20, scale: 0.95 }}
               transition={{ type: "spring", stiffness: 300, damping: 25 }}
               className="
-                fixed top-16 left-0 right-0 mx-4 z-50
+                fixed top-16 left-0 right-0 mx-3 sm:mx-4 z-50
                 bg-gradient-to-b from-[#060b1a] to-[#040812]
                 backdrop-blur-md
                 border border-cyan-500/30
@@ -434,13 +437,13 @@ export default function Navbar() {
               {/* Top glow line */}
               <div className="absolute top-0 left-0 w-full h-[1px] bg-gradient-to-r from-transparent via-cyan-400 to-transparent" />
 
-              <div className="flex flex-col px-6 py-4 gap-2 max-h-[calc(100vh-5rem)] overflow-y-auto">
+              <div className="grid grid-cols-2 sm:grid-cols-3 px-3 py-3 gap-1 max-h-[calc(100vh-5rem)] overflow-y-auto custom-scrollbar">
                 {links.map((link, index) => (
                   <motion.div
                     key={link.path}
                     initial={{ opacity: 0, x: -20 }}
                     animate={{ opacity: 1, x: 0 }}
-                    transition={{ delay: index * 0.05 }}
+                    transition={{ delay: index * 0.04 }}
                   >
                     <NavLink
                       to={link.path}
@@ -448,14 +451,13 @@ export default function Navbar() {
                     >
                       {({ isActive }) => (
                         <motion.div
-                          whileHover={{ x: 8 }}
-                          whileTap={{ scale: 0.98 }}
+                          whileTap={{ scale: 0.96 }}
                           className={`
-                            relative px-4 py-3 rounded-lg text-sm font-medium
+                            relative px-3 py-2.5 rounded-lg text-sm font-medium text-center
                             transition-all duration-200
                             ${isActive
-                              ? "text-cyan-400 bg-cyan-500/10 border-l-2 border-cyan-400"
-                              : "text-gray-300 hover:text-cyan-300 hover:bg-cyan-500/5 border-l-2 border-transparent"
+                              ? "text-cyan-400 bg-cyan-500/10 border border-cyan-400/40"
+                              : "text-gray-300 hover:text-cyan-300 hover:bg-cyan-500/5 border border-transparent"
                             }
                           `}
                         >
@@ -499,25 +501,6 @@ export default function Navbar() {
          SPACER FOR FIXED NAVBAR
       ====================================================== */}
       <div className="h-16" />
-
-      {/* ======================================================
-         CUSTOM SCROLLBAR STYLES (add to global CSS)
-      ====================================================== */}
-      <style>{`
-        .custom-scrollbar::-webkit-scrollbar {
-          width: 6px;
-        }
-        .custom-scrollbar::-webkit-scrollbar-track {
-          background: rgba(6, 11, 26, 0.5);
-        }
-        .custom-scrollbar::-webkit-scrollbar-thumb {
-          background: rgba(34, 211, 238, 0.3);
-          border-radius: 3px;
-        }
-        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-          background: rgba(34, 211, 238, 0.5);
-        }
-      `}</style>
     </>
   );
 }

@@ -1,12 +1,6 @@
-import { Routes, Route, useLocation } from "react-router-dom";
-import { AnimatePresence } from "framer-motion";
-import { useEffect } from "react";
-import { Analytics } from "@vercel/analytics/react";
-
-import { VisitorProvider, useVisitorIP, useVisitHistory } from "./context/VisitorContext";
-import { logPageVisit } from "./utils/trackVisitor";
-
+import { Routes, Route } from "react-router-dom";
 import Layout from "./components/Layout";
+
 import Start from "./pages/Start";
 import Home from "./pages/Home";
 import Linux from "./pages/Linux";
@@ -43,99 +37,61 @@ import CyberHome from "./pages/cybersecurity/CyberHome";
 import Concepts from "./pages/cybersecurity/Concepts";
 import Attacks from "./pages/cybersecurity/Attacks";
 import Vulnerabilities from "./pages/cybersecurity/Vulnerabilities";
+import ReportsHome from "./pages/reports/ReportsHome";
+import ReportDetail from "./pages/reports/ReportDetail";
 
-/* ===============================
-   SCROLL TO TOP + PAGE TRACKER
-================================ */
-function ScrollToTop() {
-  const { pathname } = useLocation();
-  const visitorData = useVisitorIP();
-  const { addVisit } = useVisitHistory();
-
-  useEffect(() => {
-    window.scrollTo(0, 0);
-    if (visitorData.loaded) {
-      logPageVisit(pathname, visitorData, addVisit);
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [pathname, visitorData.loaded]);
-
-  return null;
-}
-
-/* ===============================
-   ANIMATED ROUTES
-================================ */
-function AnimatedRoutes() {
-  const location = useLocation();
-
+function App() {
   return (
-    <>
-      <ScrollToTop />
-      <AnimatePresence mode="wait">
-        <Routes location={location} key={location.pathname}>
-          <Route element={<Layout />}>
+    <Routes>
+      <Route element={<Layout />}>
+        <Route path="/" element={<Home />} />
+        <Route path="/start" element={<Start />} />
+        <Route path="/linux" element={<Linux />} />
+        <Route path="/cyber-laws" element={<CyberLaws />} />
+        <Route path="/blockchain" element={<Blockchain />} />
+        <Route path="/cryptography" element={<Cryptography />} />
+        <Route path="/cyber-news" element={<CyberNews />} />
+        <Route path="/cheatsheet" element={<Cheatsheet />} />
+        <Route path="/about" element={<About />} />
+        <Route path="/admin" element={<Admin />} />
+        <Route path="/portfolio" element={<PortfolioCVSection />} />
 
-            <Route path="/" element={<Home />} />
-            <Route path="/start" element={<Start />} />
-            <Route path="/linux" element={<Linux />} />
-            <Route path="/cyber-laws" element={<CyberLaws />} />
-            <Route path="/blockchain" element={<Blockchain />} />
-            <Route path="/cryptography" element={<Cryptography />} />
-            <Route path="/cyber-news" element={<CyberNews />} />
-            <Route path="/cheatsheet" element={<Cheatsheet />} />
-            <Route path="/about" element={<About />} />
-            <Route path="/admin" element={<Admin />} />
-            <Route path="/portfolio" element={<PortfolioCVSection />} />
+        <Route path="/tools" element={<ToolsHome />} />
+        <Route path="/tools/toolkit" element={<CyberToolkit />} />
+        <Route path="/tools/:toolId" element={<ToolPage />} />
 
-            <Route path="/tools" element={<ToolsHome />} />
-            <Route path="/tools/toolkit" element={<CyberToolkit />} />
-            <Route path="/tools/:toolId" element={<ToolPage />} />
+        <Route path="/cyber-laws/home" element={<LawsHome />} />
+        <Route path="/cyber-laws/cyber-crimes" element={<CyberCrimes />} />
+        <Route path="/cyber-laws/it-act" element={<ITAct />} />
+        <Route path="/cyber-laws/ethics" element={<Ethics />} />
 
-            <Route path="/cyber-laws/home" element={<LawsHome />} />
-            <Route path="/cyber-laws/cyber-crimes" element={<CyberCrimes />} />
-            <Route path="/cyber-laws/it-act" element={<ITAct />} />
-            <Route path="/cyber-laws/ethics" element={<Ethics />} />
+        <Route path="/linux/home" element={<LinuxHome />} />
+        <Route path="/linux/basics" element={<LinuxBasics />} />
+        <Route path="/linux/files" element={<LinuxFiles />} />
+        <Route path="/linux/networking" element={<LinuxNetworking />} />
+        <Route path="/linux/toolscmd" element={<Linuxtoolscmd />} />
 
-            <Route path="/linux/home" element={<LinuxHome />} />
-            <Route path="/linux/basics" element={<LinuxBasics />} />
-            <Route path="/linux/files" element={<LinuxFiles />} />
-            <Route path="/linux/networking" element={<LinuxNetworking />} />
-            <Route path="/linux/toolscmd" element={<Linuxtoolscmd />} />
+        <Route path="/cryptography/home" element={<CryptoHome />} />
+        <Route path="/cryptography/symmetric" element={<Symmetric />} />
+        <Route path="/cryptography/asymmetric" element={<Asymmetric />} />
+        <Route path="/cryptography/hashing" element={<Hashing />} />
+        <Route path="/cryptography/digital-signatures" element={<DigitalSignatures />} />
 
-            <Route path="/cryptography/home" element={<CryptoHome />} />
-            <Route path="/cryptography/symmetric" element={<Symmetric />} />
-            <Route path="/cryptography/asymmetric" element={<Asymmetric />} />
-            <Route path="/cryptography/hashing" element={<Hashing />} />
-            <Route path="/cryptography/digital-signatures" element={<DigitalSignatures />} />
+        <Route path="/blockchain/home" element={<BlockchainHome />} />
+        <Route path="/blockchain/how-it-works" element={<HowItWorks />} />
+        <Route path="/blockchain/smart-contracts" element={<SmartContracts />} />
+        <Route path="/blockchain/security" element={<Security />} />
 
-            <Route path="/blockchain/home" element={<BlockchainHome />} />
-            <Route path="/blockchain/how-it-works" element={<HowItWorks />} />
-            <Route path="/blockchain/smart-contracts" element={<SmartContracts />} />
-            <Route path="/blockchain/security" element={<Security />} />
+        <Route path="/cybersecurity/home" element={<CyberHome />} />
+        <Route path="/cybersecurity/concepts" element={<Concepts />} />
+        <Route path="/cybersecurity/attacks" element={<Attacks />} />
+        <Route path="/cybersecurity/vulnerabilities" element={<Vulnerabilities />} />
 
-            <Route path="/cybersecurity/home" element={<CyberHome />} />
-            <Route path="/cybersecurity/concepts" element={<Concepts />} />
-            <Route path="/cybersecurity/attacks" element={<Attacks />} />
-            <Route path="/cybersecurity/vulnerabilities" element={<Vulnerabilities />} />
-
-          </Route>
-        </Routes>
-      </AnimatePresence>
-      <Analytics />
-    </>
+        <Route path="/reports" element={<ReportsHome />} />
+        <Route path="/reports/:id" element={<ReportDetail />} />
+      </Route>
+    </Routes>
   );
 }
 
-/* ===============================
-   APP ROOT
-================================ */
-export default function App() {
-  return (
-    <VisitorProvider>
-      <div className="min-h-screen bg-bg text-white font-sans">
-        <AnimatedRoutes />
-      </div>
-    </VisitorProvider>
-  );
-}
+export default App;

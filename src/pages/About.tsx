@@ -84,7 +84,7 @@ const skillGroups = [
 ];
 
 const certifications = [
-  { name: "Penetration Testing Specialization", issuer: "ENCRYTECL", icon: "🎯", color: "#06b6d4", rgb: "6,182,212",   done: false },
+  { name: "Penetration Testing Specialization", issuer: "ENCRYTECL", icon: "🎯", color: "#06b6d4", rgb: "6,182,212",   done: true },
   { name: "CEH (Certified Ethical Hacker)",     issuer: "EC-Council", icon: "🛡️", color: "#8b5cf6", rgb: "139,92,246", done: false },
   { name: "Cybersecurity Fundamentals",          issuer: "ENCRYTECL", icon: "🔐", color: "#10b981", rgb: "16,185,129", done: true  },
 ];

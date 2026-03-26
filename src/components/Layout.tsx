@@ -1,38 +1,32 @@
-import { Outlet } from "react-router-dom";
+import { Outlet, useLocation } from "react-router-dom";
+import { AnimatePresence } from "framer-motion";
 import PageTransition from "./PageTransition";
 import Navbar from "./Navbar";
 import Footer from "./Footer";
 import MatrixRain from "./MatrixRain";
 
 export default function Layout() {
-  return (
-    <div className="relative min-h-screen bg-black text-white overflow-x-hidden">
+  const location = useLocation();
 
-      {/* ===============================
-          MATRIX RAIN — fixed behind everything
-          zIndex: 0, pointerEvents: none (set inside MatrixRain)
-      =============================== */}
+  return (
+    <div className="relative min-h-screen bg-[#020617] text-white flex flex-col overflow-x-hidden">
+
+      {/* Matrix Rain — fixed behind everything */}
       <MatrixRain />
 
-      {/* ===============================
-          NAVBAR — z-50 stays on top
-      =============================== */}
+      {/* Navbar — always on top */}
       <Navbar />
 
-      {/* ===============================
-          MAIN CONTENT — z-10 above matrix
-      =============================== */}
-      <main className="relative z-10">
-        <PageTransition>
-          <div className="page-container">
+      {/* Main content — grows to fill space, pushes footer down */}
+      <main className="relative z-10 flex-1">
+        <AnimatePresence mode="wait" initial={false}>
+          <PageTransition key={location.pathname}>
             <Outlet />
-          </div>
-        </PageTransition>
+          </PageTransition>
+        </AnimatePresence>
       </main>
 
-      {/* ===============================
-          FOOTER — z-10 above matrix
-      =============================== */}
+      {/* Footer — always at bottom */}
       <div className="relative z-10">
         <Footer />
       </div>
