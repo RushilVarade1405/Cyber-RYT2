@@ -161,8 +161,8 @@ export default function Footer() {
 
               <div className="space-y-2">
                 {[
-                  { handle: "RYTNIX",   href: "https://github.com/RushilVarade1405", role: "founder & dev" },
-                  { handle: "CRUSVEDER",href: "https://github.com/CRUSVEDER",        role: "contributor"  },
+                  { handle: "RYTNIX",   href: "https://github.com/RushilVarade1405", role: "Founder & Developer" },
+                  { handle: "CRUSVEDER",href: "https://github.com/CRUSVEDER",        role: "Contributor"  },
                 ].map(({ handle, href, role }) => (
                   <a
                     key={handle}
