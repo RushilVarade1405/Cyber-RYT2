@@ -167,21 +167,6 @@ export const blockchainData: BlockchainTopic[] = [
         description: "EVM-compatible blockchain offering fast transactions and low fees for DeFi applications",
         link: "https://www.bnbchain.org/en/bnb-smart-chain",
       },
-      {
-        name: "Cardano",
-        description: "Research-driven blockchain with peer-reviewed development and focus on sustainability",
-        link: "https://cardano.org",
-      },
-      {
-        name: "Polkadot",
-        description: "Multi-chain protocol enabling interoperability between different blockchains",
-        link: "https://polkadot.network",
-      },
-      {
-        name: "Avalanche",
-        description: "High-throughput blockchain platform with sub-second finality and customizable subnets",
-        link: "https://www.avax.network",
-      },
     ],
   },
 

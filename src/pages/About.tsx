@@ -560,7 +560,7 @@ function PortfolioCard() {
                   AVAILABLE
                 </span>
               </div>
-              <p className="text-cyan-400 text-sm truncate" style={{ fontFamily: "'Share Tech Mono', monospace" }}>Cybersecurity · SOC Analyst · VAPT</p>
+              <p className="text-cyan-400 text-sm truncate" style={{ fontFamily: "'Share Tech Mono', monospace" }}>Cybersecurity · VAPT</p>
               <div className="flex flex-wrap gap-3 mt-0.5 text-xs text-gray-500">
                 <span className="flex items-center gap-1"><MapPin size={9} />India</span>
                 <span className="flex items-center gap-1"><GraduationCap size={9} />B.E. CS · 2025</span>
