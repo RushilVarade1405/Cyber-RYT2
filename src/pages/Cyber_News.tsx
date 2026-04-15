@@ -1,84 +1,49 @@
-// src/pages/Cyber_News.tsx
-// ─────────────────────────────────────────────────────────────────────────────
-// Cybersecurity News Feed — Redesigned to match Home.tsx aesthetic
-// Fonts: Orbitron, Share Tech Mono, Rajdhani (same as Home)
-// Theme: Dark cyberpunk, neon cyan/blue/purple, matrix-style effects
-// RSS: Parallel proxy racing with validation — no sequential waiting
-// ─────────────────────────────────────────────────────────────────────────────
+/**
+ * CyberNews.tsx — Single-file Cyber Threat Intel Feed
+ *
+ * FIX SUMMARY (2025-04):
+ *  1. All proxies race in TRUE PARALLEL (Promise.any) — no sequential waterfall
+ *  2. Staggered proxy start (0/200/400ms) to avoid hammering one proxy
+ *  3. XML validity check on EVERY response — rejects HTML error pages
+ *  4. Proxy failure memory in sessionStorage — skip bad proxies for 5 min
+ *  5. Per-proxy 6s timeout (not 10s), hard 14s wall-clock budget per source
+ *  6. All alt-URLs per source also race in parallel
+ *  7. Cache in sessionStorage (15 min TTL) — survives page navigation
+ *  8. Static fallback shown ONLY when every single source fails
+ *  9. Single file — no split between News.ts / rssService.ts / CyberNews.tsx
+ */
 
-import { motion, type Variants, AnimatePresence } from "framer-motion";
-import { useState, useEffect, useMemo, useCallback, useRef, memo } from "react";
+import { memo, useEffect, useRef, useState, useCallback } from "react";
+import { motion, type Variants } from "framer-motion";
 import {
-  Rss, Shield, AlertTriangle, Bug, RefreshCw, ExternalLink,
-  Clock, Newspaper, Globe, BookOpen, AlertCircle, Terminal,
-  Flame, CalendarDays, TrendingUp, Wifi, WifiOff, ChevronRight,
-  Eye, Loader2, X, Filter, ChevronDown, RotateCcw, Radio, Activity,
-  Zap, ArrowUpRight,
+  RefreshCw, ExternalLink, Shield, AlertTriangle,
+  Bug, Zap, BookOpen, Radio, Clock, TrendingUp, ChevronRight,
 } from "lucide-react";
 
-/* ─────────────────────────────────────────────────────────────
-   GLOBAL STYLES — matching Home.tsx exactly
-───────────────────────────────────────────────────────────── */
+/* ─── GLOBAL CSS ─────────────────────────────────────────────────────────── */
 const GLOBAL_CSS = `
   @import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Rajdhani:wght@300;400;500;600;700&family=Orbitron:wght@400;500;600;700;800;900&display=swap');
-
-  :root {
-    --cyan: #00ffe7;
-    --cyan-dim: #00ffe740;
-    --blue: #3b82f6;
-    --purple: #a855f7;
-    --red: #ff2d55;
-    --bg: #020509;
-  }
-
-  @keyframes scanline {
-    0%   { transform: translateY(-100vh); }
-    100% { transform: translateY(100vh); }
-  }
-  @keyframes flicker {
-    0%,100% { opacity: 1; }
-    92% { opacity: 1; }
-    93% { opacity: 0.4; }
-    94% { opacity: 1; }
-    96% { opacity: 0.6; }
-    97% { opacity: 1; }
-  }
-  @keyframes neon-pulse {
-    0%,100% { text-shadow: 0 0 4px var(--cyan), 0 0 10px var(--cyan), 0 0 20px var(--cyan-dim); }
-    50%      { text-shadow: 0 0 8px var(--cyan), 0 0 20px var(--cyan), 0 0 40px var(--cyan-dim), 0 0 60px var(--cyan-dim); }
-  }
-  @keyframes border-spin {
-    from { transform: rotate(0deg); }
-    to   { transform: rotate(360deg); }
-  }
-  @keyframes corner-flash {
-    0%,90%,100% { opacity: 0; }
-    92%,98%     { opacity: 1; }
-  }
-  @keyframes marquee {
-    0%   { transform: translateX(0); }
-    100% { transform: translateX(-50%); }
-  }
-
-  .neon-text    { animation: neon-pulse 3s ease-in-out infinite; }
-  .flicker      { animation: flicker 8s infinite; }
-  .scan-animate { animation: scanline 8s linear infinite; }
-  .marquee-t    { display: flex; width: max-content; animation: marquee 44s linear infinite; will-change: transform; }
-  @media(max-width:480px){ .marquee-t { animation-duration: 28s; } }
-
-  .cyber-scrollbar::-webkit-scrollbar { width: 4px; }
-  .cyber-scrollbar::-webkit-scrollbar-track { background: transparent; }
-  .cyber-scrollbar::-webkit-scrollbar-thumb { background: rgba(0,255,231,0.25); border-radius: 4px; }
-  .cyber-scrollbar { scrollbar-width: thin; scrollbar-color: rgba(0,255,231,0.25) transparent; }
-
-  .fluid-hero { font-size: clamp(1.75rem, 5.5vw, 3.75rem); }
+  :root{--cyan:#00ffe7;--cyan-dim:#00ffe740;--blue:#3b82f6;--purple:#a855f7;--red:#ff2d55;--bg:#020509}
+  @keyframes scanline{0%{transform:translateY(-100vh)}100%{transform:translateY(100vh)}}
+  @keyframes neon-pulse{0%,100%{text-shadow:0 0 4px var(--cyan),0 0 10px var(--cyan),0 0 20px var(--cyan-dim)}50%{text-shadow:0 0 8px var(--cyan),0 0 20px var(--cyan),0 0 40px var(--cyan-dim),0 0 60px var(--cyan-dim)}}
+  @keyframes line-extend{from{width:0}to{width:100%}}
+  @keyframes corner-flash{0%,90%,100%{opacity:0}92%,98%{opacity:1}}
+  @keyframes ticker{0%{transform:translateX(100%)}100%{transform:translateX(-100%)}}
+  @keyframes flicker{0%,100%{opacity:1}92%{opacity:1}93%{opacity:.4}94%{opacity:1}96%{opacity:.6}97%{opacity:1}}
+  @keyframes fadeInUp{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
+  @keyframes spin{to{transform:rotate(360deg)}}
+  .neon-text{animation:neon-pulse 3s ease-in-out infinite}
+  .scan-animate{animation:scanline 8s linear infinite}
+  .spin-anim{animation:spin 1s linear infinite}
+  ::-webkit-scrollbar{width:4px;height:4px}
+  ::-webkit-scrollbar-track{background:rgba(0,0,0,.4)}
+  ::-webkit-scrollbar-thumb{background:rgba(0,255,231,.2);border-radius:2px}
 `;
 
-/* ─────────────────────────────────────────────────────────────
-   TYPES
-───────────────────────────────────────────────────────────── */
-export type NewsCategory = "Breach" | "Vulnerability" | "Malware" | "Advisory" | "Research";
-export type NewsSeverity = "Critical" | "High" | "Medium" | "Low";
+/* ─── TYPES ──────────────────────────────────────────────────────────────── */
+export type NewsCategory  = "Breach" | "Vulnerability" | "Malware" | "Advisory" | "Research";
+export type NewsSeverity  = "Critical" | "High" | "Medium" | "Low";
+type ActiveFilter         = "All" | NewsCategory;
 
 export interface CyberNewsArticle {
   id: string;
@@ -88,1252 +53,802 @@ export interface CyberNewsArticle {
   source: string;
   publishedAt: string;
   category: NewsCategory;
-  tags: string[];
   severity: NewsSeverity;
+  tags: string[];
   isLive?: boolean;
 }
 
-export interface RSSSource {
+/* ─── RSS SOURCES ────────────────────────────────────────────────────────── */
+interface RSSSource {
   name: string;
   url: string;
   altUrls?: string[];
-  color: string;
-  dot: string;
   region: "global" | "india";
-  enabled: boolean;
   defaultCategory?: NewsCategory;
+  priority: number;
 }
 
-export interface FetchResult {
-  articles: CyberNewsArticle[];
-  succeededFeeds: string[];
-  failedFeeds: string[];
-  fromCache: boolean;
-  isLive: boolean;
-}
-
-/* ─────────────────────────────────────────────────────────────
-   RSS SOURCES
-───────────────────────────────────────────────────────────── */
-export const RSS_SOURCES: RSSSource[] = [
-  { name: "The Hacker News", url: "https://feeds.feedburner.com/TheHackersNews", color: "text-red-400", dot: "bg-red-400", region: "global", enabled: true },
-  { name: "SecurityWeek", url: "https://feeds.feedburner.com/Securityweek", color: "text-orange-400", dot: "bg-orange-400", region: "global", enabled: true },
-  { name: "Help Net Security", url: "https://feeds2.feedburner.com/HelpNetSecurity", color: "text-yellow-400", dot: "bg-yellow-400", region: "global", enabled: true },
-  { name: "Krebs on Security", url: "https://krebsonsecurity.com/feed/", color: "text-purple-400", dot: "bg-purple-400", region: "global", enabled: true },
-  { name: "Rapid7 Blog", url: "https://blog.rapid7.com/rss/", altUrls: ["https://www.rapid7.com/blog/rss/"], color: "text-blue-400", dot: "bg-blue-400", region: "global", enabled: true, defaultCategory: "Vulnerability" },
-  { name: "CVEFeed", url: "https://cvefeed.io/rssfeed/severity/high.xml", altUrls: ["https://cvefeed.io/rssfeed/latest.xml"], color: "text-red-300", dot: "bg-red-300", region: "global", enabled: true, defaultCategory: "Vulnerability" },
-  { name: "Packet Storm", url: "https://feeds.feedburner.com/packetstormsecurity/IIOJ", altUrls: ["https://packetstormsecurity.com/feeds/news.xml"], color: "text-rose-400", dot: "bg-rose-400", region: "global", enabled: true, defaultCategory: "Vulnerability" },
-  { name: "CERT-In", url: "https://www.cert-in.org.in/RSS.jsp", altUrls: ["https://cert-in.org.in/RSS.jsp"], color: "text-green-400", dot: "bg-green-400", region: "india", enabled: true, defaultCategory: "Advisory" },
-  { name: "CyberPeace", url: "https://www.cyberpeace.org/feed/", altUrls: ["https://cyberpeace.org/?feed=rss2"], color: "text-teal-400", dot: "bg-teal-400", region: "india", enabled: true },
-  { name: "DSCI", url: "https://www.dsci.in/feed/", altUrls: ["https://dsci.in/?feed=rss2"], color: "text-cyan-400", dot: "bg-cyan-400", region: "india", enabled: true },
-  { name: "Crus.live", url: "https://crus.live/rss.xml", color: "text-indigo-400", dot: "bg-indigo-400", region: "india", enabled: true },
+const RSS_SOURCES: RSSSource[] = [
+  // ── Priority 10: Core global sources ──
+  { name: "The Hacker News",    url: "https://feeds.feedburner.com/TheHackersNews",          region: "global", priority: 10 },
+  { name: "BleepingComputer",   url: "https://www.bleepingcomputer.com/feed/",                region: "global", priority: 10 },
+  { name: "Krebs on Security",  url: "https://krebsonsecurity.com/feed/",                     region: "global", priority: 10 },
+  { name: "Dark Reading",       url: "https://www.darkreading.com/rss.xml",                   region: "global", priority: 10 },
+  { name: "SecurityWeek",       url: "https://feeds.feedburner.com/Securityweek",
+    altUrls: ["https://www.securityweek.com/feed/"],                                           region: "global", priority: 10 },
+  // ── Priority 9: Threat intel + gov ──
+  { name: "CISA Alerts",        url: "https://www.cisa.gov/news.xml",                         region: "global", priority: 9,  defaultCategory: "Advisory" },
+  { name: "Unit 42",            url: "https://unit42.paloaltonetworks.com/feed/",              region: "global", priority: 9 },
+  { name: "Talos Intelligence", url: "https://blog.talosintelligence.com/rss/",               region: "global", priority: 9 },
+  // ── Priority 8: Coverage ──
+  { name: "Help Net Security",  url: "https://feeds2.feedburner.com/HelpNetSecurity",
+    altUrls: ["https://www.helpnetsecurity.com/feed/"],                                        region: "global", priority: 8 },
+  { name: "Cybersecurity News", url: "https://cybersecuritynews.com/feed/",                   region: "global", priority: 8 },
+  { name: "The Record",         url: "https://therecord.media/feed",                          region: "global", priority: 8 },
+  { name: "Malwarebytes Labs",  url: "https://www.malwarebytes.com/blog/feed",                region: "global", priority: 8 },
+  { name: "ESET WeLiveSecurity",url: "https://www.welivesecurity.com/feed/",                  region: "global", priority: 8 },
+  { name: "Securelist",         url: "https://securelist.com/feed/",                          region: "global", priority: 8 },
+  // ── Priority 7: Research ──
+  { name: "Rapid7 Blog",        url: "https://blog.rapid7.com/rss/",
+    altUrls: ["https://www.rapid7.com/blog/rss/"],                                             region: "global", priority: 7, defaultCategory: "Vulnerability" },
+  { name: "CVEFeed",            url: "https://cvefeed.io/rssfeed/severity/high.xml",
+    altUrls: ["https://cvefeed.io/rssfeed/latest.xml"],                                        region: "global", priority: 7, defaultCategory: "Vulnerability" },
+  { name: "Packet Storm",       url: "https://feeds.feedburner.com/packetstormsecurity/IIOJ",
+    altUrls: ["https://packetstormsecurity.com/feeds/news.xml"],                               region: "global", priority: 7, defaultCategory: "Vulnerability" },
+  // ── India-specific ──
+  { name: "CERT-In",            url: "https://www.cert-in.org.in/RSS.jsp",
+    altUrls: ["https://www.cert-in.org.in/rss.jsp", "https://cert-in.org.in/RSS.jsp"],        region: "india",  priority: 9, defaultCategory: "Advisory" },
+  { name: "CyberPeace",         url: "https://www.cyberpeace.org/feed/",
+    altUrls: ["https://cyberpeace.org/feed/", "https://www.cyberpeace.org/?feed=rss2"],        region: "india",  priority: 7 },
+  { name: "DSCI",               url: "https://www.dsci.in/feed/",
+    altUrls: ["https://dsci.in/feed/", "https://www.dsci.in/?feed=rss2"],                      region: "india",  priority: 7 },
 ];
 
-/* ─────────────────────────────────────────────────────────────
-   CONFIG MAPS
-───────────────────────────────────────────────────────────── */
-const categoryConfig: Record<NewsCategory, { icon: any; color: string; bg: string; border: string; label: string; accent: string }> = {
-  Breach:        { icon: AlertTriangle, color: "text-orange-400", bg: "bg-orange-500/10", border: "border-orange-400/40", label: "Data Breach",    accent: "#f97316" },
-  Vulnerability: { icon: Bug,           color: "text-red-400",    bg: "bg-red-500/10",    border: "border-red-400/40",    label: "Vulnerability", accent: "#ef4444" },
-  Malware:       { icon: Flame,         color: "text-rose-400",   bg: "bg-rose-500/10",   border: "border-rose-400/40",   label: "Malware",       accent: "#fb7185" },
-  Advisory:      { icon: Shield,        color: "text-yellow-400", bg: "bg-yellow-500/10", border: "border-yellow-400/40", label: "Advisory",      accent: "#eab308" },
-  Research:      { icon: BookOpen,      color: "text-cyan-400",   bg: "bg-cyan-500/10",   border: "border-cyan-400/40",   label: "Research",      accent: "#00ffe7" },
-};
+/* ─── PROXY RACE ENGINE ──────────────────────────────────────────────────── */
+const PROXY_TIMEOUT_MS  = 6000;
+const SOURCE_BUDGET_MS  = 14000;
+const STAGGER_MS        = 200;
+const PROXY_FAIL_TTL    = 5 * 60 * 1000;  // suppress failed proxy for 5 min
+const PERF_KEY          = "cn_proxy_perf_v3";
 
-const severityConfig: Record<NewsSeverity, { color: string; bg: string; border: string; dot: string; bar: string; accent: string }> = {
-  Critical: { color: "text-red-300",    bg: "bg-red-500/15",    border: "border-red-400/50",    dot: "bg-red-400",    bar: "from-red-500 via-rose-400 to-red-500",        accent: "#ef4444" },
-  High:     { color: "text-orange-300", bg: "bg-orange-500/15", border: "border-orange-400/50", dot: "bg-orange-400", bar: "from-orange-500 via-amber-400 to-orange-500", accent: "#f97316" },
-  Medium:   { color: "text-yellow-300", bg: "bg-yellow-500/15", border: "border-yellow-400/50", dot: "bg-yellow-400", bar: "from-yellow-500 via-amber-400 to-yellow-500", accent: "#eab308" },
-  Low:      { color: "text-green-300",  bg: "bg-green-500/15",  border: "border-green-400/50",  dot: "bg-green-400",  bar: "from-cyan-500 via-blue-400 to-cyan-500",       accent: "#22c55e" },
-};
-
-const DAILY_FEED_SIZE = 9;
-
-/* ─────────────────────────────────────────────────────────────
-   RSS FETCH ENGINE — parallel proxy racing
-───────────────────────────────────────────────────────────── */
-interface ProxyDef { id: string; build: (u: string) => string; extract: (r: Response) => Promise<string>; }
+interface ProxyDef { id: string; build: (u: string) => string }
 
 const PROXIES: ProxyDef[] = [
-  { id: "allorigins-get",  build: (u) => `https://api.allorigins.win/get?url=${encodeURIComponent(u)}&t=${Date.now()}`, extract: async (r) => { const j = await r.json(); return j?.contents ?? ""; } },
-  { id: "allorigins-raw",  build: (u) => `https://api.allorigins.win/raw?url=${encodeURIComponent(u)}&t=${Date.now()}`, extract: (r) => r.text() },
-  { id: "corsproxy",       build: (u) => `https://corsproxy.io/?${encodeURIComponent(u)}`, extract: (r) => r.text() },
-  { id: "codetabs",        build: (u) => `https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(u)}`, extract: (r) => r.text() },
-  { id: "thingproxy",      build: (u) => `https://thingproxy.freeboard.io/fetch/${u}`, extract: (r) => r.text() },
+  { id: "allorigins-get",  build: u => `https://api.allorigins.win/get?url=${encodeURIComponent(u)}&t=${Date.now()}` },
+  { id: "allorigins-raw",  build: u => `https://api.allorigins.win/raw?url=${encodeURIComponent(u)}&t=${Date.now()}` },
+  { id: "corsproxy",       build: u => `https://corsproxy.io/?${encodeURIComponent(u)}` },
+  { id: "codetabs",        build: u => `https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(u)}` },
+  { id: "thingproxy",      build: u => `https://thingproxy.freeboard.io/fetch/${u}` },
 ];
 
-function isValidRSS(text: string): boolean {
-  if (!text || text.length < 100) return false;
+interface PerfEntry { avgMs: number; failUntil: number }
+
+function loadPerf(): Record<string, PerfEntry> {
+  try { return JSON.parse(sessionStorage.getItem(PERF_KEY) ?? "{}"); } catch { return {}; }
+}
+function savePerf(p: Record<string, PerfEntry>) {
+  try { sessionStorage.setItem(PERF_KEY, JSON.stringify(p)); } catch {}
+}
+function markWin(id: string, ms: number) {
+  const p = loadPerf(); const e = p[id] ?? { avgMs: ms, failUntil: 0 };
+  p[id] = { avgMs: Math.round(e.avgMs * 0.6 + ms * 0.4), failUntil: 0 }; savePerf(p);
+}
+function markFail(id: string) {
+  const p = loadPerf(); p[id] = { avgMs: (p[id]?.avgMs ?? 9999), failUntil: Date.now() + PROXY_FAIL_TTL }; savePerf(p);
+}
+function sortedProxies(): ProxyDef[] {
+  const perf = loadPerf(); const now = Date.now();
+  return [...PROXIES].sort((a, b) => {
+    const pa = perf[a.id], pb = perf[b.id];
+    const af = (pa?.failUntil ?? 0) > now, bf = (pb?.failUntil ?? 0) > now;
+    if (af && !bf) return 1; if (!af && bf) return -1;
+    return (pa?.avgMs ?? 5000) - (pb?.avgMs ?? 5000);
+  });
+}
+
+function isValidXML(text: string): boolean {
+  if (!text || text.length < 80) return false;
   const t = text.trimStart();
-  return (t.startsWith("<?xml") || t.startsWith("<rss") || t.startsWith("<feed")) &&
-    (t.includes("<item>") || t.includes("<item ") || t.includes("<entry>") || t.includes("<entry "));
+  return (t.startsWith("<?xml") || t.startsWith("<rss") || t.startsWith("<feed"))
+    && (t.includes("<item") || t.includes("<entry"));
 }
 
-async function fetchWithTimeout(url: string, ms = 8000): Promise<Response> {
-  const ctrl = new AbortController();
-  const timer = setTimeout(() => ctrl.abort(), ms);
-  try {
-    return await fetch(url, { signal: ctrl.signal, headers: { Accept: "application/rss+xml, application/xml, text/xml, */*" } });
-  } finally { clearTimeout(timer); }
-}
+/** True parallel proxy race with staggered starts */
+async function proxyRace(targetUrl: string): Promise<string> {
+  const proxies = sortedProxies();
+  const cancel = new AbortController();
 
-async function fetchSourceXML(source: RSSSource): Promise<string | null> {
-  const urls = [source.url, ...(source.altUrls ?? [])];
-
-  // Try direct fetch first
-  for (const url of urls) {
-    try {
-      const r = await fetchWithTimeout(url, 5000);
-      if (r.ok) { const t = await r.text(); if (isValidRSS(t)) return t; }
-    } catch { /* CORS blocked — try proxies */ }
-  }
-
-  // Race all proxies × all URLs in parallel
-  const allRaces = urls.flatMap((url) =>
-    PROXIES.map((proxy, idx) =>
-      new Promise<string>((resolve, reject) => {
-        setTimeout(async () => {
-          try {
-            const r = await fetchWithTimeout(proxy.build(url), 8000);
-            if (!r.ok) { reject(new Error(`HTTP ${r.status}`)); return; }
-            const text = await proxy.extract(r);
-            if (isValidRSS(text)) resolve(text);
-            else reject(new Error("invalid RSS"));
-          } catch (e) { reject(e); }
-        }, idx * 200); // stagger 200ms
-      })
-    )
+  const races = proxies.map((proxy, idx) =>
+    new Promise<string>((resolve, reject) => {
+      const stagger = setTimeout(async () => {
+        if (cancel.signal.aborted) { reject(new DOMException("aborted", "AbortError")); return; }
+        const ctrl = new AbortController();
+        cancel.signal.addEventListener("abort", () => ctrl.abort(), { once: true });
+        const hard = setTimeout(() => { ctrl.abort(); markFail(proxy.id); reject(new Error(`timeout:${proxy.id}`)); }, PROXY_TIMEOUT_MS);
+        const t0 = Date.now();
+        try {
+          const proxyUrl = proxy.build(targetUrl);
+          const res = await fetch(proxyUrl, {
+            signal: ctrl.signal,
+            headers: { Accept: "application/rss+xml, application/xml, application/atom+xml, text/xml, */*" },
+          });
+          clearTimeout(hard);
+          if (!res.ok) { markFail(proxy.id); reject(new Error(`HTTP ${res.status}`)); return; }
+          // allorigins /get returns JSON envelope — unwrap it
+          let text: string;
+          if (proxy.id === "allorigins-get") {
+            const json = await res.json(); text = json?.contents ?? "";
+          } else {
+            text = await res.text();
+          }
+          if (isValidXML(text)) { markWin(proxy.id, Date.now() - t0); cancel.abort(); resolve(text); }
+          else { markFail(proxy.id); reject(new Error(`bad XML from ${proxy.id}`)); }
+        } catch (e: any) {
+          clearTimeout(hard);
+          if (e?.name !== "AbortError") markFail(proxy.id);
+          reject(e);
+        }
+      }, idx * STAGGER_MS);
+      cancel.signal.addEventListener("abort", () => clearTimeout(stagger), { once: true });
+    })
   );
 
-  try { return await Promise.any(allRaces); }
-  catch { return null; }
+  try { return await Promise.any(races); }
+  catch { throw new Error(`All proxies failed: ${targetUrl}`); }
 }
 
-/* ─────────────────────────────────────────────────────────────
-   XML PARSER
-───────────────────────────────────────────────────────────── */
-function stripHtml(html: string): string {
+/** Fetch one source — all alt-URLs also race in parallel, hard budget */
+async function fetchSourceXML(source: RSSSource): Promise<string> {
+  const urls = [source.url, ...(source.altUrls ?? [])];
+  const urlRaces = urls.map(u => proxyRace(u));
+  const budget   = new Promise<never>((_, rej) => setTimeout(() => rej(new Error(`budget:${source.name}`)), SOURCE_BUDGET_MS));
+  return Promise.race([Promise.any(urlRaces), budget]);
+}
+
+/* ─── XML PARSER ─────────────────────────────────────────────────────────── */
+function stripHTML(html: string): string {
   return html
     .replace(/<!\[CDATA\[([\s\S]*?)\]\]>/g, "$1")
     .replace(/<[^>]+>/g, " ")
     .replace(/&amp;/g, "&").replace(/&lt;/g, "<").replace(/&gt;/g, ">")
-    .replace(/&quot;/g, '"').replace(/&nbsp;/g, " ").replace(/&#\d+;/g, " ")
+    .replace(/&quot;/g, '"').replace(/&#039;|&apos;/g, "'")
+    .replace(/&nbsp;/g, " ").replace(/&#\d+;/g, " ").replace(/&[a-z]+;/g, " ")
     .replace(/\s{2,}/g, " ").trim();
 }
 
 function xmlText(el: Element, ...tags: string[]): string {
   for (const tag of tags) {
-    const found = el.querySelector(tag) ?? el.getElementsByTagName(tag)[0];
-    if (found) return (found.textContent ?? "").trim();
+    const f = el.querySelector(tag) ?? el.getElementsByTagName(tag)[0];
+    if (f) return (f.textContent ?? "").trim();
   }
   return "";
 }
 
-interface RawItem { title: string; link: string; description: string; pubDate: string; }
+interface RawItem { title: string; link: string; description: string; pubDate: string }
 
-function parseRSS(xml: string): RawItem[] {
-  try {
-    const cleaned = xml.replace(/^\uFEFF/, "");
-    const parser = new DOMParser();
-    const doc = parser.parseFromString(cleaned, "application/xml");
-    const rssItems = Array.from(doc.querySelectorAll("item"));
-    const atomItems = Array.from(doc.querySelectorAll("entry"));
-    const isAtom = rssItems.length === 0 && atomItems.length > 0;
-    const nodes = isAtom ? atomItems : rssItems;
-    if (nodes.length === 0) return [];
-    return nodes.slice(0, 20).map((node): RawItem | null => {
-      let title = "", link = "", description = "", pubDate = "";
-      if (isAtom) {
-        title = stripHtml(xmlText(node, "title"));
-        const linkEl = node.querySelector("link[rel='alternate']") ?? node.querySelector("link");
-        link = linkEl?.getAttribute("href") ?? xmlText(node, "id");
-        description = stripHtml(xmlText(node, "summary", "content"));
-        pubDate = xmlText(node, "published", "updated");
-      } else {
-        title = stripHtml(xmlText(node, "title"));
-        const linkEl = node.querySelector("link") ?? node.getElementsByTagName("link")[0];
-        link = linkEl?.textContent?.trim() || linkEl?.getAttribute("href") || xmlText(node, "guid") || "";
-        description = stripHtml(xmlText(node, "description", "content:encoded", "summary"));
-        pubDate = xmlText(node, "pubDate", "dc:date", "published", "updated");
-      }
-      if (!title || !link?.startsWith("http")) return null;
-      return { title, link, description, pubDate };
-    }).filter((x): x is RawItem => x !== null);
-  } catch { return []; }
+function parseXML(xml: string): RawItem[] {
+  const clean = xml.replace(/^\uFEFF/, "").replace(/<\?xml[^?]*\?>/i, '<?xml version="1.0" encoding="UTF-8"?>');
+  const doc   = new DOMParser().parseFromString(clean, "application/xml");
+  if (doc.querySelector("parsererror")) {
+    // Try text/html as fallback
+    const doc2 = new DOMParser().parseFromString(clean, "text/html");
+    return parseNodes(doc2);
+  }
+  return parseNodes(doc);
 }
 
-/* ─────────────────────────────────────────────────────────────
-   CLASSIFIER
-───────────────────────────────────────────────────────────── */
+function parseNodes(doc: Document): RawItem[] {
+  const rss  = Array.from(doc.querySelectorAll("item"));
+  const atom = Array.from(doc.querySelectorAll("entry"));
+  const isAtom = rss.length === 0 && atom.length > 0;
+  const nodes = isAtom ? atom : rss;
+  if (nodes.length === 0) return [];
+
+  return nodes.map(node => {
+    let title = "", link = "", description = "", pubDate = "";
+    if (isAtom) {
+      title       = stripHTML(xmlText(node, "title"));
+      const lEl   = node.querySelector("link[rel='alternate']") ?? node.querySelector("link");
+      link        = lEl?.getAttribute("href") ?? xmlText(node, "id");
+      description = stripHTML(xmlText(node, "summary", "content"));
+      pubDate     = xmlText(node, "published", "updated");
+    } else {
+      title       = stripHTML(xmlText(node, "title"));
+      const lEl   = node.querySelector("link") ?? node.getElementsByTagName("link")[0];
+      link        = lEl?.textContent?.trim() || lEl?.nextSibling?.textContent?.trim() || lEl?.getAttribute("href") || xmlText(node, "guid") || "";
+      description = stripHTML(xmlText(node, "description", "content:encoded", "summary", "content"));
+      pubDate     = xmlText(node, "pubDate", "dc:date", "published", "updated", "date");
+    }
+    if (!title || !link?.startsWith("http")) return null;
+    return { title, link, description, pubDate } as RawItem;
+  }).filter(Boolean) as RawItem[];
+}
+
+/* ─── CLASSIFIER ─────────────────────────────────────────────────────────── */
 const CAT_KW: Record<NewsCategory, string[]> = {
-  Breach: ["breach", "leak", "exposed", "stolen", "compromised", "hacked", "data theft", "exfiltrat", "dump", "unauthorized access"],
-  Vulnerability: ["cve-", "vulnerability", "zero-day", "zero day", "exploit", "patch", "rce", "authentication bypass", "sql injection", "buffer overflow", "privilege escalation", "flaw"],
-  Malware: ["ransomware", "malware", "trojan", "botnet", "backdoor", "spyware", "rootkit", "worm", "virus", "infostealer", "cryptominer", "lockbit", "stealer", "rat ", "loader", "dropper"],
-  Advisory: ["advisory", "cisa", "cert-in", "cert ", "nsa", "fbi", "warning", "alert", "directive", "patch tuesday", "guidance", "mitigation", "bulletin", "ncsc", "notice"],
-  Research: ["research", "discovered", "analysis", "report", "study", "technique", "cryptograph", "academic", "whitepaper", "threat intelligence", "findings", "investigation"],
+  Breach:        ["breach","leak","exposed","stolen","compromised","hacked","exfiltrat","data theft","dump","unauthorized access","data leak"],
+  Vulnerability: ["cve-","vulnerability","zero-day","zero day","exploit","patch","rce","remote code execution","authentication bypass","sql injection","buffer overflow","privilege escalation","cvss","flaw","unpatched"],
+  Malware:       ["ransomware","malware","trojan","botnet","backdoor","spyware","rootkit","worm","virus","infostealer","cryptominer","lockbit","alphv","cl0p","stealer","rat ","loader","dropper","keylogger"],
+  Advisory:      ["advisory","cisa","cert-in","cert ","nsa","fbi","warning","alert","directive","patch tuesday","guidance","mitigation","security notice","bulletin","ncsc","nciipc","notice","cyber alert"],
+  Research:      ["research","discovered","analysis","report","study","technique","post-quantum","cryptograph","whitepaper","threat intelligence","threat intel","findings","investigation"],
 };
 const SEV_KW: Record<NewsSeverity, string[]> = {
-  Critical: ["critical", "zero-day", "actively exploit", "cvss 9", "cvss 10", "emergency", "nation-state", "apt", "supply chain attack", "mass exploit", "wormable"],
-  High: ["high severity", "remote code execution", "authentication bypass", "data breach", "millions of", "widespread", "unauthenticated", "high risk"],
-  Medium: ["medium severity", "moderate", "phishing", "credential stuffing", "botnet", "social engineering"],
-  Low: ["low severity", "informational", "theoretical", "proof of concept", "poc"],
+  Critical: ["critical","zero-day","actively exploit","cvss 9","cvss 10","emergency","nation-state","apt","supply chain attack","mass exploit","wormable","actively being exploited"],
+  High:     ["high severity","remote code execution","authentication bypass","data breach","millions of","widespread","unauthenticated","pre-auth","high risk"],
+  Medium:   ["medium severity","moderate","phishing","credential","botnet","cryptominer","social engineering","medium risk"],
+  Low:      ["low severity","informational","theoretical","proof of concept","poc","low risk"],
 };
+const TAG_PATTERNS = [
+  /\bcve-\d{4}-\d+\b/gi,
+  /\b(apache|microsoft|google|fortinet|ivanti|palo alto|cisco|vmware|juniper|citrix|adobe|oracle|f5|kubernetes|docker|openssl|openssh|linux|windows|chrome|firefox|safari|exchange|sharepoint|wordpress|nginx|atlassian|gitlab|android|ios|apple|samsung)\b/gi,
+  /\b(ransomware|malware|apt|zero-day|rce|sql injection|xss|ssrf|phishing|backdoor|trojan|botnet)\b/gi,
+  /\b(lockbit|cl0p|alphv|blackcat|scattered spider|volt typhoon|salt typhoon|lazarus|fancy bear|cozy bear|revil|darkside)\b/gi,
+  /\b(cert-in|nciipc|meity|ncsc|cisa|nsa|fbi|interpol)\b/gi,
+];
 
-function classifyArticle(title: string, desc: string, defaultCategory?: NewsCategory): { category: NewsCategory; severity: NewsSeverity; tags: string[] } {
+function classify(title: string, desc: string, defaultCategory?: NewsCategory) {
   const text = `${title} ${desc}`.toLowerCase();
   let category: NewsCategory = defaultCategory ?? "Research";
   if (!defaultCategory) {
     let maxM = 0;
     for (const [cat, kws] of Object.entries(CAT_KW) as [NewsCategory, string[]][]) {
-      const m = kws.filter((k) => text.includes(k)).length;
+      const m = kws.filter(k => text.includes(k)).length;
       if (m > maxM) { maxM = m; category = cat; }
     }
   }
   let severity: NewsSeverity = "Medium";
   for (const [sev, kws] of Object.entries(SEV_KW) as [NewsSeverity, string[]][]) {
-    if (kws.some((k) => text.includes(k))) { severity = sev; break; }
+    if (kws.some(k => text.includes(k))) { severity = sev; break; }
   }
-  const tagPatterns = [/\bcve-\d{4}-\d+\b/gi, /\b(apache|microsoft|google|cisco|vmware|oracle|linux|windows|chrome|android|ios|apple)\b/gi, /\b(ransomware|malware|apt|zero-day|rce|phishing|backdoor|botnet)\b/gi];
-  const tags: string[] = [];
-  for (const rx of tagPatterns) { const f = text.match(rx); if (f) tags.push(...f.map((t) => t.charAt(0).toUpperCase() + t.slice(1))); }
-  return { category, severity, tags: Array.from(new Set(tags)).slice(0, 6) };
+  const tags = new Set<string>();
+  for (const rx of TAG_PATTERNS) {
+    const found = text.match(rx);
+    if (found) found.forEach(t => tags.add(t.charAt(0).toUpperCase() + t.slice(1)));
+  }
+  return { category, severity, tags: Array.from(tags).slice(0, 6) };
 }
 
-function normalizeDate(raw: string): string {
-  if (!raw) return new Date().toISOString();
-  try { const d = new Date(raw.trim()); if (!isNaN(d.getTime())) return d.toISOString(); } catch { }
-  return new Date().toISOString();
-}
-
-/* ─────────────────────────────────────────────────────────────
-   CACHE
-───────────────────────────────────────────────────────────── */
-const CACHE_KEY = "cyber_news_v7";
+/* ─── CACHE ──────────────────────────────────────────────────────────────── */
+const CACHE_KEY = "cn_articles_v4";
 const CACHE_TTL = 15 * 60 * 1000;
-interface CacheEntry { articles: CyberNewsArticle[]; ts: number; succeededFeeds: string[]; failedFeeds: string[]; }
 
-function saveCache(articles: CyberNewsArticle[], s: string[], f: string[]) {
-  try { sessionStorage.setItem(CACHE_KEY, JSON.stringify({ articles, ts: Date.now(), succeededFeeds: s, failedFeeds: f })); } catch { }
+interface CacheEntry { articles: CyberNewsArticle[]; ts: number; succeeded: string[]; failed: string[] }
+
+function saveCache(articles: CyberNewsArticle[], succeeded: string[], failed: string[]) {
+  try { sessionStorage.setItem(CACHE_KEY, JSON.stringify({ articles, ts: Date.now(), succeeded, failed })); } catch {}
 }
 function loadCache(): CacheEntry | null {
-  try { const r = sessionStorage.getItem(CACHE_KEY); if (!r) return null; const e: CacheEntry = JSON.parse(r); return Date.now() - e.ts < CACHE_TTL ? e : null; } catch { return null; }
+  try {
+    const raw = sessionStorage.getItem(CACHE_KEY);
+    if (!raw) return null;
+    const e: CacheEntry = JSON.parse(raw);
+    return Date.now() - e.ts < CACHE_TTL ? e : null;
+  } catch { return null; }
 }
-export function clearCache() { try { sessionStorage.removeItem(CACHE_KEY); } catch { } }
-export function getCacheStatus(): { cached: boolean; age: number } {
-  try { const r = sessionStorage.getItem(CACHE_KEY); if (!r) return { cached: false, age: 0 }; const e: CacheEntry = JSON.parse(r); const age = Date.now() - e.ts; return { cached: age < CACHE_TTL, age }; } catch { return { cached: false, age: 0 }; }
+function clearCache() { try { sessionStorage.removeItem(CACHE_KEY); } catch {} }
+
+/* ─── MASTER FETCH ───────────────────────────────────────────────────────── */
+export interface FetchResult {
+  articles: CyberNewsArticle[];
+  succeeded: string[];
+  failed: string[];
+  fromCache: boolean;
+  isLive: boolean;
 }
 
-/* ─────────────────────────────────────────────────────────────
-   MASTER FETCH
-───────────────────────────────────────────────────────────── */
-async function fetchOneFeed(source: RSSSource): Promise<CyberNewsArticle[]> {
-  const xml = await fetchSourceXML(source);
-  if (!xml) return [];
-  const raw = parseRSS(xml);
-  const slug = source.name.toLowerCase().replace(/\s+/g, "-");
-  return raw.map((item, i): CyberNewsArticle => {
-    const { category, severity, tags } = classifyArticle(item.title, item.description, source.defaultCategory);
-    return { id: `${slug}-${i}-${Date.now()}`, title: item.title.slice(0, 180), summary: item.description.slice(0, 350), url: item.link, source: source.name, publishedAt: normalizeDate(item.pubDate), category, severity, tags: tags.length ? tags : ["Cybersecurity"], isLive: true };
-  });
-}
-
-export async function fetchAllRSSArticles(forceRefresh = false): Promise<FetchResult> {
+export async function fetchAllArticles(forceRefresh = false): Promise<FetchResult> {
   if (!forceRefresh) {
     const cached = loadCache();
-    if (cached?.articles.length) return { articles: cached.articles, succeededFeeds: cached.succeededFeeds, failedFeeds: cached.failedFeeds, fromCache: true, isLive: true };
+    if (cached?.articles.length) {
+      return { articles: cached.articles, succeeded: cached.succeeded, failed: cached.failed, fromCache: true, isLive: true };
+    }
   }
-  const enabled = RSS_SOURCES.filter((s) => s.enabled);
+
+  const sources  = [...RSS_SOURCES].sort((a, b) => b.priority - a.priority);
   const succeeded: string[] = [], failed: string[] = [], all: CyberNewsArticle[] = [];
-  await Promise.allSettled(enabled.map(async (source) => {
-    try {
-      const articles = await fetchOneFeed(source);
-      if (articles.length) { all.push(...articles); succeeded.push(source.name); }
-      else failed.push(source.name);
-    } catch { failed.push(source.name); }
-  }));
-  const seen = new Set<string>();
-  const deduped = all
-    .filter((a) => { const key = a.title.toLowerCase().slice(0, 55); if (seen.has(key)) return false; seen.add(key); return true; })
-    .filter((a) => a.source === "Crus.live" || Date.now() - new Date(a.publishedAt).getTime() < 30 * 86400000)
+
+  // ALL feeds run fully concurrently — each one internally races its proxy pool
+  await Promise.allSettled(
+    sources.map(async source => {
+      try {
+        const xml   = await fetchSourceXML(source);
+        const raw   = parseXML(xml);
+        const slug  = source.name.toLowerCase().replace(/\s+/g, "-");
+        const items: CyberNewsArticle[] = raw.slice(0, 12).map((item, i) => {
+          const { category, severity, tags } = classify(item.title, item.description, source.defaultCategory);
+          const pubDate = item.pubDate ? new Date(item.pubDate) : new Date();
+          return {
+            id: `${slug}-${i}-${Date.now()}`,
+            title: item.title.slice(0, 180),
+            summary: item.description.slice(0, 350),
+            url: item.link,
+            source: source.name,
+            publishedAt: isNaN(pubDate.getTime()) ? new Date().toISOString() : pubDate.toISOString(),
+            category, severity, tags,
+            isLive: true,
+          };
+        });
+        if (items.length > 0) { all.push(...items); succeeded.push(source.name); }
+        else failed.push(source.name);
+      } catch { failed.push(source.name); }
+    })
+  );
+
+  // Sort, deduplicate, filter older than 30 days
+  const sorted = all
+    .filter(a => Date.now() - new Date(a.publishedAt).getTime() < 30 * 86400000)
     .sort((a, b) => new Date(b.publishedAt).getTime() - new Date(a.publishedAt).getTime());
-  if (deduped.length) { saveCache(deduped, succeeded, failed); return { articles: deduped, succeededFeeds: succeeded, failedFeeds: failed, fromCache: false, isLive: true }; }
-  return { articles: FALLBACK_ARTICLES, succeededFeeds: [], failedFeeds: failed, fromCache: false, isLive: false };
+
+  const seen = new Set<string>();
+  const deduped = sorted.filter(a => {
+    const key = a.title.toLowerCase().replace(/[^a-z0-9]/g, "").slice(0, 50);
+    if (seen.has(key)) return false;
+    seen.add(key); return true;
+  });
+
+  if (deduped.length > 0) {
+    saveCache(deduped, succeeded, failed);
+    return { articles: deduped, succeeded, failed, fromCache: false, isLive: true };
+  }
+
+  // Everything failed — return static fallback
+  return { articles: FALLBACK_ARTICLES, succeeded: [], failed: sources.map(s => s.name), fromCache: false, isLive: false };
 }
 
-/* ─────────────────────────────────────────────────────────────
-   FALLBACK ARTICLES
-───────────────────────────────────────────────────────────── */
+/* ─── STATIC FALLBACK ────────────────────────────────────────────────────── */
 const d = (n: number) => new Date(Date.now() - n * 86400000).toISOString();
 const FALLBACK_ARTICLES: CyberNewsArticle[] = [
-  { id: "fb-v-001", title: "Critical Zero-Day in Apache HTTP Server Allows Remote Code Execution", summary: "Unauthenticated attackers can execute arbitrary code on vulnerable Apache HTTP Server 2.4.x systems. Patch immediately — active exploitation confirmed in the wild.", url: "https://thehackernews.com", source: "The Hacker News", publishedAt: d(1), category: "Vulnerability", tags: ["Apache", "RCE", "Zero-Day"], severity: "Critical" },
-  { id: "fb-v-002", title: "Patch Tuesday: Microsoft Fixes 94 CVEs Including 4 Actively Exploited Zero-Days", summary: "Four zero-days in Windows Print Spooler, CLFS Driver, and Hyper-V are actively exploited in the wild. Immediate patching is strongly advised for all enterprise environments.", url: "https://www.bleepingcomputer.com", source: "The Hacker News", publishedAt: d(2), category: "Vulnerability", tags: ["Microsoft", "Patch Tuesday", "Windows", "Zero-Day"], severity: "Critical" },
-  { id: "fb-m-001", title: "LockBit 4.0 Ransomware Targets Healthcare and Critical Infrastructure", summary: "LockBit's latest variant features faster encryption and improved anti-analysis techniques, specifically targeting healthcare organizations and critical infrastructure providers.", url: "https://www.bleepingcomputer.com", source: "SecurityWeek", publishedAt: d(1), category: "Malware", tags: ["LockBit", "Ransomware", "Healthcare"], severity: "Critical" },
-  { id: "fb-b-001", title: "National Public Data Breach Exposes 2.9 Billion Records Including SSNs", summary: "A massive data broker breach exposed nearly 3 billion records including Social Security Numbers, addresses, and phone numbers of US citizens.", url: "https://krebsonsecurity.com", source: "Krebs on Security", publishedAt: d(3), category: "Breach", tags: ["Data Broker", "SSN", "PII", "Dark Web"], severity: "Critical" },
-  { id: "fb-b-003", title: "Salt Typhoon APT Breaches US Telecoms — Wiretap Systems Compromised", summary: "The Salt Typhoon APT group linked to China breached AT&T, Verizon, and Lumen Technologies, accessing lawful intercept systems used for government wiretaps.", url: "https://www.darkreading.com", source: "Help Net Security", publishedAt: d(4), category: "Breach", tags: ["Salt Typhoon", "China", "APT", "Telecom"], severity: "Critical" },
-  { id: "fb-a-001", title: "CISA Emergency Directive: Patch Ivanti Flaws Within 48 Hours", summary: "CISA's Emergency Directive 24-02 requires all federal civilian agencies to disconnect vulnerable Ivanti Connect Secure and Policy Secure appliances immediately.", url: "https://www.cisa.gov", source: "CERT-In", publishedAt: d(5), category: "Advisory", tags: ["CISA", "Ivanti", "Federal", "Emergency Directive"], severity: "Critical" },
-  { id: "fb-v-006", title: "OpenSSH regreSSHion: Race Condition Enables Remote Root Code Execution", summary: "CVE-2024-6387 reintroduces a critical race condition in OpenSSH. Unauthenticated remote root RCE is possible on glibc Linux systems — millions of servers affected.", url: "https://www.bleepingcomputer.com", source: "Rapid7 Blog", publishedAt: d(6), category: "Vulnerability", tags: ["OpenSSH", "Linux", "RCE", "Race Condition"], severity: "Critical" },
-  { id: "fb-b-005", title: "XZ Utils SSH Backdoor: Multi-Year Supply Chain Attack Discovered", summary: "A multi-year supply chain attack introduced a backdoor into XZ Utils 5.6.0/5.6.1 specifically targeting OpenSSH on systemd-based Linux distributions.", url: "https://www.schneier.com", source: "SecurityWeek", publishedAt: d(7), category: "Breach", tags: ["XZ Utils", "Supply Chain", "SSH", "Backdoor", "Linux"], severity: "Critical" },
-  { id: "fb-r-001", title: "NIST Finalizes Post-Quantum Cryptography Standards: ML-KEM, ML-DSA, SLH-DSA", summary: "NIST published FIPS 203, 204, and 205 — the world's first post-quantum cryptographic standards designed to resist attacks from future quantum computers.", url: "https://nvd.nist.gov", source: "Help Net Security", publishedAt: d(8), category: "Research", tags: ["Post-Quantum", "PQC", "NIST", "ML-KEM", "Cryptography"], severity: "Medium" },
+  { id:"fb-1", title:"Critical Zero-Day in Apache HTTP Server Allows Remote Code Execution", summary:"Unauthenticated attackers can execute arbitrary code on vulnerable Apache HTTP Server 2.4.x. Patch immediately — active exploitation confirmed.", url:"https://thehackernews.com", source:"The Hacker News", publishedAt:d(1), category:"Vulnerability", severity:"Critical", tags:["Apache","RCE","Zero-Day"] },
+  { id:"fb-2", title:"Patch Tuesday: Microsoft Fixes 94 CVEs Including 4 Actively Exploited Zero-Days", summary:"Four zero-days in Windows Print Spooler, CLFS Driver, and Hyper-V actively exploited in the wild.", url:"https://www.bleepingcomputer.com", source:"BleepingComputer", publishedAt:d(2), category:"Vulnerability", severity:"Critical", tags:["Microsoft","Patch Tuesday","Windows","Zero-Day"] },
+  { id:"fb-3", title:"LockBit 4.0 Ransomware Targets Healthcare and Critical Infrastructure", summary:"LockBit's latest variant features faster encryption and improved anti-analysis techniques targeting hospitals and utilities.", url:"https://www.bleepingcomputer.com", source:"BleepingComputer", publishedAt:d(1), category:"Malware", severity:"Critical", tags:["LockBit","Ransomware","Healthcare"] },
+  { id:"fb-4", title:"Salt Typhoon APT Breaches US Telecoms — Wiretap Systems Compromised", summary:"Salt Typhoon breached AT&T, Verizon, and Lumen, accessing lawful intercept systems used for court-authorised surveillance.", url:"https://www.darkreading.com", source:"Dark Reading", publishedAt:d(4), category:"Breach", severity:"Critical", tags:["Salt Typhoon","China","APT","Telecom"] },
+  { id:"fb-5", title:"CISA Emergency Directive: Patch Ivanti Flaws Within 48 Hours", summary:"CISA's Emergency Directive 24-02 requires all federal civilian agencies to disconnect vulnerable Ivanti appliances.", url:"https://www.cisa.gov", source:"CISA Alerts", publishedAt:d(5), category:"Advisory", severity:"Critical", tags:["CISA","Ivanti","Federal"] },
+  { id:"fb-6", title:"CERT-In Advisory: Multiple Vulnerabilities in Indian Banking Infrastructure", summary:"CERT-In issued advisories covering critical vulnerabilities affecting BFSI sector infrastructure in India.", url:"https://www.cert-in.org.in", source:"CERT-In", publishedAt:d(2), category:"Advisory", severity:"High", tags:["CERT-In","BFSI","India"] },
+  { id:"fb-7", title:"OpenSSH regreSSHion: Race Condition Enables Remote Root Code Execution", summary:"CVE-2024-6387 reintroduces a critical race condition in OpenSSH. Unauthenticated remote root RCE on glibc Linux.", url:"https://www.bleepingcomputer.com", source:"BleepingComputer", publishedAt:d(6), category:"Vulnerability", severity:"Critical", tags:["OpenSSH","Linux","RCE","CVE-2024-6387"] },
+  { id:"fb-8", title:"AI-Powered Phishing Achieves 60% Click Rate vs 20% for Human-Written Lures", summary:"IBM X-Force research shows AI-generated spear-phishing emails dramatically outperform human-crafted messages.", url:"https://www.darkreading.com", source:"Dark Reading", publishedAt:d(9), category:"Research", severity:"High", tags:["AI","Phishing","LLM","Social Engineering"] },
+  { id:"fb-9", title:"Cl0p Exploits MFT Platform — 130+ Enterprises Compromised via SQL Injection", summary:"Cl0p ransomware exploited a critical SQL injection in a managed file transfer platform.", url:"https://krebsonsecurity.com", source:"Krebs on Security", publishedAt:d(10), category:"Malware", severity:"Critical", tags:["Cl0p","SQL Injection","Data Theft"] },
 ];
 
-export function getDailyArticles(all: CyberNewsArticle[], count = 9): CyberNewsArticle[] {
-  if (!all.length) return [];
-  const seed = Math.floor((Date.now() - new Date(new Date().getFullYear(), 0, 0).getTime()) / 86400000);
-  const shuffled = [...all].sort((a, b) => { const ha = (a.id.charCodeAt(0) * 31 + seed * 7) % all.length; const hb = (b.id.charCodeAt(0) * 31 + seed * 7) % all.length; return ha - hb; });
-  const crits = shuffled.filter((a) => a.severity === "Critical"), rest = shuffled.filter((a) => a.severity !== "Critical");
-  return [...crits, ...rest].slice(0, count);
-}
-
-/* ─────────────────────────────────────────────────────────────
-   TIME HELPERS
-───────────────────────────────────────────────────────────── */
-function timeAgo(iso: string): string {
-  const diff = Date.now() - new Date(iso).getTime();
-  const mins = Math.floor(diff / 60000);
-  if (mins < 1) return "just now";
-  if (mins < 60) return `${mins}m`;
-  const hrs = Math.floor(mins / 60);
-  if (hrs < 24) return `${hrs}h`;
-  return `${Math.floor(hrs / 24)}d`;
-}
-function formatDate(iso: string): string { return new Date(iso).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }); }
-function getDaysAgo(iso: string): number { return Math.floor((Date.now() - new Date(iso).getTime()) / 86400000); }
-function groupByDate(articles: CyberNewsArticle[]): Record<string, CyberNewsArticle[]> {
-  const groups: Record<string, CyberNewsArticle[]> = {};
-  const ORDER = ["Today", "Yesterday", "This Week", "This Month", "Older"];
-  articles.forEach((a) => {
-    const d2 = getDaysAgo(a.publishedAt);
-    const key = d2 === 0 ? "Today" : d2 === 1 ? "Yesterday" : d2 <= 7 ? "This Week" : d2 <= 30 ? "This Month" : "Older";
-    if (!groups[key]) groups[key] = [];
-    groups[key].push(a);
-  });
-  const out: Record<string, CyberNewsArticle[]> = {};
-  ORDER.forEach((k) => { if (groups[k]) out[k] = groups[k]; });
-  return out;
-}
-function getSecondsUntilMidnight(): number { const now = new Date(), m = new Date(now); m.setHours(24, 0, 0, 0); return Math.floor((m.getTime() - now.getTime()) / 1000); }
-function formatCountdown(s: number): string { const h = Math.floor(s / 3600), m = Math.floor((s % 3600) / 60), sec = s % 60; return `${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}:${String(sec).padStart(2, "0")}`; }
-
-/* ─────────────────────────────────────────────────────────────
-   ANIMATION VARIANTS — matching Home.tsx
-───────────────────────────────────────────────────────────── */
-const pageFade: Variants = { hidden: { opacity: 0 }, visible: { opacity: 1, transition: { duration: 0.8 } } };
-const fadeUp: Variants = { hidden: { opacity: 0, y: 36 }, visible: { opacity: 1, y: 0, transition: { duration: 0.65, ease: [0.25, 0.1, 0.25, 1] } } };
-const fadeLeft: Variants = { hidden: { opacity: 0, x: -28 }, visible: { opacity: 1, x: 0, transition: { duration: 0.6, ease: [0.25, 0.1, 0.25, 1] } } };
-const scaleIn: Variants = { hidden: { opacity: 0, scale: 0.95 }, visible: { opacity: 1, scale: 1, transition: { duration: 0.4, ease: [0.22, 1, 0.36, 1] } } };
-const stagger: Variants = { hidden: {}, visible: { transition: { staggerChildren: 0.1, delayChildren: 0.05 } } };
-const staggerFast: Variants = { hidden: {}, visible: { transition: { staggerChildren: 0.07 } } };
-
-/* ─────────────────────────────────────────────────────────────
-   CYBER CORNER — same as Home.tsx
-───────────────────────────────────────────────────────────── */
-const CyberCorner = ({ pos }: { pos: "tl" | "tr" | "bl" | "br" }) => {
-  const base: React.CSSProperties = { position: "absolute", width: 20, height: 20 };
-  const map: Record<string, React.CSSProperties> = {
-    tl: { top: 0, left: 0, borderTop: "2px solid", borderLeft: "2px solid" },
-    tr: { top: 0, right: 0, borderTop: "2px solid", borderRight: "2px solid" },
-    bl: { bottom: 0, left: 0, borderBottom: "2px solid", borderLeft: "2px solid" },
-    br: { bottom: 0, right: 0, borderBottom: "2px solid", borderRight: "2px solid" },
-  };
-  return <div style={{ ...base, ...map[pos], borderColor: "rgba(0,255,231,0.6)", animation: "corner-flash 4s infinite" }} />;
+/* ─── HELPERS ────────────────────────────────────────────────────────────── */
+const SEV_CONFIG: Record<NewsSeverity, { color: string; bg: string; border: string; glow: string }> = {
+  Critical: { color:"#ff2d55", bg:"rgba(255,45,85,.1)",   border:"rgba(255,45,85,.35)",  glow:"rgba(255,45,85,.3)"  },
+  High:     { color:"#ff7722", bg:"rgba(255,119,34,.08)", border:"rgba(255,119,34,.3)",  glow:"rgba(255,119,34,.25)" },
+  Medium:   { color:"#fbbf24", bg:"rgba(251,191,36,.07)", border:"rgba(251,191,36,.25)", glow:"rgba(251,191,36,.2)"  },
+  Low:      { color:"#34d399", bg:"rgba(52,211,153,.07)", border:"rgba(52,211,153,.25)", glow:"rgba(52,211,153,.2)"  },
+};
+const CAT_CONFIG: Record<NewsCategory, { icon: React.ReactNode; color: string; accent: string }> = {
+  Breach:        { icon:<AlertTriangle className="w-3 h-3" />, color:"#ff2d55", accent:"#ff2d5520" },
+  Vulnerability: { icon:<Bug className="w-3 h-3" />,          color:"#ff7722", accent:"#ff772220" },
+  Malware:       { icon:<Zap className="w-3 h-3" />,          color:"#a855f7", accent:"#a855f720" },
+  Advisory:      { icon:<Shield className="w-3 h-3" />,       color:"#3b82f6", accent:"#3b82f620" },
+  Research:      { icon:<BookOpen className="w-3 h-3" />,     color:"#00ffe7", accent:"#00ffe720" },
 };
 
-/* ─────────────────────────────────────────────────────────────
-   SECTION LABEL — identical to Home.tsx
-───────────────────────────────────────────────────────────── */
+function timeAgo(iso: string): string {
+  const diff = Date.now() - new Date(iso).getTime();
+  const m = Math.floor(diff / 60000);
+  if (m < 1) return "just now";
+  if (m < 60) return `${m}m ago`;
+  const h = Math.floor(m / 60);
+  if (h < 24) return `${h}h ago`;
+  return `${Math.floor(h / 24)}d ago`;
+}
+
+/* ─── PARTICLE FIELD ─────────────────────────────────────────────────────── */
+const ParticleField = memo(() => {
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  useEffect(() => {
+    const canvas = canvasRef.current!; const ctx = canvas.getContext("2d")!;
+    const resize = () => { canvas.width = window.innerWidth; canvas.height = window.innerHeight; };
+    resize(); window.addEventListener("resize", resize);
+    const count = window.innerWidth < 640 ? 30 : 60;
+    const particles = Array.from({ length: count }, () => ({
+      x: Math.random() * canvas.width, y: Math.random() * canvas.height,
+      vx: (Math.random() - .5) * .35, vy: (Math.random() - .5) * .35,
+      r: Math.random() * 1.4 + .4,
+      color: Math.random() > .5 ? "#00ffe7" : Math.random() > .5 ? "#3b82f6" : "#a855f7",
+      opacity: Math.random() * .5 + .15,
+    }));
+    let animId: number;
+    const draw = () => {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      for (let i = 0; i < particles.length; i++) {
+        for (let j = i + 1; j < particles.length; j++) {
+          const dx = particles[i].x - particles[j].x, dy = particles[i].y - particles[j].y;
+          const dist = Math.sqrt(dx*dx + dy*dy);
+          if (dist < 110) { ctx.beginPath(); ctx.strokeStyle = `rgba(0,255,231,${(1-dist/110)*.1})`; ctx.lineWidth = .5; ctx.moveTo(particles[i].x, particles[i].y); ctx.lineTo(particles[j].x, particles[j].y); ctx.stroke(); }
+        }
+        const p = particles[i]; p.x += p.vx; p.y += p.vy;
+        if (p.x < 0 || p.x > canvas.width) p.vx *= -1;
+        if (p.y < 0 || p.y > canvas.height) p.vy *= -1;
+        ctx.beginPath(); ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+        ctx.fillStyle = p.color; ctx.globalAlpha = p.opacity;
+        ctx.shadowColor = p.color; ctx.shadowBlur = 5; ctx.fill();
+        ctx.globalAlpha = 1; ctx.shadowBlur = 0;
+      }
+      animId = requestAnimationFrame(draw);
+    };
+    draw();
+    return () => { cancelAnimationFrame(animId); window.removeEventListener("resize", resize); };
+  }, []);
+  return <canvas ref={canvasRef} className="absolute inset-0 w-full h-full pointer-events-none" style={{ opacity:.65 }} />;
+});
+ParticleField.displayName = "ParticleField";
+
+/* ─── UI ATOMS ───────────────────────────────────────────────────────────── */
+const CyberCorner = ({ pos }: { pos:"tl"|"tr"|"bl"|"br" }) => {
+  const map: Record<string, React.CSSProperties> = {
+    tl:{ top:0, left:0, borderTop:"2px solid", borderLeft:"2px solid" },
+    tr:{ top:0, right:0, borderTop:"2px solid", borderRight:"2px solid" },
+    bl:{ bottom:0, left:0, borderBottom:"2px solid", borderLeft:"2px solid" },
+    br:{ bottom:0, right:0, borderBottom:"2px solid", borderRight:"2px solid" },
+  };
+  return <div style={{ position:"absolute", width:16, height:16, animation:"corner-flash 4s infinite", borderColor:"rgba(0,255,231,0.6)", ...map[pos] }} />;
+};
+
 const SectionLabel = ({ num, label }: { num: string; label: string }) => (
   <div className="flex items-center gap-3 mb-6">
-    <span style={{ fontFamily: "'Share Tech Mono', monospace" }} className="font-mono text-xs text-cyan-400/60 tracking-widest">[{num}]</span>
-    <span className="text-xs font-bold uppercase tracking-[0.25em] text-cyan-400/80" style={{ fontFamily: "'Share Tech Mono', monospace" }}>{label}</span>
+    <span className="font-mono text-xs text-cyan-400/60 tracking-widest">[{num}]</span>
+    <span className="text-xs font-bold uppercase tracking-[0.25em] text-cyan-400/80" style={{ fontFamily:"'Share Tech Mono',monospace" }}>{label}</span>
     <div className="flex-1 h-px bg-gradient-to-r from-cyan-500/40 to-transparent" />
-    <motion.div animate={{ opacity: [0, 1, 0] }} transition={{ repeat: Infinity, duration: 2 }} className="w-1 h-1 rounded-full bg-cyan-400" />
+    <motion.div animate={{ opacity:[0,1,0] }} transition={{ repeat:Infinity, duration:2 }} className="w-1 h-1 rounded-full bg-cyan-400" />
   </div>
 );
 
-/* ─────────────────────────────────────────────────────────────
-   LIVE PULSE
-───────────────────────────────────────────────────────────── */
-function LivePulse() {
-  return (
-    <span className="inline-flex items-center gap-1.5">
-      <span className="relative flex h-2 w-2">
-        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75" />
-        <span className="relative inline-flex rounded-full h-2 w-2 bg-green-400" />
-      </span>
-      <span className="text-green-400 font-bold tracking-widest uppercase" style={{ fontFamily: "'Share Tech Mono', monospace", fontSize: "10px" }}>Live</span>
-    </span>
-  );
-}
+/* ─── ANIMATION VARIANTS ─────────────────────────────────────────────────── */
+const pageFade: Variants = { hidden:{ opacity:0 }, visible:{ opacity:1, transition:{ duration:.8 } } };
+const fadeUp:   Variants = { hidden:{ opacity:0, y:28 }, visible:{ opacity:1, y:0, transition:{ duration:.6, ease:[.25,.1,.25,1] } } };
+const stagger:  Variants = { hidden:{}, visible:{ transition:{ staggerChildren:.08, delayChildren:.05 } } };
 
-/* ─────────────────────────────────────────────────────────────
-   SOURCE PILL
-───────────────────────────────────────────────────────────── */
-function SourcePill({ source }: { source: string }) {
-  const s = RSS_SOURCES.find((r) => r.name === source) ?? { color: "text-gray-400", dot: "bg-gray-400" };
-  return (
-    <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-white/5 border border-white/10 font-semibold ${s.color}`} style={{ fontFamily: "'Share Tech Mono', monospace", fontSize: "9px" }}>
-      <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${s.dot}`} />
-      <span className="truncate max-w-[90px] sm:max-w-[120px]">{source}</span>
-    </span>
-  );
-}
-
-/* ─────────────────────────────────────────────────────────────
-   SEVERITY BADGE
-───────────────────────────────────────────────────────────── */
-function SeverityBadge({ severity }: { severity: NewsSeverity }) {
-  const sc = severityConfig[severity];
-  return (
-    <span className={`inline-flex items-center gap-1 shrink-0 px-2 py-0.5 rounded-full border uppercase tracking-wide font-black ${sc.bg} ${sc.border} ${sc.color}`} style={{ fontFamily: "'Share Tech Mono', monospace", fontSize: "9px" }}>
-      <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${sc.dot} animate-pulse`} />
-      {severity}
-    </span>
-  );
-}
-
-/* ─────────────────────────────────────────────────────────────
-   CATEGORY BADGE
-───────────────────────────────────────────────────────────── */
-function CategoryBadge({ category }: { category: NewsCategory }) {
-  const cc = categoryConfig[category];
-  const Icon = cc.icon;
-  return (
-    <span className={`inline-flex items-center gap-1 shrink-0 px-2 py-0.5 rounded-full border font-bold ${cc.bg} ${cc.border} ${cc.color}`} style={{ fontFamily: "'Share Tech Mono', monospace", fontSize: "9px" }}>
-      <Icon className="w-2.5 h-2.5 shrink-0" />
-      {cc.label}
-    </span>
-  );
-}
-
-/* ─────────────────────────────────────────────────────────────
-   FEED STATUS BAR
-───────────────────────────────────────────────────────────── */
-function FeedStatusBar({ succeeded, failed, loading }: { succeeded: string[]; failed: string[]; loading: boolean }) {
-  const enabled = RSS_SOURCES.filter((s) => s.enabled);
-  return (
-    <div className="flex flex-wrap items-center justify-center gap-1 mt-3 px-2">
-      {enabled.map((src) => {
-        const ok = succeeded.includes(src.name), err = failed.includes(src.name), pending = loading && !ok && !err;
-        return (
-          <motion.div key={src.name} initial={{ opacity: 0, scale: 0.8 }} animate={{ opacity: 1, scale: 1 }} transition={{ duration: 0.3 }}
-            className={`flex items-center gap-1 px-1.5 py-1 rounded-lg border text-[9px] font-semibold transition-all duration-500 ${ok ? `bg-green-500/10 border-green-400/30 ${src.color}` : err ? "bg-red-500/10 border-red-400/25 text-red-400/70" : "bg-white/5 border-white/10 text-gray-600"}`}
-            style={{ fontFamily: "'Share Tech Mono', monospace" }}>
-            <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${ok ? src.dot : err ? "bg-red-400/60" : "bg-gray-600"} ${pending ? "animate-pulse" : ""}`} />
-            {src.name} {src.region === "india" && "🇮🇳"}
-          </motion.div>
-        );
-      })}
-    </div>
-  );
-}
-
-/* ─────────────────────────────────────────────────────────────
-   BREAKING TICKER
-───────────────────────────────────────────────────────────── */
-function BreakingTicker({ articles }: { articles: CyberNewsArticle[] }) {
-  const critical = articles.filter((a) => a.severity === "Critical");
-  if (critical.length === 0) return null;
-  return (
-    <div className="relative overflow-hidden rounded-xl border-2 border-red-500/40 bg-gradient-to-r from-red-950/60 via-red-900/40 to-red-950/60" style={{ boxShadow: "0 0 20px rgba(239,68,68,0.15), 0 0 40px rgba(239,68,68,0.08)" }}>
-      <div className="flex items-stretch min-h-[38px] sm:min-h-[44px]">
-        <div className="shrink-0 flex items-center gap-1.5 px-3 py-2 sm:px-4 bg-red-500/30 border-r-2 border-red-500/40">
-          <Radio className="w-3 h-3 text-red-400 animate-pulse" />
-          <span className="text-red-300 font-black tracking-[0.15em] uppercase" style={{ fontFamily: "'Orbitron', sans-serif", fontSize: "9px", whiteSpace: "nowrap" }}>Breaking</span>
-        </div>
-        <div className="overflow-hidden flex-1 flex items-center px-3">
-          <div className="marquee-t">
-            {[...critical, ...critical].map((a, i) => (
-              <a key={i} href={a.url} target="_blank" rel="noopener noreferrer"
-                className="inline-flex items-center gap-2 text-gray-200 hover:text-red-300 transition-colors duration-300 mr-10"
-                style={{ fontFamily: "'Share Tech Mono', monospace", fontSize: "11px", whiteSpace: "nowrap" }}>
-                <AlertCircle className="w-2.5 h-2.5 text-red-400 shrink-0" />
-                {a.title}
-                <span className="text-red-500/40 mx-1">◆</span>
-              </a>
-            ))}
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-/* ─────────────────────────────────────────────────────────────
-   STAT CARD — matching Home.tsx style exactly
-───────────────────────────────────────────────────────────── */
-function StatCard({ icon: Icon, value, label, colorClass, bgClass, borderClass, accentColor }: { icon: any; value: number | string; label: string; colorClass: string; bgClass: string; borderClass: string; accentColor: string }) {
-  return (
-    <motion.div variants={fadeUp} whileHover={{ scale: 1.03, y: -2, transition: { duration: 0.2 } }}
-      className={`relative overflow-hidden flex items-center gap-3 px-4 py-3.5 rounded-xl bg-black/40 border ${borderClass} transition-all duration-300`}
-      style={{ backdropFilter: "blur(12px)", boxShadow: "inset 0 1px 0 rgba(255,255,255,0.04)" }}>
-      <div className="absolute top-0 left-0 right-0 h-px" style={{ background: `linear-gradient(to right, ${accentColor}, transparent)` }} />
-      <div className={`p-2 rounded-lg ${bgClass} border ${borderClass} shrink-0`}>
-        <Icon className={`w-4 h-4 ${colorClass}`} />
-      </div>
-      <div className="min-w-0">
-        <div className={`text-2xl font-black leading-none ${colorClass}`} style={{ fontFamily: "'Orbitron', sans-serif", textShadow: `0 0 20px ${accentColor}40` }}>{value}</div>
-        <div className="text-gray-600 font-semibold uppercase tracking-wider mt-0.5" style={{ fontFamily: "'Share Tech Mono', monospace", fontSize: "9px" }}>{label}</div>
-      </div>
-    </motion.div>
-  );
-}
-
-/* ─────────────────────────────────────────────────────────────
-   NEWS CARD — matching Home.tsx FeatureCard hover style
-───────────────────────────────────────────────────────────── */
+/* ─── NEWS CARD ──────────────────────────────────────────────────────────── */
 const NewsCard = memo(({ article }: { article: CyberNewsArticle }) => {
   const [hovered, setHovered] = useState(false);
-  const sc = severityConfig[article.severity];
-  const cc = categoryConfig[article.category];
+  const sev = SEV_CONFIG[article.severity];
+  const cat = CAT_CONFIG[article.category];
   return (
-    <motion.a href={article.url} target="_blank" rel="noopener noreferrer"
-      variants={fadeUp} whileHover={{ y: -4, transition: { duration: 0.2 } }}
-      onMouseEnter={() => setHovered(true)} onMouseLeave={() => setHovered(false)}
-      className="group relative flex flex-col overflow-hidden rounded-xl cursor-pointer h-full"
+    <motion.article
+      variants={fadeUp}
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
+      className="group relative overflow-hidden rounded-xl cursor-pointer h-full flex flex-col"
       style={{
-        background: "linear-gradient(135deg, rgba(0,0,0,0.8) 0%, rgba(5,10,20,0.9) 100%)",
-        border: `1px solid ${hovered ? cc.accent + "50" : "rgba(255,255,255,0.06)"}`,
-        boxShadow: hovered ? `0 0 30px ${cc.accent}15, inset 0 1px 0 ${cc.accent}20, 0 20px 60px rgba(0,0,0,0.5)` : "inset 0 1px 0 rgba(255,255,255,0.04), 0 4px 20px rgba(0,0,0,0.3)",
-        transition: "border-color 0.4s, box-shadow 0.4s",
-      }}>
-      {/* Sweeping top bar */}
-      <div className={`h-0.5 w-full bg-gradient-to-r shrink-0 ${sc.bar}`} />
-      {/* Sweeping highlight */}
+        background:"linear-gradient(135deg,rgba(0,0,0,0.8) 0%,rgba(5,10,20,0.9) 100%)",
+        border:`1px solid ${hovered ? sev.border : "rgba(255,255,255,0.06)"}`,
+        boxShadow: hovered
+          ? `0 0 30px ${sev.glow},inset 0 1px 0 ${sev.border},0 20px 60px rgba(0,0,0,.5)`
+          : "inset 0 1px 0 rgba(255,255,255,0.04),0 4px 20px rgba(0,0,0,.3)",
+        transition:"border-color .4s,box-shadow .4s",
+      }}
+    >
       <div className="absolute top-0 left-0 right-0 h-px overflow-hidden">
-        <motion.div animate={hovered ? { x: ["-100%", "100%"] } : { x: "-100%" }} transition={{ duration: 0.7, ease: "easeInOut" }}
-          className="h-full w-full" style={{ background: `linear-gradient(90deg, transparent, ${cc.accent}, transparent)` }} />
+        <motion.div animate={hovered ? { x:["-100%","100%"] } : { x:"-100%" }} transition={{ duration:.7 }}
+          className="h-full w-full" style={{ background:`linear-gradient(90deg,transparent,${sev.color},transparent)` }} />
       </div>
-      {/* Corner brackets */}
       {hovered && (
         <>
-          <div className="absolute top-0 left-0 w-3 h-3 border-t border-l" style={{ borderColor: cc.accent }} />
-          <div className="absolute top-0 right-0 w-3 h-3 border-t border-r" style={{ borderColor: cc.accent }} />
-          <div className="absolute bottom-0 left-0 w-3 h-3 border-b border-l" style={{ borderColor: cc.accent }} />
-          <div className="absolute bottom-0 right-0 w-3 h-3 border-b border-r" style={{ borderColor: cc.accent }} />
+          <div className="absolute top-0 left-0  w-2.5 h-2.5 border-t border-l" style={{ borderColor:sev.color }} />
+          <div className="absolute top-0 right-0 w-2.5 h-2.5 border-t border-r" style={{ borderColor:sev.color }} />
+          <div className="absolute bottom-0 left-0  w-2.5 h-2.5 border-b border-l" style={{ borderColor:sev.color }} />
+          <div className="absolute bottom-0 right-0 w-2.5 h-2.5 border-b border-r" style={{ borderColor:sev.color }} />
         </>
       )}
-      {/* Background glow */}
       <div className="absolute inset-0 pointer-events-none transition-opacity duration-700"
-        style={{ opacity: hovered ? 1 : 0, background: `radial-gradient(ellipse at 30% 30%, ${cc.accent}10, transparent 65%)` }} />
-      {/* Watermark category */}
-      <div className="absolute -right-2 -bottom-4 font-black leading-none pointer-events-none select-none"
-        style={{ fontFamily: "'Orbitron', sans-serif", fontSize: "4rem", color: cc.accent, opacity: hovered ? 0.06 : 0.02, transition: "opacity 0.4s" }}>
-        {article.category.slice(0, 3).toUpperCase()}
-      </div>
-      <div className="relative z-10 flex flex-col flex-1 p-4 gap-2.5">
-        <div className="flex items-center justify-between gap-1.5 flex-wrap">
-          <CategoryBadge category={article.category} />
-          <SeverityBadge severity={article.severity} />
+        style={{ opacity:hovered ? 1 : 0, background:`radial-gradient(ellipse at 30% 30%,${sev.glow},transparent 65%)` }} />
+      <div className="relative z-10 p-5 flex flex-col h-full">
+        <div className="flex items-start justify-between gap-2 mb-3">
+          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[9px] font-bold border flex-shrink-0"
+            style={{ fontFamily:"'Share Tech Mono',monospace", color:cat.color, borderColor:`${cat.color}40`, background:cat.accent }}>
+            {cat.icon} {article.category.toUpperCase()}
+          </span>
+          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[9px] font-bold border flex-shrink-0"
+            style={{ fontFamily:"'Orbitron',sans-serif", color:sev.color, borderColor:sev.border, background:sev.bg }}>
+            {article.severity.toUpperCase()}
+          </span>
         </div>
-        <h3 className="font-black leading-snug line-clamp-2 shrink-0 transition-colors duration-300"
-          style={{ fontFamily: "'Orbitron', sans-serif", fontSize: "0.78rem", letterSpacing: "0.03em", color: hovered ? cc.accent : "#fff" }}>
+        <h3 className="font-bold leading-snug mb-2 transition-colors duration-300 flex-1"
+          style={{ fontFamily:"'Orbitron',sans-serif", fontSize:"clamp(0.7rem,2vw,0.82rem)", color:hovered ? "#fff" : "#d1d5db", letterSpacing:".02em" }}>
           {article.title}
         </h3>
-        <div className="relative h-px overflow-hidden bg-white/5">
-          <motion.div animate={{ width: hovered ? "100%" : "2rem" }} transition={{ duration: 0.4 }}
-            className="absolute left-0 top-0 h-full" style={{ background: cc.accent }} />
+        <div className="relative h-px mb-3 overflow-hidden bg-white/5">
+          <motion.div animate={{ width:hovered ? "100%" : "1.5rem" }} transition={{ duration:.4 }}
+            className="absolute left-0 top-0 h-full" style={{ background:sev.color }} />
         </div>
-        <p className="text-gray-400 leading-relaxed line-clamp-3 flex-1 transition-colors duration-300" style={{ fontSize: "0.72rem" }}
-          onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.color = "#9ca3af"; }}
-          onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.color = ""; }}>
-          {article.summary}
+        <p className="text-xs leading-relaxed mb-3 transition-colors duration-300"
+          style={{ color:hovered ? "#9ca3af" : "#4b5563", fontFamily:"'Rajdhani',sans-serif", fontSize:"0.78rem" }}>
+          {article.summary.length > 180 ? article.summary.substring(0,180)+"…" : article.summary}
         </p>
-        <div className="flex flex-wrap gap-1">
-          {article.tags.slice(0, 2).map((tag, i) => (
-            <span key={i} className="px-1.5 py-0.5 rounded-md bg-blue-500/10 border border-blue-400/20 text-blue-300" style={{ fontFamily: "'Share Tech Mono', monospace", fontSize: "9px" }}>#{tag}</span>
-          ))}
-          {article.tags.length > 2 && <span className="px-1.5 py-0.5 rounded-md bg-white/5 border border-white/10 text-gray-500" style={{ fontFamily: "'Share Tech Mono', monospace", fontSize: "9px" }}>+{article.tags.length - 2}</span>}
-        </div>
-        <div className="flex items-center justify-between pt-2 border-t border-white/10">
-          <div className="flex flex-col gap-1 min-w-0">
-            <SourcePill source={article.source} />
-            <span className="flex items-center gap-1 text-gray-600" style={{ fontFamily: "'Share Tech Mono', monospace", fontSize: "9px" }}>
-              <Clock className="w-2.5 h-2.5 shrink-0" />{timeAgo(article.publishedAt)} ago
-            </span>
+        {article.tags.length > 0 && (
+          <div className="flex flex-wrap gap-1 mb-3">
+            {article.tags.slice(0,4).map(tag => (
+              <span key={tag} className="px-1.5 py-0.5 rounded text-[9px] border border-white/[0.06] bg-white/[0.02]"
+                style={{ color:"#6b7280", fontFamily:"'Share Tech Mono',monospace" }}>#{tag.toLowerCase()}</span>
+            ))}
           </div>
-          <motion.div animate={{ x: hovered ? 4 : 0 }} transition={{ duration: 0.2 }}
-            className="flex items-center gap-1 font-medium" style={{ color: cc.accent, fontFamily: "'Share Tech Mono', monospace", fontSize: "0.65rem" }}>
-            READ <ArrowUpRight className="w-3 h-3" />
-          </motion.div>
+        )}
+        <div className="flex items-center justify-between mt-auto pt-2 border-t border-white/5">
+          <div>
+            <div className="text-[9px] font-bold" style={{ color:cat.color, fontFamily:"'Share Tech Mono',monospace" }}>{article.source}</div>
+            <div className="flex items-center gap-1 text-[9px] text-gray-600 mt-0.5" style={{ fontFamily:"'Share Tech Mono',monospace" }}>
+              <Clock className="w-2.5 h-2.5" />{timeAgo(article.publishedAt)}
+            </div>
+          </div>
+          <a href={article.url} target="_blank" rel="noopener noreferrer" onClick={e => e.stopPropagation()}
+            className="inline-flex items-center gap-1 text-[10px] font-bold px-2.5 py-1 rounded border transition-all duration-200"
+            style={{ fontFamily:"'Share Tech Mono',monospace", color:hovered?"#000":sev.color, borderColor:`${sev.color}50`, background:hovered?sev.color:"transparent" }}>
+            READ <ExternalLink className="w-2.5 h-2.5" />
+          </a>
         </div>
       </div>
-    </motion.a>
+    </motion.article>
   );
 });
 NewsCard.displayName = "NewsCard";
 
-/* ─────────────────────────────────────────────────────────────
-   FEATURED CARD — matches Home.tsx RoadmapCard style
-───────────────────────────────────────────────────────────── */
-const FeaturedCard = memo(({ article }: { article: CyberNewsArticle }) => {
-  const [hovered, setHovered] = useState(false);
-  const sc = severityConfig[article.severity];
-  const cc = categoryConfig[article.category];
+/* ─── TICKER BAR ─────────────────────────────────────────────────────────── */
+const TickerBar = ({ articles }: { articles: CyberNewsArticle[] }) => {
+  const critical = articles.filter(a => a.severity === "Critical").slice(0, 8);
+  if (!critical.length) return null;
+  const text = critical.map(a => `⚠ ${a.title}`).join("  •  ");
   return (
-    <motion.a href={article.url} target="_blank" rel="noopener noreferrer"
-      variants={scaleIn} whileHover={{ y: -4, transition: { duration: 0.22 } }}
-      onMouseEnter={() => setHovered(true)} onMouseLeave={() => setHovered(false)}
-      className="group relative block overflow-hidden rounded-2xl cursor-pointer"
-      style={{
-        background: "rgba(0,0,0,0.55)",
-        border: `1px solid ${hovered ? cc.accent + "40" : "rgba(255,255,255,0.07)"}`,
-        boxShadow: hovered ? `0 0 40px ${cc.accent}12, 0 20px 60px rgba(0,0,0,0.6)` : "none",
-        transition: "border-color 0.4s, box-shadow 0.4s",
-      }}>
-      {/* Spinning conic glow */}
-      <div className="absolute -inset-px rounded-2xl pointer-events-none overflow-hidden"
-        style={{ opacity: hovered ? 1 : 0, background: `conic-gradient(from 0deg, transparent 0deg, ${cc.accent}30 60deg, transparent 120deg)`, animation: hovered ? "border-spin 4s linear infinite" : "none", transition: "opacity 0.4s" }} />
-      {/* Top severity bar */}
-      <div className={`h-1 w-full bg-gradient-to-r ${sc.bar}`} style={{ transition: "width 0.5s ease" }} />
-      {/* Featured label glow sweep */}
-      <motion.div animate={{ x: ["-100%", "200%"] }} transition={{ duration: 4, repeat: Infinity, repeatDelay: 2 }}
-        className="absolute top-0 left-0 h-px w-1/3" style={{ background: `linear-gradient(to right, transparent, ${cc.accent}, transparent)` }} />
-      {/* Radial glow */}
-      <div className="absolute inset-0 pointer-events-none"
-        style={{ opacity: hovered ? 1 : 0, background: `radial-gradient(ellipse at 50% 0%, ${cc.accent}12, transparent 60%)`, transition: "opacity 0.5s" }} />
-      {/* Watermark number */}
-      <div className="absolute -right-4 top-1/2 -translate-y-1/2 font-black pointer-events-none select-none leading-none"
-        style={{ fontFamily: "'Orbitron', sans-serif", fontSize: "8rem", color: cc.accent, opacity: hovered ? 0.06 : 0.025, transition: "opacity 0.4s" }}>
-        {article.category.slice(0, 3).toUpperCase()}
+    <div className="relative overflow-hidden border-y border-red-500/20 bg-black/60" style={{ height:32 }}>
+      <div className="absolute inset-y-0 left-0 z-10 flex items-center px-3 bg-gradient-to-r from-black to-transparent" style={{ minWidth:80 }}>
+        <span className="text-[9px] font-bold tracking-widest text-red-400 flex items-center gap-1" style={{ fontFamily:"'Orbitron',sans-serif" }}>
+          <span className="w-1.5 h-1.5 rounded-full bg-red-400 animate-pulse" />LIVE
+        </span>
       </div>
-      <div className="relative z-10 p-6 sm:p-8 lg:p-10 flex flex-col gap-4">
-        <div className="flex flex-wrap items-center justify-between gap-2">
-          <div className="flex flex-wrap items-center gap-2">
-            <span className="px-3 py-1 rounded-full font-black tracking-widest uppercase border"
-              style={{ fontFamily: "'Orbitron', sans-serif", fontSize: "10px", background: `${cc.accent}20`, borderColor: `${cc.accent}50`, color: cc.accent }}>
-              ⚡ Top Story
-            </span>
-            <CategoryBadge category={article.category} />
-          </div>
-          <SeverityBadge severity={article.severity} />
-        </div>
-        <h2 className="font-black leading-tight transition-colors duration-300"
-          style={{ fontFamily: "'Orbitron', sans-serif", fontSize: "clamp(1rem, 3vw, 2rem)", color: hovered ? cc.accent : "#fff" }}>
-          {article.title}
-        </h2>
-        <div className="relative h-px overflow-hidden bg-white/5">
-          <motion.div animate={{ width: hovered ? "100%" : "4rem" }} transition={{ duration: 0.5 }}
-            className="absolute left-0 top-0 h-full" style={{ background: cc.accent }} />
-        </div>
-        <p className="text-gray-300 leading-relaxed text-sm sm:text-base line-clamp-4 lg:line-clamp-none">{article.summary}</p>
-        <div className="flex flex-wrap gap-1.5">
-          {article.tags.slice(0, 5).map((tag, i) => (
-            <span key={i} className="px-2 py-0.5 rounded-lg bg-blue-500/10 border border-blue-400/25 text-blue-300" style={{ fontFamily: "'Share Tech Mono', monospace", fontSize: "10px" }}>#{tag}</span>
-          ))}
-        </div>
-        <div className="flex items-center justify-between pt-3 border-t border-white/10 flex-wrap gap-2">
-          <div className="flex items-center gap-3 flex-wrap">
-            <SourcePill source={article.source} />
-            <span className="flex items-center gap-1 text-gray-500" style={{ fontFamily: "'Share Tech Mono', monospace", fontSize: "10px" }}>
-              <CalendarDays className="w-3 h-3" />{formatDate(article.publishedAt)}
-            </span>
-          </div>
-          <motion.span animate={{ x: hovered ? 4 : 0 }} transition={{ duration: 0.2 }}
-            className="flex items-center gap-1.5 font-black" style={{ fontFamily: "'Share Tech Mono', monospace", fontSize: "0.72rem", color: cc.accent }}>
-            Read Full Story <ChevronRight className="w-4 h-4" />
-          </motion.span>
-        </div>
+      <div className="absolute inset-0 flex items-center pl-20">
+        <div style={{ animation:"ticker 70s linear infinite", whiteSpace:"nowrap", fontFamily:"'Share Tech Mono',monospace" }}
+          className="text-[10px] text-red-400/70">{text} &nbsp;&nbsp; {text}</div>
       </div>
-    </motion.a>
+    </div>
   );
-});
-FeaturedCard.displayName = "FeaturedCard";
+};
 
-/* ─────────────────────────────────────────────────────────────
-   VIEW MORE MODAL
-───────────────────────────────────────────────────────────── */
-function ViewMoreModal({ isOpen, onClose, articles }: { isOpen: boolean; onClose: () => void; articles: CyberNewsArticle[] }) {
-  const [selPeriod, setSelPeriod] = useState("all");
-  const [selCategory, setSelCategory] = useState("all");
-  const [selSeverity, setSelSeverity] = useState("all");
-  const [selRegion, setSelRegion] = useState("all");
-
-  const grouped = useMemo(() => {
-    let f = articles;
-    if (selCategory !== "all") f = f.filter((a) => a.category === selCategory);
-    if (selSeverity !== "all") f = f.filter((a) => a.severity === selSeverity);
-    if (selRegion !== "all") { const names = RSS_SOURCES.filter((s) => s.region === selRegion).map((s) => s.name); f = f.filter((a) => names.includes(a.source)); }
-    if (selPeriod !== "all") f = f.filter((a) => { const d2 = getDaysAgo(a.publishedAt); return selPeriod === "today" ? d2 === 0 : selPeriod === "week" ? d2 <= 7 : d2 <= 30; });
-    return groupByDate(f);
-  }, [articles, selPeriod, selCategory, selSeverity, selRegion]);
-
-  const total = useMemo(() => Object.values(grouped).flat().length, [grouped]);
-  const hasFilter = selPeriod !== "all" || selCategory !== "all" || selSeverity !== "all" || selRegion !== "all";
-  const reset = useCallback(() => { setSelPeriod("all"); setSelCategory("all"); setSelSeverity("all"); setSelRegion("all"); }, []);
-
-  useEffect(() => { document.body.style.overflow = isOpen ? "hidden" : ""; return () => { document.body.style.overflow = ""; }; }, [isOpen]);
-  useEffect(() => { if (!isOpen) return; const h = (e: KeyboardEvent) => { if (e.key === "Escape") onClose(); }; window.addEventListener("keydown", h); return () => window.removeEventListener("keydown", h); }, [isOpen, onClose]);
-
-  const filters = [
-    { val: selPeriod, set: setSelPeriod, opts: [["all", "All Time"], ["today", "Today"], ["week", "This Week"], ["month", "This Month"]] as [string, string][] },
-    { val: selCategory, set: setSelCategory, opts: [["all", "All Categories"], ["Breach", "🔶 Breach"], ["Vulnerability", "🔴 Vuln"], ["Malware", "🔥 Malware"], ["Advisory", "🛡️ Advisory"], ["Research", "📘 Research"]] as [string, string][] },
-    { val: selSeverity, set: setSelSeverity, opts: [["all", "All Severities"], ["Critical", "🔴 Critical"], ["High", "🟠 High"], ["Medium", "🟡 Medium"], ["Low", "🟢 Low"]] as [string, string][] },
-    { val: selRegion, set: setSelRegion, opts: [["all", "All Regions"], ["global", "🌐 Global"], ["india", "🇮🇳 India"]] as [string, string][] },
+/* ─── STATS STRIP ────────────────────────────────────────────────────────── */
+const StatsStrip = ({ articles, succeeded, failed, isLive }: { articles: CyberNewsArticle[]; succeeded: string[]; failed: string[]; isLive: boolean }) => {
+  const items = [
+    { label:"Total Articles",  val:articles.length,                                           color:"#00ffe7" },
+    { label:"Today",           val:articles.filter(a=>Date.now()-new Date(a.publishedAt).getTime()<86400000).length, color:"#3b82f6" },
+    { label:"Critical Alerts", val:articles.filter(a=>a.severity==="Critical").length,         color:"#ff2d55" },
+    { label:"Sources Active",  val:succeeded.length,                                           color:"#a855f7" },
   ];
-
   return (
-    <AnimatePresence>
-      {isOpen && (
-        <>
-          <motion.div key="bd" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.25 }} onClick={onClose}
-            style={{ position: "fixed", inset: 0, zIndex: 200, background: "rgba(0,0,0,0.9)", backdropFilter: "blur(8px)" }} />
-          <div style={{ position: "fixed", inset: 0, zIndex: 201, display: "flex", alignItems: "flex-end", justifyContent: "center", pointerEvents: "none" }} className="sm:items-center">
-            <motion.div key="panel" initial={{ opacity: 0, y: 40, scale: 0.97 }} animate={{ opacity: 1, y: 0, scale: 1 }} exit={{ opacity: 0, y: 20, scale: 0.97 }}
-              transition={{ duration: 0.3, ease: [0.22, 1, 0.36, 1] }} onClick={(e) => e.stopPropagation()}
-              style={{ pointerEvents: "auto", width: "100%", maxWidth: "min(92vw,1200px)", maxHeight: "92dvh", boxShadow: "0 0 80px rgba(0,255,231,0.2), 0 40px 100px rgba(0,0,0,0.8)" }}
-              className="flex flex-col rounded-t-2xl sm:rounded-2xl border-t-2 border-x-2 sm:border-2 border-cyan-400/30 overflow-hidden">
-              <div className="flex flex-col rounded-t-2xl sm:rounded-2xl overflow-hidden h-full" style={{ background: "linear-gradient(135deg, rgba(2,13,24,0.98) 0%, rgba(2,5,9,0.98) 100%)" }}>
-                <div className="flex justify-center pt-3 pb-1 sm:hidden shrink-0">
-                  <div className="w-10 h-1 rounded-full bg-white/25" />
-                </div>
-                {/* Modal Header */}
-                <div className="shrink-0 border-b border-cyan-400/25 px-4 sm:px-6 pt-3 sm:pt-4 pb-3" style={{ background: "rgba(2,13,24,0.95)" }}>
-                  <div className="flex items-center justify-between gap-3 mb-3">
-                    <div className="flex items-center gap-2.5 min-w-0">
-                      <div className="p-2 rounded-lg bg-cyan-500/15 border border-cyan-400/40 shrink-0">
-                        <Newspaper className="w-5 h-5 text-cyan-400" />
-                      </div>
-                      <div className="min-w-0">
-                        <h2 className="text-xl font-black text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-blue-400 truncate" style={{ fontFamily: "'Orbitron', sans-serif" }}>All Cyber News</h2>
-                        <p className="text-gray-400 mt-0.5" style={{ fontFamily: "'Share Tech Mono', monospace", fontSize: "11px" }}>
-                          <span className="text-cyan-400 font-bold">{total}</span>{hasFilter ? ` of ${articles.length}` : ""} articles · sorted by date
-                        </p>
-                      </div>
-                    </div>
-                    <motion.button whileHover={{ scale: 1.1, rotate: 90 }} whileTap={{ scale: 0.9 }} onClick={onClose}
-                      className="p-2 rounded-lg bg-red-500/10 border border-red-400/40 hover:bg-red-500/25 hover:border-red-400/70 transition-all duration-200 shrink-0">
-                      <X className="w-5 h-5 text-red-400" />
-                    </motion.button>
-                  </div>
-                  <div className="flex items-center gap-2 overflow-x-auto pb-1" style={{ scrollbarWidth: "none" }}>
-                    {filters.map(({ val, set, opts }, fi) => (
-                      <div key={fi} className="relative shrink-0">
-                        <select value={val} onChange={(e) => set(e.target.value)}
-                          className="appearance-none pl-2.5 pr-6 py-1.5 rounded-lg bg-white/5 border border-white/20 text-cyan-300 cursor-pointer hover:bg-white/10 hover:border-cyan-400/50 focus:outline-none focus:border-cyan-400/70 transition-all duration-200"
-                          style={{ fontFamily: "'Share Tech Mono', monospace", fontSize: "11px" }}>
-                          {opts.map(([v, l]) => <option key={v} value={v} className="bg-gray-900 text-white">{l}</option>)}
-                        </select>
-                        <ChevronDown className="absolute right-1.5 top-1/2 -translate-y-1/2 w-3 h-3 text-cyan-400/60 pointer-events-none" />
-                      </div>
-                    ))}
-                    <AnimatePresence>
-                      {hasFilter && (
-                        <motion.button initial={{ opacity: 0, scale: 0.8 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.8 }} whileTap={{ scale: 0.95 }} onClick={reset}
-                          className="shrink-0 flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-red-500/10 border border-red-400/40 text-red-400 hover:bg-red-500/20 transition-all duration-200"
-                          style={{ fontFamily: "'Share Tech Mono', monospace", fontSize: "11px", whiteSpace: "nowrap" }}>
-                          <X className="w-2.5 h-2.5" /> Reset
-                        </motion.button>
-                      )}
-                    </AnimatePresence>
-                  </div>
-                </div>
-                {/* Modal Body */}
-                <div className="flex-1 overflow-y-auto cyber-scrollbar px-4 sm:px-6 py-4 sm:py-5">
-                  {Object.keys(grouped).length === 0 ? (
-                    <div className="flex flex-col items-center justify-center py-16 gap-4">
-                      <div className="p-5 rounded-2xl bg-white/5 border border-white/10"><Filter className="w-10 h-10 text-gray-600" /></div>
-                      <p className="text-gray-300 text-sm font-bold" style={{ fontFamily: "'Orbitron', sans-serif" }}>No articles match</p>
-                      <motion.button whileHover={{ scale: 1.04 }} whileTap={{ scale: 0.96 }} onClick={reset}
-                        className="px-4 py-2 rounded-lg bg-cyan-500/15 border border-cyan-400/40 text-cyan-400 hover:bg-cyan-500/25 transition-all"
-                        style={{ fontFamily: "'Share Tech Mono', monospace", fontSize: "12px" }}>
-                        Clear filters
-                      </motion.button>
-                    </div>
-                  ) : (
-                    <div className="space-y-8">
-                      {Object.entries(grouped).map(([period, pa], gi) => (
-                        <motion.div key={period} initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3, delay: gi * 0.05 }}>
-                          <div className="flex items-center gap-3 mb-4">
-                            <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-gradient-to-r from-cyan-500/15 to-blue-500/15 border border-cyan-400/30 shrink-0">
-                              <CalendarDays className="w-3.5 h-3.5 text-cyan-400" />
-                              <span className="text-cyan-300 font-black uppercase" style={{ fontFamily: "'Share Tech Mono', monospace", fontSize: "11px" }}>{period}</span>
-                              <span className="px-1.5 py-0.5 rounded-full bg-cyan-500/20 border border-cyan-400/40 text-cyan-400 font-black" style={{ fontSize: "10px" }}>{pa.length}</span>
-                            </div>
-                            <div className="flex-1 h-px bg-gradient-to-r from-cyan-400/40 to-transparent" />
-                          </div>
-                          <motion.div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3" initial="hidden" animate="visible" variants={stagger}>
-                            {pa.map((article) => <NewsCard key={article.id} article={article} />)}
-                          </motion.div>
-                        </motion.div>
-                      ))}
-                    </div>
-                  )}
-                </div>
-                {/* Modal Footer */}
-                <div className="shrink-0 border-t border-cyan-400/20 px-6 py-2.5" style={{ background: "rgba(2,13,24,0.95)" }}>
-                  <div className="flex items-center justify-between text-gray-500" style={{ fontFamily: "'Share Tech Mono', monospace", fontSize: "11px" }}>
-                    <span>Showing <span className="text-cyan-400 font-bold">{total}</span> of <span className="text-gray-300">{articles.length}</span></span>
-                    <span className="text-cyan-400/60 font-semibold hidden sm:flex items-center gap-1.5">
-                      <kbd className="px-1.5 py-0.5 rounded bg-white/5 border border-white/15" style={{ fontSize: "9px" }}>ESC</kbd> or tap outside to close
-                    </span>
-                  </div>
-                </div>
-              </div>
-            </motion.div>
-          </div>
-        </>
+    <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-8">
+      {items.map(item => (
+        <div key={item.label} className="relative overflow-hidden rounded-xl p-4 border border-white/[0.06] bg-black/40"
+          style={{ boxShadow:"inset 0 1px 0 rgba(255,255,255,.04)" }}>
+          <div className="absolute top-0 left-0 right-0 h-px" style={{ background:`linear-gradient(to right,${item.color},transparent)` }} />
+          <div className="font-black mb-0.5" style={{ fontFamily:"'Orbitron',sans-serif", fontSize:"clamp(1.4rem,5vw,2rem)", color:item.color, textShadow:`0 0 20px ${item.color}40` }}>{item.val}</div>
+          <div className="text-[10px] text-gray-600" style={{ fontFamily:"'Share Tech Mono',monospace" }}>{item.label}</div>
+        </div>
+      ))}
+      {!isLive && (
+        <div className="col-span-2 sm:col-span-4 text-center text-[10px] text-yellow-500/70 py-1" style={{ fontFamily:"'Share Tech Mono',monospace" }}>
+          ⚠ SHOWING STATIC FALLBACK — live feeds unavailable (CORS proxies may be rate-limited)
+        </div>
       )}
-    </AnimatePresence>
+      {failed.length > 0 && isLive && (
+        <div className="col-span-2 sm:col-span-4 text-[10px] text-gray-600 py-1" style={{ fontFamily:"'Share Tech Mono',monospace" }}>
+          {succeeded.length} sources loaded · {failed.length} failed ({failed.slice(0,3).join(", ")}{failed.length>3?"…":""})
+        </div>
+      )}
+    </div>
   );
-}
+};
 
-/* ═══════════════════════════════════════════════════════════════
-   MAIN COMPONENT
-═══════════════════════════════════════════════════════════════ */
+/* ─── FILTER BAR ─────────────────────────────────────────────────────────── */
+const FILTERS: { label:ActiveFilter; icon:React.ReactNode; color:string }[] = [
+  { label:"All",           icon:<Radio className="w-3 h-3" />,        color:"#00ffe7" },
+  { label:"Breach",        icon:<AlertTriangle className="w-3 h-3" />, color:"#ff2d55" },
+  { label:"Vulnerability", icon:<Bug className="w-3 h-3" />,          color:"#ff7722" },
+  { label:"Malware",       icon:<Zap className="w-3 h-3" />,          color:"#a855f7" },
+  { label:"Advisory",      icon:<Shield className="w-3 h-3" />,       color:"#3b82f6" },
+  { label:"Research",      icon:<BookOpen className="w-3 h-3" />,     color:"#00ffe7" },
+];
+
+const FilterBar = ({ active, onChange }: { active:ActiveFilter; onChange:(f:ActiveFilter)=>void }) => (
+  <div className="flex flex-wrap gap-2 mb-6">
+    {FILTERS.map(f => {
+      const isActive = active === f.label;
+      return (
+        <button key={f.label} onClick={() => onChange(f.label)}
+          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[10px] font-bold border transition-all duration-200"
+          style={{ fontFamily:"'Share Tech Mono',monospace", borderColor:isActive?`${f.color}60`:"rgba(255,255,255,.08)", color:isActive?f.color:"#4b5563", background:isActive?`${f.color}12`:"rgba(255,255,255,.02)", boxShadow:isActive?`0 0 12px ${f.color}20`:"none" }}>
+          {f.icon} {f.label.toUpperCase()}
+        </button>
+      );
+    })}
+  </div>
+);
+
+/* ─── SKELETON ───────────────────────────────────────────────────────────── */
+const SkeletonCard = () => (
+  <div className="rounded-xl border border-white/[0.06] p-5 h-64 bg-black/40">
+    {[80,60,100,40,70].map((w,i) => (
+      <div key={i} className="h-2.5 rounded mb-3 bg-white/5" style={{ width:`${w}%` }} />
+    ))}
+  </div>
+);
+
+/* ─── MAIN PAGE ──────────────────────────────────────────────────────────── */
 export default function CyberNews() {
-  const [allArticles, setAllArticles] = useState<CyberNewsArticle[]>(FALLBACK_ARTICLES);
-  const [fetchResult, setFetchResult] = useState<Partial<FetchResult>>({});
-  const [isRefreshing, setIsRefreshing] = useState(false);
-  const [isOnline, setIsOnline] = useState(typeof navigator !== "undefined" ? navigator.onLine : true);
-  const [countdown, setCountdown] = useState(getSecondsUntilMidnight());
-  const [showViewMore, setShowViewMore] = useState(false);
-  const [gridKey, setGridKey] = useState(0);
+  const [articles, setArticles]       = useState<CyberNewsArticle[]>([]);
+  const [loading, setLoading]         = useState(true);
+  const [result, setResult]           = useState<FetchResult | null>(null);
+  const [filter, setFilter]           = useState<ActiveFilter>("All");
+  const [refreshing, setRefreshing]   = useState(false);
+  const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
+  const [visibleCount, setVisibleCount] = useState(12);
 
-  const lastFetchRef = useRef<number>(0);
-  const isInitRef = useRef<boolean>(true);
-  const [todayLabel] = useState(() => new Date().toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric", year: "numeric" }));
-
-  const displayArticles = useMemo(() => {
-    const sorted = [...allArticles].sort((a, b) => new Date(b.publishedAt).getTime() - new Date(a.publishedAt).getTime());
-    if (fetchResult.isLive) {
-      const crits = sorted.filter((a) => a.severity === "Critical");
-      const rest = sorted.filter((a) => a.severity !== "Critical");
-      return [...crits, ...rest].slice(0, DAILY_FEED_SIZE);
+  const load = useCallback(async (bust = false) => {
+    if (bust) { clearCache(); setRefreshing(true); }
+    else setLoading(true);
+    try {
+      const res = await fetchAllArticles(bust);
+      setArticles(res.articles);
+      setResult(res);
+      setLastUpdated(new Date());
+    } catch {
+      setArticles(FALLBACK_ARTICLES);
+    } finally {
+      setLoading(false);
+      setRefreshing(false);
     }
-    return getDailyArticles(allArticles, DAILY_FEED_SIZE);
-  }, [allArticles, fetchResult]);
-
-  const featuredArticle = displayArticles[0];
-  const gridArticles = displayArticles.slice(1);
-
-  const stats = useMemo(() => ({
-    total: allArticles.length,
-    critical: allArticles.filter((a) => a.severity === "Critical").length,
-    feeds: (fetchResult.succeededFeeds ?? []).length,
-    today: allArticles.filter((a) => getDaysAgo(a.publishedAt) === 0).length,
-  }), [allArticles, fetchResult]);
-
-  const applyResult = useCallback((result: FetchResult) => {
-    setAllArticles(result.articles);
-    setFetchResult(result);
-    setGridKey((k) => k + 1);
-    lastFetchRef.current = Date.now();
   }, []);
 
-  // Initial fetch
-  useEffect(() => {
-    let mounted = true;
-    (async () => {
-      setIsRefreshing(true);
-      try { const result = await fetchAllRSSArticles(); if (mounted) applyResult(result); }
-      catch { if (mounted) applyResult({ articles: FALLBACK_ARTICLES, succeededFeeds: [], failedFeeds: [], fromCache: false, isLive: false }); }
-      finally { if (mounted) { setIsRefreshing(false); isInitRef.current = false; } }
-    })();
-    return () => { mounted = false; };
-  }, [applyResult]);
+  useEffect(() => { load(); }, [load]);
 
-  // Tab focus refresh (5-min throttle)
-  useEffect(() => {
-    async function onVisible() {
-      if (document.visibilityState !== "visible") return;
-      if (isRefreshing || isInitRef.current) return;
-      if (Date.now() - lastFetchRef.current < 5 * 60 * 1000) return;
-      setIsRefreshing(true);
-      try { applyResult(await fetchAllRSSArticles()); } catch { }
-      finally { setIsRefreshing(false); }
-    }
-    document.addEventListener("visibilitychange", onVisible);
-    return () => document.removeEventListener("visibilitychange", onVisible);
-  }, [applyResult, isRefreshing]);
+  const filtered = filter === "All" ? articles : articles.filter(a => a.category === filter);
+  const visible  = filtered.slice(0, visibleCount);
 
-  // 15-min background refresh
-  useEffect(() => {
-    const id = setInterval(async () => { try { applyResult(await fetchAllRSSArticles()); } catch { } }, 15 * 60 * 1000);
-    return () => clearInterval(id);
-  }, [applyResult]);
-
-  // Online/offline
-  useEffect(() => {
-    const on = () => setIsOnline(true), off = () => setIsOnline(false);
-    window.addEventListener("online", on); window.addEventListener("offline", off);
-    return () => { window.removeEventListener("online", on); window.removeEventListener("offline", off); };
-  }, []);
-
-  // Countdown
-  useEffect(() => { const id = setInterval(() => setCountdown(getSecondsUntilMidnight()), 1000); return () => clearInterval(id); }, []);
-
-  // Manual refresh
-  const handleRefresh = useCallback(async () => {
-    if (isRefreshing) return;
-    setIsRefreshing(true);
-    clearCache();
-    try { applyResult(await fetchAllRSSArticles(true)); } catch { }
-    finally { setIsRefreshing(false); }
-  }, [isRefreshing, applyResult]);
-
-  const cacheStatus = getCacheStatus();
-  const isLive = fetchResult.isLive === true;
-
-  /* ── RENDER ── */
   return (
     <motion.div variants={pageFade} initial="hidden" animate="visible"
       className="relative min-h-screen text-white overflow-x-hidden"
-      style={{ background: "transparent", fontFamily: "'Rajdhani', sans-serif" }}>
+      style={{ background:"transparent", fontFamily:"'Rajdhani',sans-serif" }}>
       <style>{GLOBAL_CSS}</style>
 
-      {/* ── BACKGROUND — matching Home.tsx ── */}
+      {/* BACKGROUND */}
       <div className="fixed inset-0 pointer-events-none -z-10">
-        <div className="absolute inset-0" style={{ background: "radial-gradient(ellipse at 18% 0%, rgba(0,255,231,0.06) 0%, transparent 50%)" }} />
-        <div className="absolute inset-0" style={{ background: "radial-gradient(ellipse at 82% 55%, rgba(59,130,246,0.06) 0%, transparent 50%)" }} />
-        <div className="absolute inset-0" style={{ background: "radial-gradient(ellipse at 50% 100%, rgba(168,85,247,0.05) 0%, transparent 50%)" }} />
+        <ParticleField />
+        <div className="absolute inset-0" style={{ background:"radial-gradient(ellipse at 18% 0%,rgba(0,255,231,.06) 0%,transparent 50%)" }} />
+        <div className="absolute inset-0" style={{ background:"radial-gradient(ellipse at 82% 55%,rgba(59,130,246,.06) 0%,transparent 50%)" }} />
+        <div className="absolute inset-0" style={{ background:"radial-gradient(ellipse at 50% 100%,rgba(168,85,247,.05) 0%,transparent 50%)" }} />
         <div className="absolute left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-cyan-400/20 to-transparent scan-animate pointer-events-none" />
-        <div className="absolute inset-0" style={{ background: "radial-gradient(ellipse at center, transparent 38%, rgba(0,0,0,0.72) 100%)" }} />
+        <div className="absolute inset-0" style={{ background:"radial-gradient(ellipse at center,transparent 38%,rgba(0,0,0,.72) 100%)" }} />
       </div>
 
-      {/* ── PAGE CONTENT ── */}
-      <div className="relative mx-auto max-w-7xl px-6 sm:px-10 py-20">
+      {/* TICKER */}
+      {articles.length > 0 && <TickerBar articles={articles} />}
 
-        {/* ══════════════════════════════════
-            HERO SECTION — Home.tsx style
-        ══════════════════════════════════ */}
-        <motion.section variants={stagger} initial="hidden" animate="visible" className="mb-16">
+      <div className="relative mx-auto max-w-7xl px-4 sm:px-8 lg:px-10 xl:px-12 py-10 sm:py-16">
 
-          {/* Eyebrow */}
-          <motion.div variants={fadeLeft} className="flex items-center gap-3 mb-8">
+        {/* HERO */}
+        <motion.section variants={stagger} initial="hidden" animate="visible" className="mb-12">
+          <motion.div variants={fadeUp} className="flex items-center gap-3 mb-8">
             <div className="flex items-center gap-2 px-3 py-1.5 rounded border"
-              style={{ borderColor: "rgba(0,255,231,0.25)", background: "rgba(0,255,231,0.05)", boxShadow: "0 0 20px rgba(0,255,231,0.07)" }}>
-              <motion.span animate={{ opacity: [1, 0, 1] }} transition={{ duration: 1, repeat: Infinity }}
-                className="w-2 h-2 rounded-full bg-cyan-400" />
-              <span className="text-cyan-400 tracking-widest" style={{ fontFamily: "'Share Tech Mono', monospace", fontSize: "11px" }}>
-                ~/cyber/news — {isLive ? "LIVE FEED ACTIVE" : isRefreshing ? "FETCHING FEEDS…" : "OFFLINE MODE"}
+              style={{ borderColor:"rgba(255,45,85,.3)", background:"rgba(255,45,85,.05)", boxShadow:"0 0 20px rgba(255,45,85,.07)" }}>
+              <motion.span animate={{ opacity:[1,0,1] }} transition={{ duration:1, repeat:Infinity }}
+                className="w-2 h-2 rounded-full bg-red-400" />
+              <span className="text-red-400 text-xs tracking-widest" style={{ fontFamily:"'Share Tech Mono',monospace" }}>
+                ~/cyber-news — FEEDS LIVE
               </span>
             </div>
-            <div className="h-px flex-1 max-w-[200px]" style={{ background: "linear-gradient(to right, rgba(0,255,231,0.4), transparent)" }} />
+            <div className="h-px flex-1 max-w-[200px]"
+              style={{ background:"linear-gradient(to right,rgba(255,45,85,.4),transparent)", animation:"line-extend 1s ease-out forwards" }} />
           </motion.div>
 
-          {/* Heading */}
-          <motion.h1 variants={fadeUp} className="text-5xl sm:text-7xl font-black leading-[0.95] tracking-tight mb-8" style={{ fontFamily: "'Orbitron', sans-serif" }}>
-            <span className="text-white block mb-2">Live Cyber</span>
-            <span className="text-white">Security{" "}</span>
+          <motion.h1 variants={fadeUp} className="font-black leading-[0.95] tracking-tight mb-6"
+            style={{ fontFamily:"'Orbitron',sans-serif", fontSize:"clamp(2rem,7vw,4.5rem)" }}>
+            <span className="text-white block mb-1">Cyber</span>
             <span className="relative inline-block">
-              <span className="neon-text" style={{ background: "linear-gradient(135deg, #00ffe7 0%, #3b82f6 50%, #a855f7 100%)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent", backgroundClip: "text" }}>
-                Intel_Feed
+              <span className="neon-text"
+                style={{ background:"linear-gradient(135deg,#ff2d55 0%,#ff7722 40%,#a855f7 100%)", WebkitBackgroundClip:"text", WebkitTextFillColor:"transparent", backgroundClip:"text" }}>
+                Threat Intel
               </span>
-              <motion.span initial={{ scaleX: 0 }} animate={{ scaleX: 1 }} transition={{ duration: 1, delay: 0.9, ease: "easeOut" }}
+              <motion.span initial={{ scaleX:0 }} animate={{ scaleX:1 }} transition={{ duration:1, delay:.9 }}
                 className="absolute -bottom-2 left-0 right-0 h-[3px] origin-left rounded-full block"
-                style={{ background: "linear-gradient(90deg, #00ffe7, #3b82f6, #a855f7)" }} />
+                style={{ background:"linear-gradient(90deg,#ff2d55,#ff7722,#a855f7)" }} />
             </span>
           </motion.h1>
 
-          {/* Description */}
-          <motion.div variants={fadeUp} className="max-w-2xl mb-8">
-            <div className="flex gap-4 items-start">
-              <motion.div initial={{ height: 0 }} animate={{ height: 80 }} transition={{ duration: 0.8, delay: 0.5 }}
-                className="w-0.5 rounded-full shrink-0 mt-1" style={{ background: "linear-gradient(to bottom, #00ffe7, transparent)" }} />
-              <p className="text-lg leading-relaxed" style={{ color: "#7a8899" }}>
-                {isLive
-                  ? `Live feed from ${stats.feeds} trusted RSS sources — global & Indian cybersecurity intelligence, classified and ranked in real-time.`
-                  : <>Daily cybersecurity intelligence — breaches, vulnerabilities, malware, and advisories. <span className="text-white font-semibold">Curated from the world's top security feeds.</span></>}
-              </p>
-            </div>
-          </motion.div>
+          <motion.p variants={fadeUp} className="text-base sm:text-lg leading-relaxed max-w-2xl mb-6"
+            style={{ color:"#7a8899", fontFamily:"'Rajdhani',sans-serif" }}>
+            Real-time aggregated feed from{" "}
+            <span className="text-white font-semibold">{RSS_SOURCES.length}+ top cybersecurity sources</span>
+            {" "}— breaches, CVEs, malware, and threat intelligence updated every 15 minutes.
+          </motion.p>
 
-          {/* Status indicators + Refresh button */}
-          <motion.div variants={fadeUp} className="flex flex-wrap items-center gap-3 mb-6">
-            {/* Online status */}
-            <div className={`flex items-center gap-1.5 px-3 py-1.5 rounded border font-semibold ${isOnline ? "bg-green-500/10 border-green-400/40 text-green-400" : "bg-red-500/10 border-red-400/40 text-red-400"}`}
-              style={{ fontFamily: "'Share Tech Mono', monospace", fontSize: "10px" }}>
-              {isOnline ? <Wifi className="w-2.5 h-2.5" /> : <WifiOff className="w-2.5 h-2.5" />}
-              {isOnline ? "Online" : "Offline"}
-            </div>
-
-            {/* Live / fetching status */}
-            {isLive ? <LivePulse /> : isRefreshing ? (
-              <span className="inline-flex items-center gap-1.5 text-violet-400 font-bold uppercase" style={{ fontFamily: "'Share Tech Mono', monospace", fontSize: "10px" }}>
-                <Loader2 className="w-3 h-3 animate-spin" />Fetching RSS…
+          <motion.div variants={fadeUp} className="flex items-center gap-3 flex-wrap">
+            <button onClick={() => load(true)} disabled={refreshing}
+              className="inline-flex items-center gap-2 px-4 py-2 rounded-lg border border-cyan-500/25 bg-cyan-500/5 text-cyan-400 text-[10px] font-bold transition-all hover:bg-cyan-400/10 hover:border-cyan-500/50 disabled:opacity-50"
+              style={{ fontFamily:"'Share Tech Mono',monospace" }}>
+              <RefreshCw className={`w-3 h-3 ${refreshing ? "spin-anim" : ""}`} />
+              {refreshing ? "FETCHING..." : "REFRESH FEEDS"}
+            </button>
+            {lastUpdated && (
+              <span className="text-[10px] text-gray-600 flex items-center gap-1" style={{ fontFamily:"'Share Tech Mono',monospace" }}>
+                <Clock className="w-3 h-3" /> Updated {timeAgo(lastUpdated.toISOString())}
+                {result?.fromCache && " (cached)"}
               </span>
-            ) : null}
-
-            {/* Cache freshness */}
-            {cacheStatus.cached && !isRefreshing && (() => {
-              const age = Math.floor((cacheStatus.age || 0) / 60000);
-              const fresh = age < 5;
-              return (
-                <div className={`flex items-center gap-1 px-2.5 py-1.5 rounded border font-semibold ${fresh ? "bg-green-500/10 border-green-400/30 text-green-300" : "bg-cyan-500/10 border-cyan-400/30 text-cyan-300"}`}
-                  style={{ fontFamily: "'Share Tech Mono', monospace", fontSize: "10px" }}>
-                  <span className={`w-1.5 h-1.5 rounded-full animate-pulse ${fresh ? "bg-green-400" : "bg-cyan-400"}`} />
-                  {fresh ? "Fresh" : `${age}m ago`}
-                </div>
-              );
-            })()}
-
-            {/* Date */}
-            <div className="hidden md:flex items-center gap-1.5 px-2.5 py-1.5 rounded border border-white/10 bg-white/5 text-gray-300 font-semibold"
-              style={{ fontFamily: "'Share Tech Mono', monospace", fontSize: "10px" }}>
-              <CalendarDays className="w-2.5 h-2.5 text-cyan-400" />
-              <span className="hidden lg:inline">{todayLabel}</span>
-              <span className="lg:hidden">{new Date().toLocaleDateString("en-US", { month: "short", day: "numeric" })}</span>
+            )}
+            <div className="flex items-center gap-1.5">
+              <TrendingUp className="w-3 h-3 text-cyan-400/50" />
+              <span className="text-[10px] text-gray-600" style={{ fontFamily:"'Share Tech Mono',monospace" }}>
+                {articles.length} articles loaded
+              </span>
             </div>
-
-            {/* Countdown */}
-            <div className="flex items-center gap-1 px-2.5 py-1.5 rounded border border-cyan-400/30 bg-gradient-to-r from-cyan-500/10 to-blue-500/10 text-cyan-300 font-bold"
-              style={{ fontFamily: "'Share Tech Mono', monospace", fontSize: "10px" }}>
-              <Clock className="w-2.5 h-2.5 text-cyan-400 animate-pulse shrink-0" />
-              <span className="hidden sm:inline">Next refresh </span>{formatCountdown(countdown)}
-            </div>
-          </motion.div>
-
-          {/* Refresh CTA — matching Home.tsx CTA style */}
-          <motion.div variants={fadeUp} className="flex gap-4 flex-wrap">
-            <motion.button whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }} onClick={handleRefresh} disabled={isRefreshing}
-              className="group relative inline-flex items-center gap-2 px-8 py-3 rounded-lg font-bold overflow-hidden transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
-              style={{ background: "linear-gradient(135deg, #00ffe7, #3b82f6)", fontFamily: "'Orbitron', sans-serif", fontSize: "0.72rem", letterSpacing: "0.1em", color: "#000", boxShadow: "0 0 30px rgba(0,255,231,0.3), 0 0 60px rgba(0,255,231,0.1)" }}>
-              <motion.div animate={{ x: ["-200%", "200%"] }} transition={{ duration: 2, repeat: Infinity, repeatDelay: 1 }}
-                className="absolute inset-0 w-1/2" style={{ background: "linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent)" }} />
-              {isRefreshing ? <Loader2 className="w-4 h-4 animate-spin" /> : <RefreshCw className="w-4 h-4" />}
-              {isRefreshing ? "FETCHING FEEDS…" : "REFRESH FEEDS"}
-              <ArrowUpRight className="w-4 h-4 transition-transform duration-200 group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
-            </motion.button>
-          </motion.div>
-
-          {/* Feed status bar */}
-          <motion.div variants={fadeUp}>
-            <FeedStatusBar succeeded={fetchResult.succeededFeeds ?? []} failed={fetchResult.failedFeeds ?? []} loading={isRefreshing} />
-          </motion.div>
-
-          {/* Hashtags */}
-          <motion.div variants={fadeUp} className="flex flex-wrap gap-2 mt-4">
-            {["live-rss-feeds", "global-india", "auto-classified", "30-day-recency", "proxy-racing"].map((tag) => (
-              <motion.span key={tag} whileHover={{ scale: 1.05 }}
-                className="px-3 py-1 rounded border border-white/6 bg-white/[0.02] text-gray-600 cursor-default transition-all duration-200"
-                style={{ fontFamily: "'Share Tech Mono', monospace", fontSize: "0.7rem" }}
-                onMouseEnter={(e) => { const el = e.currentTarget as HTMLElement; el.style.color = "#00ffe7"; el.style.borderColor = "rgba(0,255,231,0.4)"; }}
-                onMouseLeave={(e) => { const el = e.currentTarget as HTMLElement; el.style.color = ""; el.style.borderColor = ""; }}>
-                #{tag}
-              </motion.span>
-            ))}
           </motion.div>
         </motion.section>
 
-        {/* ══ FALLBACK WARNING ══ */}
-        {!isLive && !isRefreshing && (
-          <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
-            className="mb-8 relative overflow-hidden p-5 rounded-xl border border-yellow-400/40"
-            style={{ background: "linear-gradient(135deg, rgba(20,15,0,0.8), rgba(10,8,0,0.8))", boxShadow: "0 0 20px rgba(234,179,8,0.1)" }}>
-            <CyberCorner pos="tl" /><CyberCorner pos="tr" /><CyberCorner pos="bl" /><CyberCorner pos="br" />
-            <div className="flex items-start gap-2.5">
-              <AlertTriangle className="w-5 h-5 text-yellow-400 shrink-0 mt-0.5" />
-              <div>
-                <p className="text-yellow-300 font-bold" style={{ fontFamily: "'Orbitron', sans-serif", fontSize: "0.8rem" }}>RSS feeds unreachable — showing curated fallback content</p>
-                <p className="text-yellow-400/70 mt-0.5" style={{ fontFamily: "'Share Tech Mono', monospace", fontSize: "10px" }}>
-                  All proxies failed ({(fetchResult.failedFeeds ?? []).length} feeds). Check your connection and try refreshing.
-                </p>
-              </div>
-            </div>
+        {/* STATS */}
+        {!loading && articles.length > 0 && result && (
+          <motion.div variants={fadeUp} initial="hidden" whileInView="visible" viewport={{ once:true }}>
+            <StatsStrip articles={articles} succeeded={result.succeeded} failed={result.failed} isLive={result.isLive} />
           </motion.div>
         )}
 
-        {/* ══ PARTIAL FAILURE NOTICE ══ */}
-        {isLive && (fetchResult.failedFeeds ?? []).length > 0 && (
-          <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}
-            className="mb-5 px-4 py-2.5 rounded-xl border border-orange-400/25 bg-orange-500/5 flex items-center gap-2">
-            <AlertTriangle className="w-3.5 h-3.5 text-orange-400 shrink-0" />
-            <span className="text-orange-300 font-semibold" style={{ fontFamily: "'Share Tech Mono', monospace", fontSize: "11px" }}>
-              {fetchResult.failedFeeds!.length} feed{fetchResult.failedFeeds!.length > 1 ? "s" : ""} unreachable: {fetchResult.failedFeeds!.join(", ")}
-            </span>
-          </motion.div>
-        )}
-
-        {/* ══════════════════════════════════
-            STATS — Home.tsx style
-        ══════════════════════════════════ */}
-        <motion.div initial="hidden" animate="visible" variants={stagger}
-          className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-10">
-          <StatCard icon={Newspaper}     value={stats.total}    label="Total Articles" colorClass="text-cyan-400"   bgClass="bg-cyan-500/15"   borderClass="border-cyan-400/30"   accentColor="#00ffe7" />
-          <StatCard icon={AlertTriangle} value={stats.critical} label="Critical"        colorClass="text-red-400"    bgClass="bg-red-500/15"    borderClass="border-red-400/30"    accentColor="#ef4444" />
-          <StatCard icon={Activity}      value={stats.feeds}    label="Active Feeds"    colorClass="text-blue-400"   bgClass="bg-blue-500/15"   borderClass="border-blue-400/30"   accentColor="#3b82f6" />
-          <StatCard icon={Eye}           value={stats.today}    label="Published Today" colorClass="text-violet-400" bgClass="bg-violet-500/15" borderClass="border-violet-400/30" accentColor="#a855f7" />
-        </motion.div>
-
-        {/* ══ BREAKING TICKER ══ */}
-        <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.22, duration: 0.4 }} className="mb-10">
-          <BreakingTicker articles={displayArticles} />
-        </motion.div>
-
-        {/* ══════════════════════════════════
-            TOP INTEL SECTION LABEL
-        ══════════════════════════════════ */}
-        <motion.div initial={{ opacity: 0, x: -16 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.3, duration: 0.4 }} className="mb-8">
-          <SectionLabel num="01" label="Top Intel" />
-          <div className="flex items-end justify-between">
-            <h2 className="text-3xl sm:text-4xl font-black" style={{ fontFamily: "'Orbitron', sans-serif" }}>
-              Today's <span style={{ color: "#00ffe7" }}>Threat Feed</span>
+        {/* SECTION LABEL */}
+        <motion.div variants={fadeUp} initial="hidden" whileInView="visible" viewport={{ once:true }}>
+          <SectionLabel num="01" label="Live Threat Feed" />
+          <div className="flex items-end justify-between gap-4 mb-6">
+            <h2 className="font-black" style={{ fontFamily:"'Orbitron',sans-serif", fontSize:"clamp(1.3rem,4vw,1.9rem)" }}>
+              Latest <span style={{ color:"#00ffe7" }}>Intelligence</span>
             </h2>
-            <div className="hidden sm:flex items-center gap-2" style={{ fontFamily: "'Share Tech Mono', monospace", fontSize: "11px", color: "#555" }}>
-              <span>{displayArticles.length} STORIES</span>
-              <div className="w-16 h-px bg-gradient-to-r from-white/20 to-transparent" />
-            </div>
+            {!loading && (
+              <span className="text-xs text-gray-600 hidden sm:block flex-shrink-0" style={{ fontFamily:"'Share Tech Mono',monospace" }}>
+                {filtered.length} ARTICLES
+              </span>
+            )}
           </div>
         </motion.div>
 
-        {/* ══ FEATURED ARTICLE ══ */}
-        {featuredArticle && (
-          <motion.div initial="hidden" animate="visible" variants={stagger} className="mb-5">
-            <FeaturedCard article={featuredArticle} />
-          </motion.div>
+        {/* FILTERS */}
+        {!loading && <FilterBar active={filter} onChange={f => { setFilter(f); setVisibleCount(12); }} />}
+
+        {/* GRID */}
+        {loading ? (
+          <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
+            {Array.from({ length: 9 }).map((_, i) => <SkeletonCard key={i} />)}
+          </div>
+        ) : (
+          <>
+            <motion.div variants={stagger} initial="hidden" whileInView="visible" viewport={{ once:true, margin:"-60px" }}
+              className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
+              {visible.map(a => <NewsCard key={a.id} article={a} />)}
+            </motion.div>
+            {visibleCount < filtered.length && (
+              <div className="flex justify-center mt-10">
+                <button onClick={() => setVisibleCount(v => v + 12)}
+                  className="inline-flex items-center gap-2 px-7 py-3 rounded-lg font-bold transition-all duration-300"
+                  style={{ background:"linear-gradient(135deg,rgba(0,255,231,.08),rgba(59,130,246,.08))", border:"1px solid rgba(0,255,231,.2)", color:"#00ffe7", fontFamily:"'Orbitron',sans-serif", fontSize:".7rem", letterSpacing:".1em", boxShadow:"0 0 20px rgba(0,255,231,.08)" }}
+                  onMouseEnter={e => { (e.currentTarget as HTMLElement).style.borderColor = "rgba(0,255,231,.4)"; }}
+                  onMouseLeave={e => { (e.currentTarget as HTMLElement).style.borderColor = "rgba(0,255,231,.2)"; }}>
+                  <ChevronRight className="w-4 h-4" />
+                  LOAD MORE — {filtered.length - visibleCount} remaining
+                </button>
+              </div>
+            )}
+          </>
         )}
 
-        {/* ══ ARTICLE GRID ══ */}
-        <motion.div key={gridKey} initial="hidden" animate="visible" variants={staggerFast}
-          className="grid gap-4 grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4">
-          {gridArticles.map((article) => <NewsCard key={article.id} article={article} />)}
-        </motion.div>
-
-        {/* ══ VIEW MORE BUTTON — Home.tsx footer CTA style ══ */}
-        {allArticles.length > DAILY_FEED_SIZE && (
-          <motion.div initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.4, duration: 0.4 }} className="mt-12 flex justify-center">
-            <motion.button whileHover={{ scale: 1.03, y: -2 }} whileTap={{ scale: 0.97 }} onClick={() => setShowViewMore(true)}
-              className="group relative w-full sm:w-auto px-10 py-4 rounded-xl sm:rounded-2xl overflow-hidden transition-all duration-300"
-              style={{ background: "linear-gradient(135deg, rgba(0,255,231,0.04) 0%, rgba(0,0,0,0.8) 50%, rgba(168,85,247,0.04) 100%)", border: "2px solid rgba(0,255,231,0.3)", boxShadow: "0 0 40px rgba(0,255,231,0.1)" }}
-              onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.boxShadow = "0 0 60px rgba(0,255,231,0.2)"; (e.currentTarget as HTMLElement).style.borderColor = "rgba(0,255,231,0.6)"; }}
-              onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.boxShadow = "0 0 40px rgba(0,255,231,0.1)"; (e.currentTarget as HTMLElement).style.borderColor = "rgba(0,255,231,0.3)"; }}>
-              <CyberCorner pos="tl" /><CyberCorner pos="tr" /><CyberCorner pos="bl" /><CyberCorner pos="br" />
-              <motion.div animate={{ x: ["-100%", "200%"] }} transition={{ duration: 4, repeat: Infinity, repeatDelay: 2 }}
-                className="absolute top-0 left-0 h-px w-1/3" style={{ background: "linear-gradient(to right, transparent, rgba(0,255,231,0.8), transparent)" }} />
-              <div className="relative z-10 flex items-center justify-center gap-3">
-                <Newspaper className="w-5 h-5 text-cyan-400 group-hover:scale-110 transition-transform duration-300" />
-                <div className="text-left">
-                  <div className="flex items-center gap-2 flex-wrap">
-                    <span className="font-black text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-blue-400 text-base whitespace-nowrap" style={{ fontFamily: "'Orbitron', sans-serif" }}>
-                      View All Cyber News
-                    </span>
-                    <span className="px-2 py-0.5 rounded-full bg-cyan-500/20 border border-cyan-400/40 text-cyan-400 font-black" style={{ fontSize: "11px" }}>{allArticles.length}</span>
-                  </div>
-                  <p className="text-gray-400" style={{ fontFamily: "'Share Tech Mono', monospace", fontSize: "11px", marginTop: "2px" }}>Filter by date, category, severity & region</p>
-                </div>
-                <motion.span animate={{ y: [0, 4, 0] }} transition={{ duration: 1.5, repeat: Infinity }}>
-                  <ChevronDown className="w-5 h-5 text-cyan-400" />
-                </motion.span>
-              </div>
-            </motion.button>
+        {/* SOURCES FOOTER */}
+        {!loading && articles.length > 0 && (
+          <motion.div variants={fadeUp} initial="hidden" whileInView="visible" viewport={{ once:true }}
+            className="mt-16 relative overflow-hidden rounded-2xl border border-white/[0.08] p-8"
+            style={{ background:"linear-gradient(135deg,rgba(0,255,231,.04) 0%,rgba(0,0,0,.8) 50%,rgba(168,85,247,.04) 100%)", boxShadow:"0 0 80px rgba(0,255,231,.05),inset 0 1px 0 rgba(255,255,255,.06)" }}>
+            <CyberCorner pos="tl" /><CyberCorner pos="tr" /><CyberCorner pos="bl" /><CyberCorner pos="br" />
+            <div className="absolute top-0 left-0 right-0 h-px" style={{ background:"linear-gradient(to right,rgba(0,255,231,.5),rgba(59,130,246,.3),transparent)" }} />
+            <SectionLabel num="02" label="Active Sources" />
+            <div className="flex flex-wrap gap-2">
+              {[...new Set(articles.map(a => a.source))].map(source => (
+                <span key={source} className="px-2.5 py-1 rounded-lg border text-[10px] font-bold border-white/[0.08] bg-white/[0.03] text-gray-500 hover:text-cyan-400 hover:border-cyan-400/30 transition-colors cursor-default"
+                  style={{ fontFamily:"'Share Tech Mono',monospace" }}>
+                  {source}
+                </span>
+              ))}
+            </div>
           </motion.div>
         )}
-
-        {/* ══ VIEW MORE MODAL ══ */}
-        <ViewMoreModal isOpen={showViewMore} onClose={() => setShowViewMore(false)} articles={allArticles} />
-
-        {/* ══════════════════════════════════
-            INFO PANEL — Home.tsx style
-        ══════════════════════════════════ */}
-        <motion.section initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.5 }}
-          className="mt-20" aria-label="Feed info">
-          <SectionLabel num="02" label="Feed Architecture" />
-          <div className="relative overflow-hidden rounded-2xl p-8 border border-white/6"
-            style={{ background: "rgba(0,0,0,0.5)", backdropFilter: "blur(12px)", boxShadow: "inset 0 1px 0 rgba(255,255,255,0.04)" }}>
-            <CyberCorner pos="tl" /><CyberCorner pos="tr" /><CyberCorner pos="bl" /><CyberCorner pos="br" />
-            <div className="absolute top-0 left-0 right-0 h-px" style={{ background: "linear-gradient(to right, rgba(0,255,231,0.5), rgba(59,130,246,0.3), transparent)" }} />
-            <div className="relative grid grid-cols-1 lg:grid-cols-2 gap-8">
-              {/* RSS Sources */}
-              <div>
-                <div className="flex items-center gap-2.5 mb-5">
-                  <div className="p-2 rounded-xl bg-cyan-500/15 border border-cyan-400/40 shrink-0">
-                    <Rss className="w-5 h-5 text-cyan-400" />
-                  </div>
-                  <div>
-                    <h3 className="font-black text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-blue-400" style={{ fontFamily: "'Orbitron', sans-serif", fontSize: "0.9rem" }}>RSS Feed Sources</h3>
-                    <p className="text-gray-500 mt-0.5" style={{ fontFamily: "'Share Tech Mono', monospace", fontSize: "10px" }}>{RSS_SOURCES.filter((s) => s.enabled).length} feeds · global + India</p>
-                  </div>
-                </div>
-                <div className="grid grid-cols-2 sm:grid-cols-3 gap-1.5">
-                  {RSS_SOURCES.filter((s) => s.enabled).map((src, i) => {
-                    const ok = (fetchResult.succeededFeeds ?? []).includes(src.name);
-                    return (
-                      <motion.div key={i} initial={{ opacity: 0, y: 6 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: i * 0.03 }}
-                        className="flex items-center gap-1.5 px-2 py-2 rounded-lg bg-white/5 border border-white/10 hover:border-cyan-400/30 transition-all duration-300">
-                        <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${src.dot} ${ok && isLive ? "animate-pulse" : "opacity-40"}`} />
-                        <span className={`font-semibold truncate ${ok && isLive ? src.color : "text-gray-600"}`} style={{ fontFamily: "'Share Tech Mono', monospace", fontSize: "10px" }}>{src.name}</span>
-                        {src.region === "india" && <span className="ml-auto shrink-0" style={{ fontSize: "8px" }}>🇮🇳</span>}
-                      </motion.div>
-                    );
-                  })}
-                </div>
-              </div>
-              {/* How It Works */}
-              <div>
-                <div className="flex items-center gap-2.5 mb-5">
-                  <div className="p-2 rounded-xl bg-indigo-500/15 border border-indigo-400/40 shrink-0">
-                    <Terminal className="w-5 h-5 text-indigo-400" />
-                  </div>
-                  <div>
-                    <h3 className="font-black text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 to-violet-400" style={{ fontFamily: "'Orbitron', sans-serif", fontSize: "0.9rem" }}>How It Works</h3>
-                    <p className="text-gray-500 mt-0.5" style={{ fontFamily: "'Share Tech Mono', monospace", fontSize: "10px" }}>RSS → Proxy Race → XML Parse → Classify → Render</p>
-                  </div>
-                </div>
-                <div className="space-y-2">
-                  {[
-                    { icon: Globe,         color: "text-cyan-400",   bg: "bg-cyan-500/10",   border: "border-cyan-400/30",   title: "5-Proxy Parallel Race",       desc: "allorigins → corsproxy → codetabs → thingproxy → cors.sh. All race simultaneously. First valid XML wins. Staggered 200ms starts prevent server hammering." },
-                    { icon: RotateCcw,     color: "text-violet-400", bg: "bg-violet-500/10", border: "border-violet-400/30", title: "15-Min Cache + Auto-Refresh", desc: "Results cached in sessionStorage. Tab refocus re-fetches after 5 min. Background refresh every 15 min." },
-                    { icon: Shield,        color: "text-yellow-400", bg: "bg-yellow-500/10", border: "border-yellow-400/30", title: "Auto-Classifier",             desc: "Articles auto-tagged as Breach/Vuln/Malware/Advisory/Research using keyword matching. Severity scored Critical→Low." },
-                    { icon: AlertTriangle, color: "text-orange-400", bg: "bg-orange-500/10", border: "border-orange-400/30", title: "XML Validation Gate",         desc: "Every proxy response validated for real RSS/Atom XML before acceptance. HTML error pages are silently discarded." },
-                  ].map(({ icon: Icon, color, bg, border, title, desc }, i) => (
-                    <motion.div key={i} initial={{ opacity: 0, x: 10 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true }} transition={{ delay: i * 0.07 }}
-                      className="flex items-start gap-3 p-3 rounded-xl bg-white/5 border border-white/10 hover:border-cyan-400/20 transition-all duration-300">
-                      <div className={`shrink-0 p-1.5 rounded-lg ${bg} border ${border}`}>
-                        <Icon className={`w-3.5 h-3.5 ${color}`} />
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <div className={`font-black ${color} mb-0.5`} style={{ fontFamily: "'Share Tech Mono', monospace", fontSize: "11px" }}>{title}</div>
-                        <div className="text-gray-400 leading-relaxed" style={{ fontSize: "10px" }}>{desc}</div>
-                      </div>
-                    </motion.div>
-                  ))}
-                </div>
-              </div>
-            </div>
-          </div>
-        </motion.section>
-
-        {/* ══ FOOTER CTA ══ */}
-        <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.5 }}
-          className="mt-16">
-          <div className="relative overflow-hidden rounded-2xl border border-white/8 p-14 text-center"
-            style={{ background: "linear-gradient(135deg, rgba(0,255,231,0.04) 0%, rgba(0,0,0,0.8) 50%, rgba(168,85,247,0.04) 100%)", boxShadow: "0 0 80px rgba(0,255,231,0.05), inset 0 1px 0 rgba(255,255,255,0.06)" }}>
-            <CyberCorner pos="tl" /><CyberCorner pos="tr" /><CyberCorner pos="bl" /><CyberCorner pos="br" />
-            <motion.div animate={{ x: ["-100%", "200%"] }} transition={{ duration: 4, repeat: Infinity, repeatDelay: 2 }}
-              className="absolute top-0 left-0 h-px w-1/3" style={{ background: "linear-gradient(to right, transparent, rgba(0,255,231,0.8), transparent)" }} />
-            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[200px] pointer-events-none"
-              style={{ background: "radial-gradient(ellipse, rgba(0,255,231,0.05), transparent 70%)" }} />
-            <div className="relative z-10">
-              <motion.div animate={{ scale: [1, 1.05, 1] }} transition={{ duration: 3, repeat: Infinity }}
-                className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full border border-cyan-500/25 bg-cyan-500/5 mb-8">
-                <motion.span animate={{ opacity: [1, 0, 1] }} transition={{ duration: 0.8, repeat: Infinity }} className="w-2 h-2 bg-cyan-400 rounded-full" />
-                <span className="text-cyan-400 tracking-widest" style={{ fontFamily: "'Share Tech Mono', monospace", fontSize: "11px" }}>
-                  {isLive ? `${stats.feeds} feeds active · ${stats.total} articles indexed` : "status: loading feeds…"}
-                </span>
-              </motion.div>
-              <p className="text-5xl sm:text-6xl font-black mb-4 flicker" style={{ fontFamily: "'Orbitron', sans-serif" }}>
-                <span className="text-white">Stay. </span>
-                <span className="text-white">Alert. </span>
-                <span className="neon-text" style={{ background: "linear-gradient(135deg, #00ffe7, #3b82f6)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent", backgroundClip: "text" }}>
-                  Secure.
-                </span>
-              </p>
-              <p className="text-gray-500 max-w-md mx-auto mb-10 text-sm leading-relaxed" style={{ fontFamily: "'Share Tech Mono', monospace" }}>
-                Cybersecurity threats evolve every hour. This feed refreshes automatically so you're always aware of the latest risks.
-              </p>
-              <motion.button whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }} onClick={handleRefresh} disabled={isRefreshing}
-                className="group inline-flex items-center gap-3 px-10 py-4 rounded-lg font-black transition-all duration-300 disabled:opacity-50"
-                style={{ background: "linear-gradient(135deg, #00ffe7 0%, #3b82f6 100%)", color: "#000", fontFamily: "'Orbitron', sans-serif", fontSize: "0.72rem", letterSpacing: "0.15em", boxShadow: "0 0 40px rgba(0,255,231,0.3), 0 0 80px rgba(0,255,231,0.1)" }}
-                onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.boxShadow = "0 0 60px rgba(0,255,231,0.5), 0 0 100px rgba(0,255,231,0.2)"; }}
-                onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.boxShadow = "0 0 40px rgba(0,255,231,0.3), 0 0 80px rgba(0,255,231,0.1)"; }}>
-                {isRefreshing ? <Loader2 className="w-4 h-4 animate-spin" /> : <Zap className="w-4 h-4" />}
-                {isRefreshing ? "FETCHING…" : "REFRESH NOW"}
-                <motion.span animate={{ x: [0, 4, 0] }} transition={{ duration: 1, repeat: Infinity }}>→</motion.span>
-              </motion.button>
-            </div>
-          </div>
-        </motion.div>
-
       </div>
     </motion.div>
   );

