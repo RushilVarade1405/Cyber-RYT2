@@ -625,7 +625,7 @@ function PortfolioCard() {
             </motion.button>
 
             <a
-              href="/RushilVarade_Resume.pdf"
+              href="/Rushil_Varade_Resume.pdf"
               download
               onClick={e => e.stopPropagation()}
               className="inline-flex items-center gap-2 px-6 py-2.5 rounded-lg text-sm transition-all duration-200 focus:outline-none"
